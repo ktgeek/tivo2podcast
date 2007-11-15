@@ -1,0 +1,100 @@
+#!/usr/bin/env ruby
+# You must have tivodecode for this to work.
+# Your tivo mak will be read out of ~/.tivodecode_mak if it is available
+
+# Adds the lib path next to the path the script is in to the head of
+# the search patch
+$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
+                                      'httpclient-2.1.2', 'lib'))
+$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+
+require 'optparse'
+require 'TiVo.rb'
+
+def do_menu(tivo_items, menu_size=10)
+  offset = 0
+  display_items = nil
+
+  while (true)
+    display_items = tivo_items.videos[offset, menu_size]
+    puts
+    display_items.each_with_index do |item, i|
+      printf("%2d) %3d | %-43.43s | %13.13s | %5s\n", i + offset, item.channel,
+             item.printable_title,
+             item.time_captured.strftime('%m/%d %I:%M%p'), item.duration)
+    end
+    print "\nSelect a video, n for next #{menu_size}, " +
+      "p for previous #{menu_size}, q to quit: "
+    selection = nil
+    input = $stdin.readline.strip
+    case input
+    when 'p':
+        t_offset = offset - menu_size
+        offset = t_offset if t_offset >= 0
+    when 'n':
+        t_offset = offset + menu_size
+        offset = t_offset if t_offset < tivo_items.videos.length
+    when 'q':
+        exit(0)
+    else
+      selection = input.to_i
+    end
+    break unless selection.nil? || selection >= tivo_items.videos.length
+  end
+  return tivo_items.videos[selection]
+end
+
+def make_filename(tivo_item)
+  name = tivo_item.title
+  ep = tivo_item.episode_title
+  name = name + "-" + ep unless ep.nil?
+  name = name + ".mpg"
+  return name
+end
+
+# Load the mak if we have a mak file
+mak_file = ENV['HOME'] + '/.tivodecode_mak'
+mak = nil
+mak = File.read(mak_file).strip if File.exist?(mak_file)
+
+# Parse the options to get the rest (or override the above)
+tivo_addr = nil
+opts = OptionParser.new
+opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
+opts.on('-t IP', '--tivo IP', 'The IP address of your TiVo') do |ip|
+  tivo_addr = ip
+end
+opts.on_tail('-h', '--help', 'Show this message') do
+  puts opts
+  exit
+end
+opts.parse(ARGV)
+
+if tivo_addr.nil? || mak.nil?
+  puts "Must have TiVo IP address and MAK to function."
+  exit(1)
+end
+
+tivo = TiVo::TiVo.new(tivo_addr, mak)
+
+download = do_menu(tivo.get_listings)
+dl_name = make_filename(download)
+
+puts "Attemping to download " + download.printable_title()
+IO.popen("tivodecode -o \"#{dl_name}\" -", 'wb') do |td|
+  total_size = download.size
+  chunks = 0
+  collected_size = 0
+  tivo.download_show(download) do |tc|
+    td << tc
+    collected_size += tc.length
+    if ((chunks += 1) % 100) == 0
+      printf("%2d%% done\n",
+             (collected_size.to_f / total_size * 100 + 0.5).to_i)
+    end
+  end
+end
+
+# Local Variables:
+# mode: ruby
+# End:
