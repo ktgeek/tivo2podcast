@@ -80,7 +80,7 @@ module TiVo
     end
 
     def channel
-      get_detail_item('SourceChannel')
+      get_detail_item('SourceChannel').to_i
     end
 
     def station
