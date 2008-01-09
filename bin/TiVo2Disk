@@ -32,11 +32,11 @@ def do_menu(tivo_items, menu_size=10)
     input = $stdin.readline.strip
     case input
     when 'p':
-        t_offset = offset - menu_size
-        offset = t_offset if t_offset >= 0
+      t_offset = offset - menu_size
+      offset = t_offset if t_offset >= 0
     when 'n':
-        t_offset = offset + menu_size
-        offset = t_offset if t_offset < tivo_items.videos.length
+      t_offset = offset + menu_size
+      offset = t_offset if t_offset < tivo_items.videos.length
     when '#':
       print "Enter the number of lines to display: "
       numInput= $stdin.readline.strip.to_i
@@ -45,7 +45,7 @@ def do_menu(tivo_items, menu_size=10)
       end
 
     when 's':
-        print "Select sort: t/T=title, d/D=date, c/C=chan, cap to reverse, other to abort:"
+      print "Select sort: t/T=title, d/D=date, c/C=chan, cap to reverse, other to abort:"
       sortInput= $stdin.readline.strip
       case sortInput
       when 't','T':
