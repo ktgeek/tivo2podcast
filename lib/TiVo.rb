@@ -109,6 +109,13 @@ module TiVo
       minutes = (((duration % (60 * 60 * 1000)) / (60.0 * 1000)) + 0.5).to_i
       sprintf("%2d:%02d", hours, minutes)
     end
+
+    def copy_protected?
+      result = false
+      cp = get_detail_item('CopyProtected')
+      result = cp.downcase == "yes" unless cp.nil?
+      return result
+    end
       
   end
 

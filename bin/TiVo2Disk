@@ -14,14 +14,17 @@ require 'TiVo.rb'
 def do_menu(tivo_items, menu_size=10)
   offset = 0
   display_items = nil
+  filter_copyprotected = true
 
   while (true)
     display_items = tivo_items.videos[offset, menu_size]
     puts
     display_items.each_with_index do |item, i|
-      printf("%2d) %3d | %-43.43s | %13.13s | %5s\n", i + offset, item.channel,
-             item.printable_title,
-             item.time_captured.strftime('%m/%d %I:%M%p'), item.duration)
+      unless filter_copyprotected && item.copy_projected?
+        printf("%2d) %3d | %-43.43s | %13.13s | %5s\n", i + offset,
+               item.channel, item.printable_title,
+               item.time_captured.strftime('%m/%d %I:%M%p'), item.duration)
+      end
     end
     print "\nSelect a video, n/p for next/prev #{menu_size}," +
       " # to change menu, s to sort, q to quit: "
@@ -39,7 +42,7 @@ def do_menu(tivo_items, menu_size=10)
       numInput= $stdin.readline.strip.to_i
       if numInput != nil && numInput > 0
         menu_size=numInput
-        end
+      end
 
     when 's':
         print "Select sort: t/T=title, d/D=date, c/C=chan, cap to reverse, other to abort:"
@@ -47,15 +50,15 @@ def do_menu(tivo_items, menu_size=10)
       case sortInput
       when 't','T':
         tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.printable_title }
-        tivo_items.videos.reverse!  if sortInput=='T'
+        tivo_items.videos.reverse! if sortInput=='T'
         offset=0
       when 'c','C':
         tivo_items.videos=tivo_items.videos.sort_by { |a| a.channel }
-        tivo_items.videos.reverse!  if sortInput=='C'
+        tivo_items.videos.reverse! if sortInput=='C'
         offset=0
       when 'd', 'D':
         tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.time_captured }
-        tivo_items.videos.reverse!  if sortInput=='D'
+        tivo_items.videos.reverse! if sortInput=='D'
         offset=0
       end
     when 'q':
@@ -63,7 +66,8 @@ def do_menu(tivo_items, menu_size=10)
     else
       selection = input.to_i if input.eql?(input.to_i.to_s)
     end
-    break unless selection.nil? || selection >= tivo_items.videos.length
+    break unless selection.nil? || selection >= tivo_items.videos.length ||
+      selection < 0
   end
   return tivo_items.videos[selection]
 end
