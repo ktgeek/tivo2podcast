@@ -10,6 +10,7 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'optparse'
 require 'TiVo.rb'
+require 'facets/progressbar.rb'
 
 def do_menu(tivo_items, menu_size=10)
   offset = 0
@@ -20,7 +21,7 @@ def do_menu(tivo_items, menu_size=10)
     display_items = tivo_items.videos[offset, menu_size]
     puts
     display_items.each_with_index do |item, i|
-      unless filter_copyprotected && item.copy_projected?
+      unless filter_copyprotected && item.copy_protected?
         printf("%2d) %3d | %-43.43s | %13.13s | %5s\n", i + offset,
                item.channel, item.printable_title,
                item.time_captured.strftime('%m/%d %I:%M%p'), item.duration)
@@ -110,17 +111,12 @@ dl_name = make_filename(download)
 
 puts "Attemping to download " + download.printable_title()
 IO.popen("tivodecode -o \"#{dl_name}\" -", 'wb') do |td|
-  total_size = download.size
-  chunks = 0
-  collected_size = 0
+  pbar = Console::ProgressBar.new(dl_name, download.size)
   tivo.download_show(download) do |tc|
     td << tc
-    collected_size += tc.length
-    if ((chunks += 1) % 100) == 0
-      printf("%2d%% done\n",
-             (collected_size.to_f / total_size * 100 + 0.5).to_i)
-    end
+    pbar.inc(tc.length)
   end
+  pb.finish
 end
 
 # Local Variables:

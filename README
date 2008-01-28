@@ -11,3 +11,7 @@ Credit where credit is due
 This project redistributes, but does not modify, code from the
 httpclient project maintained by NAKAMURA, Hiroshi.  You can find it
 at http://dev.ctor.org/http-access2/
+
+This project redistributes, but does not modify, code from the facets
+ruby library, specifically Console::ProgressBar by Satoru Takabayashi.
+You can find it at http://facets.rubyforge.org/
