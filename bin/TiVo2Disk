@@ -116,7 +116,7 @@ IO.popen("tivodecode -o \"#{dl_name}\" -", 'wb') do |td|
     td << tc
     pbar.inc(tc.length)
   end
-  pb.finish
+  pbar.finish
 end
 
 # Local Variables:
