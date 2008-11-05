@@ -28,8 +28,8 @@ def do_menu(tivo_items, menu_size=10)
                item.time_captured.strftime('%m/%d %I:%M%p'), item.duration)
       end
     end
-    print "\nSelect a video, n/p for next/prev #{menu_size}," +
-      " # to change menu, s to sort, q to quit: "
+    print "\nSelect video, (n)ext/(p)rev #{menu_size}," +
+      " # to change menu, (s)ort, (d)ownload, (q)uit: "
     selection = nil
     input = $stdin.readline.strip
     case input
@@ -81,8 +81,8 @@ def make_filename(tivo_item)
   name = tivo_item.title
   ep = tivo_item.episode_title
   name = name + "-" + ep unless ep.nil?
-  unless ep.nil? && tivo_item.episode_number.nil?
-    name = name + "-" tivo_item.episode_number
+  unless ep.nil? || tivo_item.episode_number.nil?
+    name = name + "-" + tivo_item.episode_number
   end
   name = name + ".mpg"
   return name
@@ -118,9 +118,9 @@ downloads = do_menu(tivo.get_listings)
 downloads.each do |dl|
   dl_name = make_filename(dl)
 
-  puts "Attemping to download " + download.printable_title()
+  puts "Attemping to download " + dl.printable_title()
   IO.popen("tivodecode -o \"#{dl_name}\" -", 'wb') do |td|
-    pbar = Console::ProgressBar.new(dl_name, download.size)
+    pbar = Console::ProgressBar.new(dl_name, dl.size)
     tivo.download_show(dl) do |tc|
       td << tc
       pbar.inc(tc.length)
