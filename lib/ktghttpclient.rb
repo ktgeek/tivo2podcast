@@ -4,6 +4,11 @@
 # memory.
 #
 # All hail the ruby never closed class!
+#
+# Update Aug 2008 - It looks like the HTTPClient library accepted my patch
+#                   so this code can go away once that version is released.
+#                   Now we'll see if I remember to go back and do this one
+#                   day.
 require 'httpclient'
 
 class HTTPClient

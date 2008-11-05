@@ -75,6 +75,10 @@ module TiVo
       get_detail_item('EpisodeTitle')
     end
 
+    def episode_number
+      get_detail_item('EpisodeNumber')
+    end
+
     def description
       get_detail_item('Description')
     end
@@ -107,6 +111,11 @@ module TiVo
       duration = get_detail_item('Duration').to_i
       hours = duration / (60 * 60 * 1000)
       minutes = (((duration % (60 * 60 * 1000)) / (60.0 * 1000)) + 0.5).to_i
+      # Rounding can get us a situation where things are 0 hours and 60 min.
+      if minutes >= 60
+        hours += 1
+        minutes -= 60
+      end
       sprintf("%2d:%02d", hours, minutes)
     end
 
