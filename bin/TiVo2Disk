@@ -116,6 +116,7 @@ tivo = TiVo::TiVo.new(tivo_addr, mak)
 downloads = do_menu(tivo.get_listings)
 
 downloads.each do |dl|
+  tivo = TiVo::TiVo.new(tivo_addr, mak)
   dl_name = make_filename(dl)
 
   puts "Attemping to download " + dl.printable_title()
