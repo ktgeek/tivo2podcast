@@ -39,7 +39,7 @@ shows.each do |show|
   download = basename + ".mpg"
 
   # downlaod the file
-  IO.popen("tivodecode -o \"#{dl_name}\" -", 'wb') do |td|
+  IO.popen("tivodecode -o \"#{download}\" -", 'wb') do |td|
     pbar = Console::ProgressBar.new(download, show.size)
     tivo.download_show(show) do |tc|
       td << tc
