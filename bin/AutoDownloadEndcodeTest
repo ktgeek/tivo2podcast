@@ -1,9 +1,7 @@
 #!/usr/bin/env ruby
 
-# HandBrakeCLI -Z "iPhone \& iPod Touch" -2 -T -b 768 -B 48 -6 stereo -5 default -i Batman:\ The\ Brave\ and\ the\ Bold-The\ Golden\ Age\ of\ Justice-31.mpg -o Batman:\ The\ Brave\ and\ the\ Bold-The\ Golden\ Age\ of\ Justice-31.m4v
-
 # This has -Z "iPhone" expanded so I could tweak a few things
-# HandBrakeCLI -v 0 -e x264 -b 768 -2 -T -5 default --crop 5:0:0:0 -a 1 -E faac -B 48 -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -m -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i Batman:\ The\ Brave\ and\ the\ Bold-The\ Golden\ Age\ of\ Justice-31.mpg -o Batman:\ The\ Brave\ and\ the\ Bold-The\ Golden\ Age\ of\ Justice-31-2.m4v
+# HandBrakeCLI -v 0 -e x264 -b 768 -2 -T -5 default --crop 5:0:0:0 -a 1 -E faac -B 48 -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i input.mpg -o output.mpg
 
 # You must have tivodecode for this to work.
 # Your tivo mak will be read out of ~/.tivodecode_mak if it is available
@@ -19,6 +17,9 @@ require 'TiVo.rb'
 require 'facets/progressbar.rb'
 require 'pp'
 
+HANDBRAKE = 'HandBrakeCLI'
+ATOMICPARSLEY = 'AtomicParsley'
+
 # Load the mak if we have a mak file
 mak_file = ENV['HOME'] + '/.tivodecode_mak'
 mak = nil
@@ -30,30 +31,57 @@ tivo = TiVo::TiVo.new(tivo_addr, mak)
 
 shows = tivo.get_listings.videos.select { |p| p.title =~ /Batman/ }
 
-shows.each do |show|
-  tivo = TiVo::TiVo.new(tivo_addr, mak)
-
-  basename = show.title + '-' + show.time_captured.strftime("%Y%m%d")
+shows.each do |s|
+  # Beef this up to capture the show title as well
+  basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
+  basename = basename + '-' + s.episode_title unless s.episode_title.nil?
+  basename = basename + '-' + s.episode_number unless s.episode_number.nil?
   basename.sub!(/:/, '_')
 
   download = basename + ".mpg"
-
-  # downlaod the file
-  IO.popen("tivodecode -o \"#{download}\" -", 'wb') do |td|
-    pbar = Console::ProgressBar.new(download, show.size)
-    tivo.download_show(show) do |tc|
-      td << tc
-      pbar.inc(tc.length)
-    end
-    pbar.finish
-    puts
-  end
-
   transcode = basename + ".m4v"
+  # I should add a check to see if the file exists or the transcoded
+  # version of it, and if so, assume we already downloaded the file
 
-  command = %w/-v 0 -e x264 -b 768 -2 -T -5 default --crop 5:0:0:0 -a 1 -E faac -B 48 -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -m -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << download << '-o' << transcode
+  if (File.exist?(download) || File.exist?(transcode))
+    tivo = TiVo::TiVo.new(tivo_addr, mak)
 
-  system("HandBrakeCLI", *command)
+    # downlaod the file
+    IO.popen("tivodecode -o \"#{download}\" -", 'wb') do |td|
+      pbar = Console::ProgressBar.new(download, s.size)
+      tivo.download_show(s) do |tc|
+        td << tc
+        pbar.inc(tc.length)
+      end
+      pbar.finish
+      puts
+    end
+
+    command = %w/-v 0 -e x264 -b 768 -2 -T -5 default --crop 5:0:0:0 -a 1 -E faac -B 48 -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << download << '-o' << transcode
+    returncode = system(HANDBRAKE, *command)
+
+    if !returncode
+      puts "something isn't working right, bailing"
+      exit(1)
+    end
+
+    File.delete(download)
+
+#   --TVNetwork        ,  -n   (str)    Sets the TV Network name on the "tvnn" atom
+#   --TVShowName       ,  -H   (str)    Sets the TV Show name on the "tvsh" atom
+#   --TVEpisode        ,  -I   (str)    Sets the TV Episode on "tven":"209", but its a string: "209 Part 1"
+#   --TVSeasonNum      ,  -U   (num)    Sets the TV Season number on the "tvsn" atom
+#   --TVEpisodeNum     ,  -N   (num)    Sets the TV Episode number on the "tves" atom
+#   --description      ,  -p   (str)    Sets the description on the "desc" atom
+    command = Array.new(transcode) << '-W' << '--TVShowName' << s.title << '--TVEpisodeNum' << s.episode_number << '--TVEpisode' << s.episode_title << '--TVNetwork' << s.station << '--description' << s.description
+    
+    returncode = system(ATOMICPARSLEY, *command)
+    if !returncode
+      puts "something isn't working right, bailing"
+      exit(1)
+    end
+    
+  end
 end
 
 # Local Variables:
