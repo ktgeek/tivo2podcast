@@ -129,6 +129,7 @@ downloads.each do |dl|
     pbar.finish
     puts
   end
+  sleep 60
 end
 
 # Local Variables:

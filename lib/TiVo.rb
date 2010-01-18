@@ -175,7 +175,7 @@ module TiVo
         # http client where we see the "Auth required" digest-auth
         # header.
         first_chunk = true
-        @client.get_content(url) do |c|
+        @client.get_content(url, nil, {'Connection' => 'close'}) do |c|
           if first_chunk
             first_chunk = false
             next
