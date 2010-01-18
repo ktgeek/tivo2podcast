@@ -29,7 +29,7 @@ tivo_addr = '192.168.69.179'
 
 tivo = TiVo::TiVo.new(tivo_addr, mak)
 
-shows = tivo.get_listings.videos.select { |p| p.title =~ /Batman/ }
+shows = tivo.get_listings.videos.select { |s| s.title =~ /Batman/ }.sort_by { |s| s.time_captured }
 
 shows.each do |s|
   # Beef this up to capture the show title as well
@@ -43,7 +43,9 @@ shows.each do |s|
   # I should add a check to see if the file exists or the transcoded
   # version of it, and if so, assume we already downloaded the file
 
-  if (File.exist?(download) || File.exist?(transcode))
+  puts download
+  
+  if (!(File.exist?(download) || File.exist?(transcode)))
     tivo = TiVo::TiVo.new(tivo_addr, mak)
 
     # downlaod the file
