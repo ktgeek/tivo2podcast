@@ -15,7 +15,7 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'optparse'
 require 'TiVo.rb'
 require 'facets/progressbar.rb'
-require 'pp'
+#require 'pp'
 
 HANDBRAKE = 'HandBrakeCLI'
 ATOMICPARSLEY = 'AtomicParsley'
@@ -69,13 +69,19 @@ shows.each do |s|
 
     File.delete(download)
 
+#   --title            ,  -s   (str)    Set the title tag: "moov.udta.meta.ilst.©nam.data"
 #   --TVNetwork        ,  -n   (str)    Sets the TV Network name on the "tvnn" atom
 #   --TVShowName       ,  -H   (str)    Sets the TV Show name on the "tvsh" atom
 #   --TVEpisode        ,  -I   (str)    Sets the TV Episode on "tven":"209", but its a string: "209 Part 1"
 #   --TVSeasonNum      ,  -U   (num)    Sets the TV Season number on the "tvsn" atom
 #   --TVEpisodeNum     ,  -N   (num)    Sets the TV Episode number on the "tves" atom
 #   --description      ,  -p   (str)    Sets the description on the "desc" atom
-    command = Array.new(transcode) << '-W' << '--TVShowName' << s.title << '--TVEpisodeNum' << s.episode_number << '--TVEpisode' << s.episode_title << '--TVNetwork' << s.station << '--description' << s.description
+
+    showtitle = s.title
+    showtitle = showtitle + ': ' + s.episode_title unless s.episode_title.nil?
+    showtitle = showtitle + ' (' + s.episode_number + ')' unless s.episode_number.nil?
+    
+    command = Array.new << transcode << '-W' << '--title' << showtitle << '--TVShowName' << s.title << '--TVEpisodeNum' << s.episode_number << '--TVEpisode' << s.episode_title << '--TVNetwork' << s.station << '--description' << s.description
     
     returncode = system(ATOMICPARSLEY, *command)
     if !returncode
