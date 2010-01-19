@@ -81,7 +81,13 @@ shows.each do |s|
     showtitle = showtitle + ': ' + s.episode_title unless s.episode_title.nil?
     showtitle = showtitle + ' (' + s.episode_number + ')' unless s.episode_number.nil?
     
-    command = Array.new << transcode << '-W' << '--title' << showtitle << '--TVShowName' << s.title << '--TVEpisodeNum' << s.episode_number << '--TVEpisode' << s.episode_title << '--TVNetwork' << s.station << '--description' << s.description
+    command = Array.new << transcode << '-W' << '--title' << showtitle << '--TVShowName' << s.title << '--TVEpisodeNum' << s.episode_number << '--TVEpisode'
+    unless s.episode_title.nil?
+      command << s.episode_title
+    else
+      command << s.time_captured.strftime("%m/%d/%Y")
+    end
+    command << '--TVNetwork' << s.station << '--description' << s.description
     
     returncode = system(ATOMICPARSLEY, *command)
     if !returncode
@@ -89,6 +95,8 @@ shows.each do |s|
       exit(1)
     end
     
+  else
+    puts "Skipping #{basename} because it seems to exist"
   end
 end
 
