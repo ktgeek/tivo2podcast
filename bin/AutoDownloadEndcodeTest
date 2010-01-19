@@ -29,7 +29,8 @@ tivo_addr = '192.168.69.179'
 
 tivo = TiVo::TiVo.new(tivo_addr, mak)
 
-shows = tivo.get_listings.videos.select { |s| s.title =~ /Batman/ }.sort_by { |s| s.time_captured }
+#shows = tivo.get_listings.videos.select { |s| s.title =~ /Batman/ }.sort_by { |s| s.time_captured }
+shows = tivo.get_listings.videos.select { |s| s.title =~ /The Daily Show/ }.sort_by { |s| s.time_captured }
 
 shows.each do |s|
   # Beef this up to capture the show title as well
@@ -81,13 +82,16 @@ shows.each do |s|
     showtitle = showtitle + ': ' + s.episode_title unless s.episode_title.nil?
     showtitle = showtitle + ' (' + s.episode_number + ')' unless s.episode_number.nil?
     
-    command = Array.new << transcode << '-W' << '--title' << showtitle << '--TVShowName' << s.title << '--TVEpisodeNum' << s.episode_number << '--TVEpisode'
+    command = Array.new << transcode << '-W' << '--title' << showtitle << '--TVShowName' << s.title 
+    command << '--TVEpisodeNum' << s.episode_number unless s.episode_number.nil?
+    command << '--TVEpisode'
     unless s.episode_title.nil?
       command << s.episode_title
     else
       command << s.time_captured.strftime("%m/%d/%Y")
     end
-    command << '--TVNetwork' << s.station << '--description' << s.description
+    command << '--TVNetwork' << s.station unless s.station.nil?
+    command << '--description' << s.description unless s.description.nil?
     
     returncode = system(ATOMICPARSLEY, *command)
     if !returncode
