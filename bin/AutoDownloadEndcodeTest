@@ -18,6 +18,7 @@ require 'facets/progressbar.rb'
 require 'sqlite3'
 require 'rss'
 require 'rss/itunes'
+require 'uri'
 #require 'pp'
 
 HANDBRAKE = 'HandBrakeCLI'
@@ -145,12 +146,11 @@ rss = RSS::Maker.make("2.0") do |maker|
   
   maker.items.do_sort = true
 
-  updateGUIDs = Array.new
   db.query("select * from status") do |rows|
     rows.each do |row|
       maker.items.new_item do |item|
         item.title = row['s_ep_title']
-        item.link = BASE_URL + row['filename']
+        item.link = URI.escape(BASE_URL + row['filename'])
 
         item.guid.content = item.link
         item.guid.isPermaLink = true
