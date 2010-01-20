@@ -107,7 +107,7 @@ module TiVo
       get_detail_item('SourceSize').to_i
     end
 
-    def duration
+    def human_duration
       duration = get_detail_item('Duration').to_i
       hours = duration / (60 * 60 * 1000)
       minutes = (((duration % (60 * 60 * 1000)) / (60.0 * 1000)) + 0.5).to_i
@@ -117,6 +117,10 @@ module TiVo
         minutes -= 60
       end
       sprintf("%2d:%02d", hours, minutes)
+    end
+
+    def duration
+      get_detail_item('Duration').to_i
     end
 
     def copy_protected?

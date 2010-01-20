@@ -25,7 +25,7 @@ def do_menu(tivo_items, menu_size=10)
       unless filter_copyprotected && item.copy_protected?
         printf("%2d) %3d | %-43.43s | %13.13s | %5s\n", i + offset,
                item.channel, item.printable_title,
-               item.time_captured.strftime('%m/%d %I:%M%p'), item.duration)
+               item.time_captured.strftime('%m/%d %I:%M%p'), item.human_duration)
       end
     end
     print "\nSelect video, (n)ext/(p)rev #{menu_size}," +

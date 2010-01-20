@@ -15,23 +15,48 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'optparse'
 require 'TiVo.rb'
 require 'facets/progressbar.rb'
+require 'sqlite3'
+require 'rss'
 #require 'pp'
 
 HANDBRAKE = 'HandBrakeCLI'
 ATOMICPARSLEY = 'AtomicParsley'
+BASE_URL = 'http://temp.kgarner.com/tdstest/'
 
 # Load the mak if we have a mak file
 mak_file = ENV['HOME'] + '/.tivodecode_mak'
 mak = nil
 mak = File.read(mak_file).strip if File.exist?(mak_file)
 
-tivo_addr = '192.168.69.179'
+def init_database(db)
+  db.execute('create table status (
+              id INTEGER PRIMARY KEY autoincrement,
+              configname TEXT,
+              rss_guid TEXT,
+              s_name TEXT,
+              s_ep_title TEXT,
+              s_ep_number TEXT,
+              s_ep_description TEXT,
+              s_ep_length INTEGER,
+              s_ep_timecap INTEGER,
+              filename TEXT
+              );')
+end
 
+# Open up the database we use for status
+db = SQLite3::Database.new("tivodownload.db")
+db.results_as_hash = true
+
+# This should be made generic into a configuration
+tivo_addr = '192.168.69.179'
 tivo = TiVo::TiVo.new(tivo_addr, mak)
 
 #shows = tivo.get_listings.videos.select { |s| s.title =~ /Batman/ }.sort_by { |s| s.time_captured }
-shows = tivo.get_listings.videos.select { |s| s.title =~ /The Daily Show/ }.sort_by { |s| s.time_captured }
+shows = tivo.get_listings.videos.select { |s| s.title =~ /The Daily Show/ && !s.copy_protected? }.sort_by { |s| s.time_captured }
 
+ps = db.prepare('insert into status(s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?, ?);')
+
+# So starts the giant loop that processes the shows...
 shows.each do |s|
   # Beef this up to capture the show title as well
   basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
@@ -78,18 +103,19 @@ shows.each do |s|
 #   --TVEpisodeNum     ,  -N   (num)    Sets the TV Episode number on the "tves" atom
 #   --description      ,  -p   (str)    Sets the description on the "desc" atom
 
-    showtitle = s.title
-    showtitle = showtitle + ': ' + s.episode_title unless s.episode_title.nil?
+    episode_title = nil
+    unless s.episode_title.nil?
+      episode_title = s.episode_title
+    else
+      episode_title = s.time_captured.strftime("%m/%d/%Y")
+    end
+    
+    showtitle = s.title + ': ' + s.episode_title
     showtitle = showtitle + ' (' + s.episode_number + ')' unless s.episode_number.nil?
     
-    command = Array.new << transcode << '-W' << '--title' << showtitle << '--TVShowName' << s.title 
+    command = Array.new << transcode << '-W' << '--title' << showtitle <<
+      '--TVShowName' << s.title << '--TVEpisode' << episode_title
     command << '--TVEpisodeNum' << s.episode_number unless s.episode_number.nil?
-    command << '--TVEpisode'
-    unless s.episode_title.nil?
-      command << s.episode_title
-    else
-      command << s.time_captured.strftime("%m/%d/%Y")
-    end
     command << '--TVNetwork' << s.station unless s.station.nil?
     command << '--description' << s.description unless s.description.nil?
     
@@ -98,11 +124,61 @@ shows.each do |s|
       puts "something isn't working right, bailing"
       exit(1)
     end
-    
+
+    ps = db.prepare('insert into status(s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?, ?);')
+    ps.execute(s.title, episode_title, s.episode_number, s.description, s.duraction, s.time_captured, transcode)
+
   else
     puts "Skipping #{basename} because it seems to exist"
   end
 end
+
+# Here is where I would generate RSS and also clean up older files
+rss = RSS::Maker.make("2.0") do |maker|
+  maker.channel.title = "The Daily Show"
+  maker.channel.description = "My Daily Show RSS feed"
+  maker.channel.link = "http://www.thedailyshow.com/"
+  maker.channel.lastBuildDate = Time.now
+
+  channel.itunes_author = channel.title
+  channel.itunes_owner = RSS::ITunesChannelModel::ITunesOwner.new
+  channel.itunes_owner.itunes_name='Keith Garner'
+  channel.itunes_owner.itunes_email='kgarner@kgarner.com'
+  
+  maker.items.do_sort = true
+
+  updateGUIDs = Array.new
+  db.query("select * from status") do |row|
+    maker.items.new_item do |item|
+      item.title = row['s_ep_title']
+      item.link = BASE_URL + row['filename']
+      guid = row['rss_guid']
+      if guid.nil?
+        guid = RSS::Rss::Channel::Item::Guid.new
+        updateGUIDs << [row['id'], guid]
+      end
+      item.guid.content = link
+      item.guid.isPermaLink = true
+      item.pubDate = row['s_ep_timecap']
+      item.description = row['s_ep_description']
+      item.itunes_summary = row['s_ep_description']
+      item.itunes_explicit = "No"
+
+      # I need to come back and do the time.  For now, I'm hard coding
+      # to 32 minutes
+      # time = row['s_ep_length'] item.itunes_duration =
+      RSS::ITunesItemModel::ITunesDuraction.new(32, 00)
+
+      item.enclosure =
+        RSS::Rss::Channel::Item::Enclosure.new(item.link, row['filename'],
+                                               'video/x-m4v')
+    end
+  end
+end
+
+File.open('rss.xml', 'w') { |f| f << rss.to_s }
+
+db.close
 
 # Local Variables:
 # mode: ruby
