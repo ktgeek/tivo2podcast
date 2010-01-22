@@ -34,8 +34,8 @@ def init_database(fdb)
                  show_name TEXT,
                  rss_filename TEXT,
                  ep_to_keep INTEGER DEFAULT 5
-               );
-               create table shows (
+               );')
+  fdb.execute('create table shows (
                  id INTEGER PRIMARY KEY AUTOINCREMENT,
                  configid TEXT NOT NULL,
                  s_name TEXT,
@@ -168,11 +168,11 @@ def add_metadata_to_video(filename, show, override_episode_title=nil,
   end
 end
 
-def add_show_to_db(show, filename, ep_title_or=nil, description_or=nil)
+def add_show_to_db(config, show, filename, ep_title_or=nil, description_or=nil)
   episode_title = ep_title_or.nil? ? show.episode_title : ep_title_or
   description = description_or.nil? ? show.description : description_or
-  ps = db.prepare('insert into shows(s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?);')
-  ps.execute(s.title, episode_title, s.episode_number, description, s.duration, s.time_captured, filename)
+  ps = db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?);')
+  ps.execute(config['id'], s.title, episode_title, s.episode_number, description, s.duration, s.time_captured, filename)
   ps.close
 end
       
@@ -245,7 +245,7 @@ configs.each do |config|
 
       add_metadata_to_video(transcode, s, episode_title, description)
 
-      add_show_to_db(s, transcode, episode_title, description)
+      add_show_to_db(config, s, transcode, episode_title, description)
 
     else
       puts "Skipping #{basename} because it seems to exist"
