@@ -33,6 +33,7 @@ def init_database(fdb)
                  config_name TEXT,
                  show_name TEXT,
                  rss_filename TEXT,
+                 rss_link TEXT NOT NULL,
                  ep_to_keep INTEGER DEFAULT 5
                );')
   fdb.execute('create table shows (
@@ -64,11 +65,11 @@ def load_configs(db, names)
 end
 
 def download_show(show, name)
-  tivo = TiVo::TiVo.new(tivo_addr, mak)
+  tivo = TiVo::TiVo.new(TIVO_ADDR, MAK)
 
   # downlaod the file
   IO.popen("tivodecode -o \"#{name}\" -", 'wb') do |td|
-    pbar = Console::ProgressBar.new(name, s.size)
+    pbar = Console::ProgressBar.new(name, show.size)
     tivo.download_show(show) do |tc|
       td << tc
       pbar.inc(tc.length)
@@ -99,13 +100,13 @@ def get_database
   return db
 end
 
-def generate_rss(config)
+def generate_rss(config, db)
   # Here is where I would generate RSS and also clean up older files
   rss = RSS::Maker.make("2.0") do |maker|
     maker.channel.title = config['show_name']
     maker.channel.description = "My " + config ['show_name'] + "how RSS feed"
     # Should I add this to the config?
-    # maker.channel.link = "http://www.thedailyshow.com/"
+    maker.channel.link = config['rss_link']
     maker.channel.lastBuildDate = Time.now
 
     maker.channel.itunes_author = maker.channel.title
@@ -143,20 +144,25 @@ def generate_rss(config)
   File.open(config['rss_filename'], 'w') { |f| f << rss.to_s }
 end
 
+#   --title            ,  -s   (str)    Set the title tag: "moov.udta.meta.ilst.©nam.data"
+#   --TVNetwork        ,  -n   (str)    Sets the TV Network name on the "tvnn" atom
+#   --TVShowName       ,  -H   (str)    Sets the TV Show name on the "tvsh" atom
+#   --TVEpisode        ,  -I   (str)    Sets the TV Episode on "tven":"209", but its a string: "209 Part 1"
+#   --TVSeasonNum      ,  -U   (num)    Sets the TV Season number on the "tvsn" atom
+#   --TVEpisodeNum     ,  -N   (num)    Sets the TV Episode number on the "tves" atom
+#   --description      ,  -p   (str)    Sets the description on the "desc" atom
+def add_metadata_to_video(filename, show, ep_title_or=nil, description_or=nil)
 
-def add_metadata_to_video(filename, show, override_episode_title=nil,
-                                override_description=nil)
-  showtitle = show.title + ': ' +
-    (override_ep_title.nil? ? show.episode_title : override_ep_title)
+  episode_title = (ep_title_or.nil? ? show.episode_title : ep_title_or)
+  showtitle = show.title + ': ' + episode_title
   showtitle = showtitle + ' (' + show.episode_number + ')' unless show.episode_number.nil?
   
-  command = Array.new << transcode << '-W' << '--title' << showtitle <<
+  command = Array.new << filename << '-W' << '--title' << showtitle <<
     '--TVShowName' << show.title << '--TVEpisode' << episode_title
   command << '--TVEpisodeNum' << show.episode_number unless show.episode_number.nil?
   command << '--TVNetwork' << show.station unless show.station.nil?
 
-  description = override_description.nil? ? show.description :
-    override_description
+  description = description_or.nil? ? show.description : description_or
   unless description.nil?
     command << '--description' << description
   end
@@ -168,11 +174,13 @@ def add_metadata_to_video(filename, show, override_episode_title=nil,
   end
 end
 
-def add_show_to_db(config, show, filename, ep_title_or=nil, description_or=nil)
+def add_show_to_db(db, config, show, filename, ep_title_or=nil,
+                   description_or=nil)
   episode_title = ep_title_or.nil? ? show.episode_title : ep_title_or
   description = description_or.nil? ? show.description : description_or
-  ps = db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?);')
-  ps.execute(config['id'], s.title, episode_title, s.episode_number, description, s.duration, s.time_captured, filename)
+  ps = db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?, ?);')
+  ps.execute(config['id'], show.title, episode_title, show.episode_number,
+             description, show.duration, show.time_captured, filename)
   ps.close
 end
       
@@ -203,7 +211,7 @@ configs = load_configs(db, opt_config_names)
 
 configs.each do |config|
 
-  shows = get_shows(config['showname'])
+  shows = get_shows(config['show_name'])
 
 
   # So starts the giant loop that processes the shows...
@@ -226,14 +234,6 @@ configs.each do |config|
       
       File.delete(download)
 
-#   --title            ,  -s   (str)    Set the title tag: "moov.udta.meta.ilst.©nam.data"
-#   --TVNetwork        ,  -n   (str)    Sets the TV Network name on the "tvnn" atom
-#   --TVShowName       ,  -H   (str)    Sets the TV Show name on the "tvsh" atom
-#   --TVEpisode        ,  -I   (str)    Sets the TV Episode on "tven":"209", but its a string: "209 Part 1"
-#   --TVSeasonNum      ,  -U   (num)    Sets the TV Season number on the "tvsn" atom
-#   --TVEpisodeNum     ,  -N   (num)    Sets the TV Episode number on the "tves" atom
-#   --description      ,  -p   (str)    Sets the description on the "desc" atom
-
       episode_title = nil
       unless s.episode_title.nil?
         episode_title = s.episode_title
@@ -245,14 +245,14 @@ configs.each do |config|
 
       add_metadata_to_video(transcode, s, episode_title, description)
 
-      add_show_to_db(config, s, transcode, episode_title, description)
+      add_show_to_db(db, config, s, transcode, episode_title, description)
 
     else
       puts "Skipping #{basename} because it seems to exist"
     end
   end
 
-  generate_rss(config)
+  generate_rss(config, db)
 end
 
 db.close
