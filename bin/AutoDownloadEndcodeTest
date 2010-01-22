@@ -24,75 +24,207 @@ require 'uri'
 HANDBRAKE = 'HandBrakeCLI'
 ATOMICPARSLEY = 'AtomicParsley'
 BASE_URL = 'http://temp.kgarner.com/tdstest/'
+# This should be made generic into a configuration
+TIVO_ADDR = '192.168.69.179'
 
-# Load the mak if we have a mak file
-mak_file = ENV['HOME'] + '/.tivodecode_mak'
-mak = nil
-mak = File.read(mak_file).strip if File.exist?(mak_file)
-
-def init_database(db)
-  db.execute('create table status (
-              id INTEGER PRIMARY KEY autoincrement,
-              configname TEXT,
-              s_name TEXT,
-              s_ep_title TEXT,
-              s_ep_number TEXT,
-              s_ep_description TEXT,
-              s_ep_length INTEGER,
-              s_ep_timecap INTEGER,
-              filename TEXT
-              );')
+def init_database(fdb)
+  fdb.execute('create table configs (
+                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 config_name TEXT,
+                 show_name TEXT,
+                 rss_filename TEXT,
+                 ep_to_keep INTEGER DEFAULT 5
+               );
+               create table shows (
+                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 configid TEXT NOT NULL,
+                 s_name TEXT,
+                 s_ep_title TEXT,
+                 s_ep_number TEXT,
+                 s_ep_description TEXT,
+                 s_ep_length INTEGER,
+                 s_ep_timecap INTEGER,
+                 filename TEXT UNIQUE,
+                 FOREIGN KEY(configid) REFERENCES configs(id)
+                );')
 end
 
-# Open up the database we use for status
-db = SQLite3::Database.new("tivodownload.db")
-db.results_as_hash = true
-
-# This should be made generic into a configuration
-tivo_addr = '192.168.69.179'
-tivo = TiVo::TiVo.new(tivo_addr, mak)
-
-#shows = tivo.get_listings.videos.select { |s| s.title =~ /Batman/ && !s.copy_protected? }.sort_by { |s| s.time_captured }
-shows = tivo.get_listings.videos.select { |s| s.title =~ /The Daily Show/ && !s.copy_protected? }.sort_by { |s| s.time_captured }
-
-# So starts the giant loop that processes the shows...
-shows.each do |s|
-  # Beef this up to capture the show title as well
-  basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
-  basename = basename + '-' + s.episode_title unless s.episode_title.nil?
-  basename = basename + '-' + s.episode_number unless s.episode_number.nil?
-  basename.sub!(/:/, '_')
-
-  download = basename + ".mpg"
-  transcode = basename + ".m4v"
-  # I should add a check to see if the file exists or the transcoded
-  # version of it, and if so, assume we already downloaded the file
-
-  puts download
-  
-  if (!(File.exist?(download) || File.exist?(transcode)))
-    tivo = TiVo::TiVo.new(tivo_addr, mak)
-
-    # downlaod the file
-    IO.popen("tivodecode -o \"#{download}\" -", 'wb') do |td|
-      pbar = Console::ProgressBar.new(download, s.size)
-      tivo.download_show(s) do |tc|
-        td << tc
-        pbar.inc(tc.length)
+def load_configs(db, names)
+  result = Array.new
+  if names.empty?
+    db.query("select * from configs") { |rs| rs.each { |r| result << r } }
+  else
+    names.each do |n|
+      db.query("select * from configs where config_name = ?", n) do |rs|
+        rs.each { |r| result << r }
       end
-      pbar.finish
-      puts
     end
+  end
+  return result
+end
 
-    command = %w/-v 0 -e x264 -b 768 -2 -T -5 default --crop 5:0:0:0 -a 1 -E faac -B 48 -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << download << '-o' << transcode
-    returncode = system(HANDBRAKE, *command)
+def download_show(show, name)
+  tivo = TiVo::TiVo.new(tivo_addr, mak)
 
-    if !returncode
-      puts "something isn't working right, bailing"
-      exit(1)
+  # downlaod the file
+  IO.popen("tivodecode -o \"#{name}\" -", 'wb') do |td|
+    pbar = Console::ProgressBar.new(name, s.size)
+    tivo.download_show(show) do |tc|
+      td << tc
+      pbar.inc(tc.length)
     end
+    pbar.finish
+    puts
+  end
+end
 
-    File.delete(download)
+def transcode_show(infile, outfile)
+  command = %w/-v 0 -e x264 -b 768 -2 -T -5 default --crop 5:0:0:0 -a 1 -E faac -B 48 -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
+  returncode = system(HANDBRAKE, *command)
+
+  if !returncode
+    puts "something isn't working right, bailing"
+    exit(1)
+  end
+end
+
+def get_database
+  # Open up the database we use for config and status
+  tivodb = (ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
+            ENV['TIVO2PODCASTDIR']) + File::SEPARATOR + '.tivo2podcast.db'
+  db_needs_init = !File.exist?(tivodb)
+  db = SQLite3::Database.new(tivodb)
+  db.results_as_hash = true
+  init_database(db) if db_needs_init
+  return db
+end
+
+def generate_rss(config)
+  # Here is where I would generate RSS and also clean up older files
+  rss = RSS::Maker.make("2.0") do |maker|
+    maker.channel.title = config['show_name']
+    maker.channel.description = "My " + config ['show_name'] + "how RSS feed"
+    # Should I add this to the config?
+    # maker.channel.link = "http://www.thedailyshow.com/"
+    maker.channel.lastBuildDate = Time.now
+
+    maker.channel.itunes_author = maker.channel.title
+    maker.channel.itunes_owner.itunes_name='Keith Garner'
+    maker.channel.itunes_owner.itunes_email='kgarner@kgarner.com'
+    
+    maker.items.do_sort = true
+
+    db.query("select * from shows where configid=?", config['id']) do |rows|
+      rows.each do |row|
+        maker.items.new_item do |item|
+          item.title = row['s_ep_title']
+          item.link = URI.escape(BASE_URL + row['filename'])
+
+          item.guid.content = item.link
+          item.guid.isPermaLink = true
+          item.pubDate = Time.parse(row['s_ep_timecap'])
+          item.description = row['s_ep_description']
+          item.itunes_summary = row['s_ep_description']
+          item.itunes_explicit = "No"
+
+          # I need to come back and do the time.  For now, I'm hard coding
+          # to 32 minutes
+          # time = row['s_ep_length']
+          item.itunes_duration = '32:00'
+
+          item.enclosure.url = item.link
+          item.enclosure.length = File.size(row['filename'])
+          item.enclosure.type = 'video/x-m4v'
+        end
+      end
+    end
+  end
+
+  File.open(config['rss_filename'], 'w') { |f| f << rss.to_s }
+end
+
+
+def add_metadata_to_video(filename, show, override_episode_title=nil,
+                                override_description=nil)
+  showtitle = show.title + ': ' +
+    (override_ep_title.nil? ? show.episode_title : override_ep_title)
+  showtitle = showtitle + ' (' + show.episode_number + ')' unless show.episode_number.nil?
+  
+  command = Array.new << transcode << '-W' << '--title' << showtitle <<
+    '--TVShowName' << show.title << '--TVEpisode' << episode_title
+  command << '--TVEpisodeNum' << show.episode_number unless show.episode_number.nil?
+  command << '--TVNetwork' << show.station unless show.station.nil?
+
+  description = override_description.nil? ? show.description :
+    override_description
+  unless description.nil?
+    command << '--description' << description
+  end
+  
+  returncode = system(ATOMICPARSLEY, *command)
+  if !returncode
+    puts "something isn't working right, bailing"
+    exit(1)
+  end
+end
+
+def add_show_to_db(show, filename, ep_title_or=nil, description_or=nil)
+  episode_title = ep_title_or.nil? ? show.episode_title : ep_title_or
+  description = description_or.nil? ? show.description : description_or
+  ps = db.prepare('insert into shows(s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?);')
+  ps.execute(s.title, episode_title, s.episode_number, description, s.duration, s.time_captured, filename)
+  ps.close
+end
+      
+def get_shows(showname)
+  tivo = TiVo::TiVo.new(TIVO_ADDR, MAK)
+  tivo.get_listings.videos.select { |s| s.title =~ /#{showname}/ && !s.copy_protected? }.sort_by { |s| s.time_captured }
+end
+
+  # Load the mak if we have a mak file
+mak_file = ENV['HOME'] + '/.tivodecode_mak'
+MAK = File.read(mak_file).strip if File.exist?(mak_file)
+
+opt_config_names = Array.new
+opts = OptionParser.new
+opts.on('-c CONFIG', '--config CONFIG',
+        'Use the named config on this run') { |c| configs << c }
+opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
+opts.on_tail('-h', '--help', 'Show this message') do
+  puts opts
+  exit
+end
+opts.parse(ARGV)
+
+db = get_database()
+  
+
+configs = load_configs(db, opt_config_names)
+
+configs.each do |config|
+
+  shows = get_shows(config['showname'])
+
+
+  # So starts the giant loop that processes the shows...
+  shows.each do |s|
+    # Beef this up to capture the show title as well
+    basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
+    basename = basename + '-' + s.episode_title unless s.episode_title.nil?
+    basename = basename + '-' + s.episode_number unless s.episode_number.nil?
+    basename.sub!(/:/, '_')
+
+    download = basename + ".mpg"
+    transcode = basename + ".m4v"
+
+    # I should add a check to see if the file exists or the transcoded
+    # version of it, and if so, assume we already downloaded the file
+    if (!(File.exist?(download) || File.exist?(transcode)))
+      download_show(s, download)
+
+      transcode_show(download, transcode)
+      
+      File.delete(download)
 
 #   --title            ,  -s   (str)    Set the title tag: "moov.udta.meta.ilst.©nam.data"
 #   --TVNetwork        ,  -n   (str)    Sets the TV Network name on the "tvnn" atom
@@ -102,77 +234,26 @@ shows.each do |s|
 #   --TVEpisodeNum     ,  -N   (num)    Sets the TV Episode number on the "tves" atom
 #   --description      ,  -p   (str)    Sets the description on the "desc" atom
 
-    episode_title = nil
-    unless s.episode_title.nil?
-      episode_title = s.episode_title
-    else
-      episode_title = s.time_captured.strftime("%m/%d/%Y")
-    end
-    
-    showtitle = s.title + ': ' + s.episode_title
-    showtitle = showtitle + ' (' + s.episode_number + ')' unless s.episode_number.nil?
-    
-    command = Array.new << transcode << '-W' << '--title' << showtitle <<
-      '--TVShowName' << s.title << '--TVEpisode' << episode_title
-    command << '--TVEpisodeNum' << s.episode_number unless s.episode_number.nil?
-    command << '--TVNetwork' << s.station unless s.station.nil?
-    command << '--description' << s.description unless s.description.nil?
-    
-    returncode = system(ATOMICPARSLEY, *command)
-    if !returncode
-      puts "something isn't working right, bailing"
-      exit(1)
-    end
-
-
-    ps = db.prepare('insert into status(s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?);')
-    ps.execute(s.title, episode_title, s.episode_number, s.description, s.duration, s.time_captured, transcode)
-    ps.close
-  else
-    puts "Skipping #{basename} because it seems to exist"
-  end
-end
-
-# Here is where I would generate RSS and also clean up older files
-rss = RSS::Maker.make("2.0") do |maker|
-  maker.channel.title = "The Daily Show"
-  maker.channel.description = "My Daily Show RSS feed"
-  maker.channel.link = "http://www.thedailyshow.com/"
-  maker.channel.lastBuildDate = Time.now
-
-  maker.channel.itunes_author = maker.channel.title
-  maker.channel.itunes_owner.itunes_name='Keith Garner'
-  maker.channel.itunes_owner.itunes_email='kgarner@kgarner.com'
-  
-  maker.items.do_sort = true
-
-  db.query("select * from status") do |rows|
-    rows.each do |row|
-      maker.items.new_item do |item|
-        item.title = row['s_ep_title']
-        item.link = URI.escape(BASE_URL + row['filename'])
-
-        item.guid.content = item.link
-        item.guid.isPermaLink = true
-        item.pubDate = Time.parse(row['s_ep_timecap'])
-        item.description = row['s_ep_description']
-        item.itunes_summary = row['s_ep_description']
-        item.itunes_explicit = "No"
-
-        # I need to come back and do the time.  For now, I'm hard coding
-        # to 32 minutes
-        # time = row['s_ep_length']
-        item.itunes_duration = '32:00'
-
-        item.enclosure.url = item.link
-        item.enclosure.length = File.size(row['filename'])
-        item.enclosure.type = 'video/x-m4v'
+      episode_title = nil
+      unless s.episode_title.nil?
+        episode_title = s.episode_title
+      else
+        episode_title = s.time_captured.strftime("%m/%d/%Y")
       end
+
+      description = s.description.sub('Copyright Tribune Media Services, Inc.', '') unless s.description.nil?
+
+      add_metadata_to_video(transcode, s, episode_title, description)
+
+      add_show_to_db(s, transcode, episode_title, description)
+
+    else
+      puts "Skipping #{basename} because it seems to exist"
     end
   end
-end
 
-File.open('rss.xml', 'w') { |f| f << rss.to_s }
+  generate_rss(config)
+end
 
 db.close
 
