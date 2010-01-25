@@ -71,8 +71,12 @@ module TiVo
       return result
     end
 
-    def episode_title
-      get_detail_item('EpisodeTitle')
+    def episode_title(use_date_if_nil=false)
+      title = get_detail_item('EpisodeTitle')
+      if use_date_if_nil && title.nil?
+        title = time_captured.strftime("%m/%d/Y&")
+      end
+      return title
     end
 
     def episode_number
@@ -80,7 +84,11 @@ module TiVo
     end
 
     def description
-      get_detail_item('Description')
+      desc = get_detail_item('Description')
+      unless desc.nil?
+        desc.sub('Copyright Tribune Media Services, Inc.', '')
+      end
+      return desc
     end
 
     def channel
@@ -163,6 +171,11 @@ module TiVo
         listings.folders = nil
       end
       return listings
+    end
+
+    def get_shows_by_name(showname)
+      get_listings.videos.select { |s| s.title =~ /#{showname}/ &&
+        !s.copy_protected? }.sort_by { |s| s.time_captured }
     end
 
     # Downloads the show given the item passed in.  If a block is given,
