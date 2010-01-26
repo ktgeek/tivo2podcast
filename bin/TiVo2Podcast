@@ -13,7 +13,7 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
 $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'optparse'
-require 'TiVovi .rb'
+require 'TiVo.rb'
 require 'tivopodcast'
 require 'facets/progressbar.rb'
 require 'rss'
