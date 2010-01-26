@@ -78,7 +78,8 @@ module Tivo2Podcast
 
     attr_writer :crop, :audio_bitrate, :video_bitrate
     
-    def initialize(show)
+    def initialize(config, show)
+      @config = config
       @show = show
       @crop = nil
       @audio_bitrate = nil
@@ -86,23 +87,23 @@ module Tivo2Podcast
     end
 
     def crop
-      @crop.nil? ? config['encode_crop'] : @crop
+      @crop.nil? ? @config['encode_crop'] : @crop
     end
 
     def audio_bitrate
-      ab = @audio_bitrate.nil? ? config['encode_audio_bitrate'] : @audio_bitrate
+      ab = @audio_bitrate.nil? ? @config['encode_audio_bitrate'] : @audio_bitrate
       ab = 48 if ab.nil?
       return ab
     end
 
     def video_bitrate
-      vb = @video_bitrate.nil? ? config['encode_video_bitrate'] : @video_bitrate
+      vb = @video_bitrate.nil? ? @config['encode_video_bitrate'] : @video_bitrate
       vb = 768 if vb.nil?
       return vb
     end
 
     def decomb?
-      decomb = @decomb.nil? ? config['encode_decomb'] : @decomb
+      decomb = @decomb.nil? ? @config['encode_decomb'] : @decomb
       (decomb.nil? || decomb == 0) ? false : true
     end
 
@@ -110,7 +111,7 @@ module Tivo2Podcast
     def transcode_show(infile, outfile)
       command = (%w/-v0 -e x264 -b/ <<  video_bitrate.to_s) + %w/-2 -T/
       command += %w/-5 default/ if decomb?
-      command << '--crop' << crop if crop.nil?
+      command << '--crop' << crop unless crop.nil?
       command += %w/-a 1 -E faac -B/ << audio_bitrate.to_s
       command += %w/-6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
       returncode = system(HANDBRAKE, *command)
@@ -133,7 +134,7 @@ module Tivo2Podcast
         ')' unless @show.episode_number.nil?
       
       command = Array.new << outfile << '-W' << '--title' << showtitle <<
-        '--TVShowName' << show.title << '--TVEpisode' <<
+        '--TVShowName' << @show.title << '--TVEpisode' <<
         @show.episode_title(true)
       command << '--TVEpisodeNum' <<
         @show.episode_number unless @show.episode_number.nil?
