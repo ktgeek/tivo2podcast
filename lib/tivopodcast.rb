@@ -153,7 +153,7 @@ module Tivo2Podcast
   class RssGenerator
     def initialize(config, db)
       @config = config
-      @db = config
+      @db = db
     end
 
     def generate()

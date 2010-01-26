@@ -95,7 +95,7 @@ configs.each do |config|
 
   # cleanup phase goes here
 
-  rss = TiVo2Podcast::RssGenerator.new(config, db)
+  rss = Tivo2Podcast::RssGenerator.new(config, db)
   File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
 end
 
