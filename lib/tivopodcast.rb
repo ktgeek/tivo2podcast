@@ -23,7 +23,11 @@ module Tivo2Podcast
                      rss_baseurl TEXT NOT NULL,
                      rss_ownername TEXT NOT NULL,
                      rss_owneremail TEXT NOT NULL,
-                     ep_to_keep INTEGER NOT NULL DEFAULT 5
+                     ep_to_keep INTEGER NOT NULL DEFAULT 5,
+                     encode_crop TEXT,
+                     encode_audio_bitrate INTEGER,
+                     encode_video_bitrate INTEGER,
+                     encode_decomb INTEGER
                    );')
       @db.execute('create table shows (
                      id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,14 +75,44 @@ module Tivo2Podcast
   class Transcoder
     HANDBRAKE = 'HandBrakeCLI'
     ATOMICPARSLEY = 'AtomicParsley'
+
+    attr_writer :crop, :audio_bitrate, :video_bitrate
     
     def initialize(show)
       @show = show
+      @crop = nil
+      @audio_bitrate = nil
+      @video_bitrate = nil
+    end
+
+    def crop
+      @crop.nil? ? config['encode_crop'] : @crop
+    end
+
+    def audio_bitrate
+      ab = @audio_bitrate.nil? ? config['encode_audio_bitrate'] : @audio_bitrate
+      ab = 48 if ab.nil?
+      return ab
+    end
+
+    def video_bitrate
+      vb = @video_bitrate.nil? ? config['encode_video_bitrate'] : @video_bitrate
+      vb = 768 if vb.nil?
+      return vb
+    end
+
+    def decomb?
+      decomb = @decomb.nil? ? config['encode_decomb'] : @decomb
+      (decomb.nil? || decomb == 0) ? false : true
     end
 
     # This transcodes and properly tags the show.
     def transcode_show(infile, outfile)
-      command = %w/-v0 -e x264 -b 768 -2 -T -5 default --crop 5:0:0:0 -a 1 -E faac -B 48 -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
+      command = (%w/-v0 -e x264 -b/ <<  video_bitrate.to_s) + %w/-2 -T/
+      command += %w/-5 default/ if decomb?
+      command << '--crop' << crop if crop.nil?
+      command += %w/-a 1 -E faac -B/ << audio_bitrate.to_s
+      command += %w/-6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
       returncode = system(HANDBRAKE, *command)
 
       if !returncode
@@ -110,6 +144,7 @@ module Tivo2Podcast
       returncode = system(ATOMICPARSLEY, *command)
       if !returncode
         puts "something isn't working right, bailing"
+        # TODO: change this to an exception
         exit(1)
       end
     end
@@ -164,7 +199,6 @@ module Tivo2Podcast
       return rss.to_s
     end
   end
-
 end
 
 
