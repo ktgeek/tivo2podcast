@@ -24,7 +24,7 @@ require 'uri'
 TIVO_ADDR = '192.168.69.179'
 
 def download_show(show, name)
-  tivo = TiVo::TiVo.new(TIVO_ADDR, mak)
+  tivo = TiVo::TiVo.new(TIVO_ADDR, MAK)
 
   # downlaod the file
   IO.popen("tivodecode -o \"#{name}\" -", 'wb') do |td|
@@ -40,12 +40,12 @@ end
 
 # Load the mak if we have a mak file
 mak_file = ENV['HOME'] + '/.tivodecode_mak'
-mak = File.read(mak_file).strip if File.exist?(mak_file)
+MAK = File.read(mak_file).strip if File.exist?(mak_file)
 
 opt_config_names = Array.new
 opts = OptionParser.new
 opts.on('-c CONFIG', '--config CONFIG',
-        'Use the named config on this run') { |c| configs << c }
+        'Use the named config on this run') { |c| opt_config_names << c }
 opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
 opts.on_tail('-h', '--help', 'Show this message') do
   puts opts
@@ -60,7 +60,7 @@ db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
 
 configs = db.get_configs(opt_config_names)
 
-tivo = TiVo::TiVo.new(TIVO_ADDR, mak)
+tivo = TiVo::TiVo.new(TIVO_ADDR, MAK)
 configs.each do |config|
 
   shows = tivo.get_shows_by_name(config['show_name'])
@@ -95,7 +95,8 @@ configs.each do |config|
 
   # cleanup phase goes here
 
-  generate_rss(config, db)
+  rss = TiVo2Podcast::RssGenerator.new(config, db)
+  File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
 end
 
 db.close
