@@ -59,7 +59,7 @@ module Tivo2Podcast
 
     def shows_by_configid(id, &block)
       @db.query("select * from shows where configid=?", id) do |rows|
-        rows.each { |row| yeild row }
+        rows.each { |row| yield row }
       end
     end
 
