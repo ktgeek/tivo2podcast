@@ -5,7 +5,7 @@ module TiVo
   FOLDER = 'x-tivo-container/folder'
   VIDEO = 'video/x-tivo-raw-tts'
 
-  TivoListings = Struct.new(:folders, :videos)
+  TiVoListings = Struct.new(:folders, :videos)
 
   class TiVoItemFactory
     def TiVoItemFactory.from_xml(xml)
@@ -22,7 +22,7 @@ module TiVo
         end
       end
       
-      TivoListings.new(folders=folders, videos=videos)
+      TiVoListings.new(folders=folders, videos=videos)
     end
   end
 

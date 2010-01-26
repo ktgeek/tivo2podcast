@@ -3,7 +3,9 @@ require 'sqlite3'
 require 'TiVo'
 
 module Tivo2Podcast
+  # Database access facade for the state information between script runs
   class T2PDatabase
+    # filename - The name of the sqlite file.
     def initialize(filename)
       db_needs_init = !File.exist?(filename)
 
@@ -13,6 +15,7 @@ module Tivo2Podcast
       init_database if db_needs_init
     end
 
+    # Creates the database tables that this class acts as a facade for
     def init_database()
       @db.execute('create table configs (
                      id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,6 +46,8 @@ module Tivo2Podcast
                    );')
     end
 
+    # Gets the configs from the config table, by default it will get all unless
+    # an array of names is passed in.
     def get_configs(names=nil)
       result = Array.new
       if names.nil? || names.empty?
@@ -57,27 +62,54 @@ module Tivo2Podcast
       return result
     end
 
+    # Select all the shows for a given config id
     def shows_by_configid(id, &block)
       @db.query("select * from shows where configid=?", id) do |rows|
         rows.each { |row| yield row }
       end
     end
 
+    # Add a show to the database for a given config and video stored
+    # in the given filename
     def add_show(show, config, filename)
       ps = @db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?, ?);')
       ps.execute(config['id'], show.title, show.episode_title(true),
              show.episode_number, show.description, show.duration,
-             show.time_captured, filename)
+             show.time_captured.to_i, filename)
       ps.close()
     end
+
+    # Cleans up shows that go over the keep threshold specified in the config
+    def show_cleanup(config)
+      filenames = Array.new\
+      @db.execute('create temp table cleanup_temp as select id,filename from shows where configid=? order by s_ep_timecap desc;', config['id'])
+      @db.query('select id,filename from cleanup_temp where rowid>?',
+                config['ep_to_keep']) do |results|
+        results.each { |r| filenames << r['filename'] }
+        db.execute('delete from shows where id=?;', r['id'])
+      end
+      # Yes, its only in memory, but we may be called many times in here.
+      db.execute('drop table cleanup_temp;')
+      return filenames
+    end
+      
   end
 
+  # This class encapsulates both calling out to handbrake to doing the
+  # transcoding from source mpg to iPhone friendly m4v, as well as
+  # calling out to AtomicParsley to add the video metadata to the file.
   class Transcoder
     HANDBRAKE = 'HandBrakeCLI'
     ATOMICPARSLEY = 'AtomicParsley'
 
     attr_writer :crop, :audio_bitrate, :video_bitrate
-    
+
+    # config is assumed to be a HashTable with the configuration information
+    # as sepecified in T2PDatabase.init_database (I should probably turn
+    # configuration into an object.
+    #
+    # show is assumed to be an instance of TiVo::TiVoVideo which holds
+    # the metadata of the show to be transcoded.
     def initialize(config, show)
       @config = config
       @show = show
@@ -107,7 +139,9 @@ module Tivo2Podcast
       (decomb.nil? || decomb == 0) ? false : true
     end
 
-    # This transcodes and properly tags the show.
+    # This transcodes and properly tags the show.  infile is the
+    # filename of the sourcefile, outfile is the filename to transcode
+    # to
     def transcode_show(infile, outfile)
       command = (%w/-v0 -e x264 -b/ <<  video_bitrate.to_s) + %w/-2 -T/
       command += %w/-5 default/ if decomb?
@@ -151,18 +185,21 @@ module Tivo2Podcast
     end
   end
 
+  # Generates the video podcast feed.
   class RssGenerator
+    # Creates the RssGenerator given a config as specified by
+    # T2PDatabase.init_database and an instanstance of T2PDatabase
     def initialize(config, db)
       @config = config
       @db = db
     end
 
+    # Generates the RSS and returns it as a string.
     def generate()
       # Here is where I would generate RSS and also clean up older files
       rss = RSS::Maker.make("2.0") do |maker|
         maker.channel.title = @config['show_name']
         maker.channel.description = "My " + @config['show_name'] + "how RSS feed"
-        # Should I add this to the config?
         maker.channel.link = @config['rss_link']
         maker.channel.lastBuildDate = Time.now
 
@@ -179,7 +216,7 @@ module Tivo2Podcast
 
             item.guid.content = item.link
             item.guid.isPermaLink = true
-            item.pubDate = Time.parse(show['s_ep_timecap'])
+            item.pubDate = Time.new(show['s_ep_timecap'])
             item.description = show['s_ep_description']
             item.itunes_summary = show['s_ep_description']
             item.itunes_explicit = "No"
@@ -196,7 +233,6 @@ module Tivo2Podcast
         end
       end
 
-      #File.open(@config['rss_filename'], 'w') { |f| f << rss.to_s }
       return rss.to_s
     end
   end

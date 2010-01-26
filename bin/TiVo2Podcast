@@ -94,6 +94,8 @@ configs.each do |config|
   end
 
   # cleanup phase goes here
+  deletes = db.show_cleanup(config)
+  deletes.each { |f| File.delete(f) }
 
   rss = Tivo2Podcast::RssGenerator.new(config, db)
   File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
