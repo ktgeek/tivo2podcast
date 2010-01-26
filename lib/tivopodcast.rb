@@ -58,13 +58,13 @@ module Tivo2Podcast
     end
 
     def shows_by_configid(id, &block)
-      db.query("select * from shows where configid=?", id) do |rows|
+      @db.query("select * from shows where configid=?", id) do |rows|
         rows.each { |row| yeild row }
       end
     end
 
     def add_show(show, config, filename)
-      ps = db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?, ?);')
+      ps = @db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?, ?);')
       ps.execute(config['id'], show.title, show.episode_title(true),
              show.episode_number, show.description, show.duration,
              show.time_captured, filename)

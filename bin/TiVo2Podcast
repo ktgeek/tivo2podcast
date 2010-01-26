@@ -13,7 +13,7 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
 $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'optparse'
-require 'TiVo.rb'
+require 'TiVovi .rb'
 require 'tivopodcast'
 require 'facets/progressbar.rb'
 require 'rss'
@@ -98,8 +98,6 @@ configs.each do |config|
   rss = Tivo2Podcast::RssGenerator.new(config, db)
   File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
 end
-
-db.close
 
 # Local Variables:
 # mode: ruby
