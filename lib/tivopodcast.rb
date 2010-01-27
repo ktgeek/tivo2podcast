@@ -86,10 +86,10 @@ module Tivo2Podcast
       @db.query('select id,filename from cleanup_temp where rowid>?',
                 config['ep_to_keep']) do |results|
         results.each { |r| filenames << r['filename'] }
-        db.execute('delete from shows where id=?;', r['id'])
+        @db.execute('delete from shows where id=?;', r['id'])
       end
       # Yes, its only in memory, but we may be called many times in here.
-      db.execute('drop table cleanup_temp;')
+      @db.execute('drop table cleanup_temp;')
       return filenames
     end
       
