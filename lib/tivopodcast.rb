@@ -218,7 +218,7 @@ module Tivo2Podcast
 
             item.guid.content = item.link
             item.guid.isPermaLink = true
-            item.pubDate = Time.new(show['s_ep_timecap'])
+            item.pubDate = Time.at(show['s_ep_timecap'])
             item.description = show['s_ep_description']
             item.itunes_summary = show['s_ep_description']
             item.itunes_explicit = "No"
