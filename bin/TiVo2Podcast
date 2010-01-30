@@ -65,6 +65,13 @@ configs.each do |config|
 
   shows = tivo.get_shows_by_name(config['show_name'])
 
+  # Only work on the X latest shows.  That way if there are 10 on the tivo,
+  # but we only want to keep 4, we don't encode 6 of them just to throw them
+  # out later in the cleanup phase.
+  if shows.size > config['ep_to_keep']
+    shows = shows.reverse[0, config['ep_to_keep']].reverse
+  end
+
   # So starts the giant loop that processes the shows...
   shows.each do |s|
     # Beef this up to capture the show title as well

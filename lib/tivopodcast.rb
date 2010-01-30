@@ -11,13 +11,14 @@ module Tivo2Podcast
 
       @db = SQLite3::Database.new(filename)
       @db.results_as_hash = true
+      @db.type_translation = true
 
       init_database if db_needs_init
     end
 
     # Creates the database tables that this class acts as a facade for
     def init_database()
-      @db.execute('create table configs (
+      @db.execute_batch('create table configs (
                      id INTEGER PRIMARY KEY AUTOINCREMENT,
                      config_name TEXT NOT NULL UNIQUE,
                      show_name TEXT NOT NULL,
@@ -31,8 +32,8 @@ module Tivo2Podcast
                      encode_audio_bitrate INTEGER,
                      encode_video_bitrate INTEGER,
                      encode_decomb INTEGER
-                   );')
-      @db.execute('create table shows (
+                   );
+                   create table shows (
                      id INTEGER PRIMARY KEY AUTOINCREMENT,
                      configid TEXT NOT NULL,
                      s_name TEXT,
@@ -218,7 +219,7 @@ module Tivo2Podcast
 
             item.guid.content = item.link
             item.guid.isPermaLink = true
-            item.pubDate = Time.at(show['s_ep_timecap'].to_i)
+            item.pubDate = Time.at(show['s_ep_timecap'])
             item.description = show['s_ep_description']
             item.itunes_summary = show['s_ep_description']
             item.itunes_explicit = "No"
