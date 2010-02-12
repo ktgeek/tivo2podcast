@@ -74,7 +74,7 @@ module TiVo
     def episode_title(use_date_if_nil=false)
       title = get_detail_item('EpisodeTitle')
       if use_date_if_nil && title.nil?
-        title = time_captured.strftime("%m/%d/Y&")
+        title = time_captured.strftime("%m/%d/%Y")
       end
       return title
     end
