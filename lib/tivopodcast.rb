@@ -146,12 +146,19 @@ module Tivo2Podcast
     # filename of the sourcefile, outfile is the filename to transcode
     # to
     def transcode_show(infile, outfile)
-      command = "#{CONFIG.handbrake} -v0 -e x264 -b #{video_bitrate.to_s} -2 -T"
-      command += ' -5 default' if decomb?
-      command += " --crop #{crop}" unless crop.nil?
-      command += " -a 1 -E faac -B #{audio_bitrate.to_s}"
-      command += " -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i \"#{infile}\" -o \"#{outfile}\""
-      IO.popen(command, 'r') { |io| print io if CONFIG.verbose }
+      command = (%w/-v0 -e x264 -b/ <<  video_bitrate.to_s) + %w/-2 -T/
+      command += %w/-5 default/ if decomb?
+      command << '--crop' << crop unless crop.nil?
+      command += %w/-a 1 -E faac -B/ << audio_bitrate.to_s
+      command += %w/-6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
+      command << ">/dev/null" << "2>&1" unless verbose
+      returncode = system(CONFIG.handbrake, *command)
+
+      if !returncode
+        puts "something isn't working right, bailing"
+        # TODO: Change this to an exception
+        exit(1)
+      end
 
       #   --title (str)    Set the title tag: "moov.udta.meta.ilst.©nam.data"
       #   --TVNetwork (str)    Sets the TV Network name on the "tvnn" atom
@@ -164,20 +171,22 @@ module Tivo2Podcast
       showtitle = showtitle + ' (' + @show.episode_number +
         ')' unless @show.episode_number.nil?
       
-#       command = Array.new << outfile << '-W' << '--title' << showtitle <<
-#         '--TVShowName' << @show.title << '--TVEpisode' <<
-#         @show.episode_title(true)
-#       command << '--TVEpisodeNum' <<
-#         @show.episode_number unless @show.episode_number.nil?
-#       command << '--TVNetwork' << @show.station unless @show.station.nil?
-#       command << '--description' <<
-#         @show.description unless @show.description.nil?
+      command = Array.new << outfile << '-W' << '--title' << showtitle <<
+        '--TVShowName' << @show.title << '--TVEpisode' <<
+        @show.episode_title(true)
+      command << '--TVEpisodeNum' <<
+        @show.episode_number unless @show.episode_number.nil?
+      command << '--TVNetwork' << @show.station unless @show.station.nil?
+      command << '--description' <<
+        @show.description unless @show.description.nil?
+      command << ">/dev/null" << "2>&1" unless verbose
 
-      command = "#{CONFIG.atomicparsley} \"#{outfile}\" -W --title \"#{showtitle}\" --TVShowName \"#{@show.title}\" --TVEpisode \"#{@show.episode_title(true)}\""
-      command += " --TVEpisodeNum \"#{@show.episode_number}\"" unless @show.episode_number.nil?
-      command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
-      command += " --description \"#{@show.description}\"" unless @show.description.nil?
-      IO.popen(command, 'r') { |io| print io if CONFIG.verbose }
+      returncode = system(ATOMICPARSLEY, *command)
+      if !returncode
+        puts "something isn't working right, bailing"
+        # TODO: change this to an exception
+        exit(1)
+      end                                
     end
   end
 
