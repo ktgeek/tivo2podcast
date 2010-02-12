@@ -19,6 +19,7 @@ require 'facets/progressbar.rb'
 require 'rss'
 require 'rss/itunes'
 require 'uri'
+require 'ostruct'
 
 CONFIG = OpenStruct.new({'tivo_addr' => '192.168.69.179',
                           'mak' => nil,
