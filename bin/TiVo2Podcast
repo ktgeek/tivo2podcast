@@ -24,7 +24,7 @@ require 'ostruct'
 CONFIG = OpenStruct.new({'tivo_addr' => '192.168.69.179',
                           'mak' => nil,
                           'verbose' => false,
-                          'opt_config_name' => nil,
+                          'opt_config_names' => nil,
                           'tivodecode' => 'tivodecode',
                           'handbrake' => 'HandBrakeCLI',
                           'atomicparsley' => 'AtomicParsley'})
@@ -48,11 +48,10 @@ end
 mak_file = ENV['HOME'] + '/.tivodecode_mak'
 CONFIG.mak = File.read(mak_file).strip if File.exist?(mak_file)
 
-opt_config_names = Array.new
 opts = OptionParser.new
 opts.on('-c CONFIG', '--config CONFIG',
         'Use the named config on this run (may be used multiple times)') do |c|
-  CONFIG.opt_config_name = Array.new if CONFIG.opt_config_name.nil?
+  CONFIG.opt_config_names = Array.new if CONFIG.opt_config_names.nil?
   CONFIG.opt_config_names << c
 end
 opts.on('-m MAK', '--mak MAK',
@@ -69,7 +68,7 @@ db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
                                     ENV['TIVO2PODCASTDIR']) +
                                    File::SEPARATOR + '.tivo2podcast.db')
 
-configs = db.get_configs(opt_config_names)
+configs = db.get_configs(CONFIG.opt_config_names)
 
 tivo = TiVo::TiVo.new(CONFIG.tivo_addr, CONFIG.mak)
 configs.each do |config|
