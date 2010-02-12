@@ -20,33 +20,43 @@ require 'rss'
 require 'rss/itunes'
 require 'uri'
 
-# This should be made generic into a configuration
-TIVO_ADDR = '192.168.69.179'
+CONFIG = OpenStruct.new({'tivo_addr' => '192.168.69.179',
+                          'mak' => nil,
+                          'verbose' => false,
+                          'opt_config_name' => nil,
+                          'tivodecode' => 'tivodecode',
+                          'handbrake' => 'HandBrakeCLI',
+                          'atomicparsley' => 'AtomicParsley'})
 
 def download_show(show, name)
-  tivo = TiVo::TiVo.new(TIVO_ADDR, MAK)
+  tivo = TiVo::TiVo.new(CONFIG.tivo_addr, CONFIG.mak)
 
   # downlaod the file
   IO.popen("tivodecode -o \"#{name}\" -", 'wb') do |td|
-    pbar = Console::ProgressBar.new(name, show.size)
+    pbar = CONFIG.verbose ? Console::ProgressBar.new(name, show.size) : nil
     tivo.download_show(show) do |tc|
       td << tc
-      pbar.inc(tc.length)
+      pbar.inc(tc.length) unless pbar.nil?
     end
-    pbar.finish
+    pbar.finish unless pbar.nil?
     puts
   end
 end
 
 # Load the mak if we have a mak file
 mak_file = ENV['HOME'] + '/.tivodecode_mak'
-MAK = File.read(mak_file).strip if File.exist?(mak_file)
+CONFIG.mak = File.read(mak_file).strip if File.exist?(mak_file)
 
 opt_config_names = Array.new
 opts = OptionParser.new
 opts.on('-c CONFIG', '--config CONFIG',
-        'Use the named config on this run') { |c| opt_config_names << c }
-opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
+        'Use the named config on this run (may be used multiple times)') do |c|
+  CONFIG.opt_config_name = Array.new if CONFIG.opt_config_name.nil?
+  CONFIG.opt_config_names << c
+end
+opts.on('-m MAK', '--mak MAK',
+        'The TiVo\'s media access key') { |k| CONFIG.mak = k }
+opts.on('-v', '--verbose') { CONFIG.verbose = true }
 opts.on_tail('-h', '--help', 'Show this message') do
   puts opts
   exit
@@ -60,7 +70,7 @@ db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
 
 configs = db.get_configs(opt_config_names)
 
-tivo = TiVo::TiVo.new(TIVO_ADDR, MAK)
+tivo = TiVo::TiVo.new(CONFIG.tivo_addr, CONFIG.mak)
 configs.each do |config|
 
   shows = tivo.get_shows_by_name(config['show_name'])
@@ -88,14 +98,14 @@ configs.each do |config|
     if (!(File.exist?(download) || File.exist?(transcode)))
       download_show(s, download)
       
-      transcoder = Tivo2Podcast::Transcoder.new(config, s)
+      transcoder = Tivo2Podcast::Transcoder.new(config, s, verbose)
       transcoder.transcode_show(download, transcode)
 
       File.delete(download)
 
       db.add_show(s, config, transcode)
 
-    else
+     else
       puts "Skipping #{basename} because it seems to exist"
     end
   end

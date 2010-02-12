@@ -101,20 +101,20 @@ module Tivo2Podcast
   # This class encapsulates both calling out to handbrake to doing the
   # transcoding from source mpg to iPhone friendly m4v, as well as
   # calling out to AtomicParsley to add the video metadata to the file.
+  #
+  # This class assumes there is a CONFIG global with information on where
+  # to find various binaries.
   class Transcoder
-    HANDBRAKE = 'HandBrakeCLI'
-    ATOMICPARSLEY = 'AtomicParsley'
-
     attr_writer :crop, :audio_bitrate, :video_bitrate
 
     # config is assumed to be a HashTable with the configuration information
     # as sepecified in T2PDatabase.init_database (I should probably turn
-    # configuration into an object.
+    # configuration into an object.)
     #
     # show is assumed to be an instance of TiVo::TiVoVideo which holds
     # the metadata of the show to be transcoded.
-    def initialize(config, show)
-      @config = config
+    def initialize(show_config, show)
+      @show_config = show_config
       @show = show
       @crop = nil
       @audio_bitrate = nil
@@ -122,23 +122,23 @@ module Tivo2Podcast
     end
 
     def crop
-      @crop.nil? ? @config['encode_crop'] : @crop
+      @crop.nil? ? @show_config['encode_crop'] : @crop
     end
 
     def audio_bitrate
-      ab = @audio_bitrate.nil? ? @config['encode_audio_bitrate'] : @audio_bitrate
+      ab = @audio_bitrate.nil? ? @show_config['encode_audio_bitrate'] : @audio_bitrate
       ab = 48 if ab.nil?
       return ab
     end
 
     def video_bitrate
-      vb = @video_bitrate.nil? ? @config['encode_video_bitrate'] : @video_bitrate
+      vb = @video_bitrate.nil? ? @show_config['encode_video_bitrate'] : @video_bitrate
       vb = 768 if vb.nil?
       return vb
     end
 
     def decomb?
-      decomb = @decomb.nil? ? @config['encode_decomb'] : @decomb
+      decomb = @decomb.nil? ? @show_config['encode_decomb'] : @decomb
       (decomb.nil? || decomb == 0) ? false : true
     end
 
@@ -146,18 +146,12 @@ module Tivo2Podcast
     # filename of the sourcefile, outfile is the filename to transcode
     # to
     def transcode_show(infile, outfile)
-      command = (%w/-v0 -e x264 -b/ <<  video_bitrate.to_s) + %w/-2 -T/
-      command += %w/-5 default/ if decomb?
-      command << '--crop' << crop unless crop.nil?
-      command += %w/-a 1 -E faac -B/ << audio_bitrate.to_s
-      command += %w/-6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
-      returncode = system(HANDBRAKE, *command)
-
-      if !returncode
-        puts "something isn't working right, bailing"
-        # TODO: Change this to an exception
-        exit(1)
-      end
+      command = "#{CONFIG.handbrake} -v0 -e x264 -b #{video_bitrate.to_s} -2 -T"
+      command += ' -5 default' if decomb?
+      command += " --crop #{crop}" unless crop.nil?
+      command += " -a 1 -E faac -B #{audio_bitrate.to_s}"
+      command += " -6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i \"#{infile}\" -o \"#{outfile}\""
+      IO.popen(command, 'r') { |io| print io if CONFIG.verbose }
 
       #   --title (str)    Set the title tag: "moov.udta.meta.ilst.©nam.data"
       #   --TVNetwork (str)    Sets the TV Network name on the "tvnn" atom
@@ -170,21 +164,20 @@ module Tivo2Podcast
       showtitle = showtitle + ' (' + @show.episode_number +
         ')' unless @show.episode_number.nil?
       
-      command = Array.new << outfile << '-W' << '--title' << showtitle <<
-        '--TVShowName' << @show.title << '--TVEpisode' <<
-        @show.episode_title(true)
-      command << '--TVEpisodeNum' <<
-        @show.episode_number unless @show.episode_number.nil?
-      command << '--TVNetwork' << @show.station unless @show.station.nil?
-      command << '--description' <<
-        @show.description unless @show.description.nil?
-      
-      returncode = system(ATOMICPARSLEY, *command)
-      if !returncode
-        puts "something isn't working right, bailing"
-        # TODO: change this to an exception
-        exit(1)
-      end
+#       command = Array.new << outfile << '-W' << '--title' << showtitle <<
+#         '--TVShowName' << @show.title << '--TVEpisode' <<
+#         @show.episode_title(true)
+#       command << '--TVEpisodeNum' <<
+#         @show.episode_number unless @show.episode_number.nil?
+#       command << '--TVNetwork' << @show.station unless @show.station.nil?
+#       command << '--description' <<
+#         @show.description unless @show.description.nil?
+
+      command = "#{CONFIG.atomicparsley} \"#{outfile}\" -W --title \"#{showtitle}\" --TVShowName \"#{@show.title}\" --TVEpisode \"#{@show.episode_title(true)}\""
+      command += " --TVEpisodeNum \"#{@show.episode_number}\"" unless @show.episode_number.nil?
+      command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
+      command += " --description \"#{@show.description}\"" unless @show.description.nil?
+      IO.popen(command, 'r') { |io| print io if CONFIG.verbose }
     end
   end
 
