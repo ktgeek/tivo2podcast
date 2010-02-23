@@ -1,17 +1,14 @@
 The opensource tivodecode is required to use the sample/useful
-TiVo2Disk script.  You can find tivodecode at
+TiVo2Disk and Tivo2Podcast scripts.  You can find tivodecode at
 http://tivodecode.sourceforge.net/
+
+TiVo2Podcast also assumes you have HandbrakeCLI installed.  You can
+get Handbrake at http://handbrake.fr/
+
+TiVo2Podcast also assumes that you have sqlite3 and the supporting
+ruby libraries.
+
+Both scripts assume that the httpclient and facets gems are installed.
 
 A unix environment is assumed for this script.  Tested under Linux and
 OS X.
-
-Credit where credit is due
---------------------------
-
-This project redistributes, but does not modify, code from the
-httpclient project maintained by NAKAMURA, Hiroshi.  You can find it
-at http://dev.ctor.org/http-access2/
-
-This project redistributes, but does not modify, code from the facets
-ruby library, specifically Console::ProgressBar by Satoru Takabayashi.
-You can find it at http://facets.rubyforge.org/

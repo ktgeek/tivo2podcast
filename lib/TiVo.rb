@@ -1,5 +1,5 @@
 require 'rexml/document'
-require 'ktghttpclient'
+require 'httpclient'
 
 module TiVo
   FOLDER = 'x-tivo-container/folder'
@@ -191,12 +191,7 @@ module TiVo
         # We ignore the first chunk to work around a bug in
         # http client where we see the "Auth required" digest-auth
         # header.
-        first_chunk = true
         @client.get_content(url, nil, {'Connection' => 'close'}) do |c|
-          if first_chunk
-            first_chunk = false
-            next
-          end
           if block
             block.call(c)
           else

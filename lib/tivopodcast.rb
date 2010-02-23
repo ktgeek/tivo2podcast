@@ -151,7 +151,9 @@ module Tivo2Podcast
       command << '--crop' << crop unless crop.nil?
       command += %w/-a 1 -E faac -B/ << audio_bitrate.to_s
       command += %w/-6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
-      command << ">/dev/null" << "2>&1" unless CONFIG.verbose
+      unless CONFIG.verbose
+        command << ">/dev/null" << "2>&1"
+      end
       returncode = system(CONFIG.handbrake, *command)
 
       if !returncode
@@ -179,7 +181,9 @@ module Tivo2Podcast
       command << '--TVNetwork' << @show.station unless @show.station.nil?
       command << '--description' <<
         @show.description unless @show.description.nil?
-      command << ">/dev/null" << "2>&1" unless CONFIG.verbose
+      unless CONFIG.verbose
+        command << ">/dev/null" << "2>&1"
+      end
 
       returncode = system(CONFIG.atomicparsley, *command)
       if !returncode

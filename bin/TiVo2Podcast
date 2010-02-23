@@ -8,10 +8,9 @@
 
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
-                                      'httpclient-2.1.2', 'lib'))
 $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 
+require 'rubygems'
 require 'optparse'
 require 'TiVo.rb'
 require 'tivopodcast'
@@ -98,7 +97,7 @@ configs.each do |config|
     if (!(File.exist?(download) || File.exist?(transcode)))
       download_show(s, download)
       
-      transcoder = Tivo2Podcast::Transcoder.new(config, s, verbose)
+      transcoder = Tivo2Podcast::Transcoder.new(config, s)
       transcoder.transcode_show(download, transcode)
 
       File.delete(download)
