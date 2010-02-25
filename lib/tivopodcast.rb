@@ -146,18 +146,19 @@ module Tivo2Podcast
     # filename of the sourcefile, outfile is the filename to transcode
     # to
     def transcode_show(infile, outfile)
-      command = (%w/-v0 -e x264 -b/ <<  video_bitrate.to_s) + %w/-2 -T/
-      command += %w/-5 default/ if decomb?
-      command << '--crop' << crop unless crop.nil?
-      command += %w/-a 1 -E faac -B/ << audio_bitrate.to_s
-      command += %w/-6 stereo -R 48 -D 0.0 -f mp4 -X 480 -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 -i/ << infile << '-o' << outfile
-      unless CONFIG.verbose
-        command << ">/dev/null" << "2>&1"
-      end
-      returncode = system(CONFIG.handbrake, *command)
-
+      command = "#{CONFIG.handbreak} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
+      command += ' -5 default' if decomb?
+      command += " --crop #{crop}" unless crop.nil?
+      command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48 " +
+        '-D 0.0 -f mp4 -X 480 -x ' +
+        'cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 ' +
+        "-i \"#{infile}\" -o \"#{outfile}\""
+      command += " >/dev/null 2>&1" unless CONFIG.verbose
+                                  
+      returncode = system(command)
       if !returncode
         puts "something isn't working right, bailing"
+        puts "Command that failed: " + command
         # TODO: Change this to an exception
         exit(1)
       end
@@ -172,22 +173,18 @@ module Tivo2Podcast
       showtitle = @show.title + ': ' + @show.episode_title(true)
       showtitle = showtitle + ' (' + @show.episode_number +
         ')' unless @show.episode_number.nil?
-      
-      command = Array.new << outfile << '-W' << '--title' << showtitle <<
-        '--TVShowName' << @show.title << '--TVEpisode' <<
-        @show.episode_title(true)
-      command << '--TVEpisodeNum' <<
-        @show.episode_number unless @show.episode_number.nil?
-      command << '--TVNetwork' << @show.station unless @show.station.nil?
-      command << '--description' <<
-        @show.description unless @show.description.nil?
-      unless CONFIG.verbose
-        command << ">/dev/null" << "2>&1"
-      end
 
-      returncode = system(CONFIG.atomicparsley, *command)
+      command = "#{CONFIG.atomicparsley} \"#{outfile}\" -W " +
+        "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " +
+        "--TVEpisode \"#{@show.episode_title(true)}\""
+      command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
+      command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
+      command += " --description \"#{@show.description}\"" unless @show.description.nil?
+      command += ' >/dev/null 2>&1' unless CONFIG.verbose
+      returncode = system(command)
       if !returncode
         puts "something isn't working right, bailing"
+        puts "Command that failed: " + command
         # TODO: change this to an exception
         exit(1)
       end                                
