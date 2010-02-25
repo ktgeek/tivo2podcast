@@ -146,7 +146,7 @@ module Tivo2Podcast
     # filename of the sourcefile, outfile is the filename to transcode
     # to
     def transcode_show(infile, outfile)
-      command = "#{CONFIG.handbreak} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
+      command = "#{CONFIG.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
       command += ' -5 default' if decomb?
       command += " --crop #{crop}" unless crop.nil?
       command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48 " +

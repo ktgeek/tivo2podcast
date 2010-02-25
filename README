@@ -1,14 +1,34 @@
-The opensource tivodecode is required to use the sample/useful
-TiVo2Disk and Tivo2Podcast scripts.  You can find tivodecode at
-http://tivodecode.sourceforge.net/
+This is my package of two scripts I wrote up to work with my TiVo
+Series 3 to my linux box in terms of downloading content.
 
-TiVo2Podcast also assumes you have HandbrakeCLI installed.  You can
-get Handbrake at http://handbrake.fr/
+TiVo2Disk
+---------
+TiVo2Disk is a simple downloading application.  It downloads the shows
+requested, and pipes them through tivodecode so you end with a useful
+mpg file.
 
-TiVo2Podcast also assumes that you have sqlite3 and the supporting
-ruby libraries.
+TiVo2Disk requires:
+ o rubygems
+ o httpclient gem
+ o facets gem
+ o tivodecode from http://tivodecode.sourceforge.net/
 
-Both scripts assume that the httpclient and facets gems are installed.
+This was tested on both OS X and Linux.
 
-A unix environment is assumed for this script.  Tested under Linux and
-OS X.
+TiVo2Podcast
+------------
+
+TiVo2Podcast was my attempt to pipeline downloading shows, transcoding
+them to be iPhone friendly, and then put them into an podcast friendly
+RSS feed for easy loading and unloading into iTunes/iPhone/etc.
+
+TiVo2Podcast requires:
+ o rubygems
+ o httpclient gem
+ o facets gem
+ o tivodecode
+ o sqlite3 and its ruby interface
+ o AtomicParsley from http://atomicparsley.sourceforge.net/
+ o HandBrakeCLI from http://handbrake.fr/
+
+This has been tested (and used daily) on Linux
