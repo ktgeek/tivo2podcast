@@ -32,7 +32,7 @@ def download_show(show, name)
   tivo = TiVo::TiVo.new(CONFIG.tivo_addr, CONFIG.mak)
 
   # downlaod the file
-  IO.popen("tivodecode -o \"#{name}\" -", 'wb') do |td|
+  IO.popen("tivodecode -n -o \"#{name}\" -", 'wb') do |td|
     pbar = CONFIG.verbose ? Console::ProgressBar.new(name, show.size) : nil
     tivo.download_show(show) do |tc|
       td << tc

@@ -27,7 +27,7 @@ def do_menu(tivo_items, menu_size=10)
                item.time_captured.strftime('%m/%d %I:%M%p'), item.human_duration)
       end
     end
-    print "\nSelect video, (n)ext/(p)rev #{menu_size}," +
+    print "\nSelect vid, (n)ext/(p)rev #{menu_size}," +
       " # to change menu, (s)ort, (d)ownload, (q)uit: "
     selection = nil
     input = $stdin.readline.strip
@@ -119,7 +119,7 @@ downloads.each do |dl|
   dl_name = make_filename(dl)
 
   puts "Attemping to download " + dl.printable_title()
-  IO.popen("tivodecode -o \"#{dl_name}\" -", 'wb') do |td|
+  IO.popen("tivodecode -n -o \"#{dl_name}\" -", 'wb') do |td|
     pbar = Console::ProgressBar.new(dl_name, dl.size)
     tivo.download_show(dl) do |tc|
       td << tc
