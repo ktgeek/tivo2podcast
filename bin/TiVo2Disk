@@ -18,7 +18,8 @@
 
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
+                                      'tivo'))
 
 require 'rubygems'
 require 'optparse'
