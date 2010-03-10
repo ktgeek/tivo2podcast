@@ -243,7 +243,8 @@ module Tivo2Podcast
             # I need to come back and do the time.  For now, I'm hard coding
             # to 32 minutes
             # time = show['s_ep_length']
-            item.itunes_duration = '32:00'
+            item.itunes_duration =
+              TiVo::TiVoVideo.human_duration(show['s_ep_length'])
 
             item.enclosure.url = item.link
             item.enclosure.length = File.size(show['filename'])
