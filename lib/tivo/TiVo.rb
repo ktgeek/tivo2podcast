@@ -141,7 +141,7 @@ module TiVo
       # Duration is in milliseconds, and we don't need that percision, so lets
       # just lop it off.  This leaves duration in seconds
       dur = dur / 60000.0
-      hours = dur / 60
+      hours = (dur / 60).to_i
       minutes = ((dur % 60.0) + 0.5).to_i
       # Rounding can get us a situation where things are 0 hours and
       # 60 min, and a lot of tivo shows show up at 59.95 minutes,
