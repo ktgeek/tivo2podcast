@@ -83,7 +83,7 @@ db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
                                    File::SEPARATOR + '.tivo2podcast.db')
 
 if CONFIG.tivo_addr.nil?
-  printf(stderr, "TiVo hostname or IP required to run the script\n")
+  printf($stderr, "TiVo hostname or IP required to run the script\n")
   exit(1)
 end
 
