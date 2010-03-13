@@ -21,6 +21,34 @@ module TiVo
 
   TiVoListings = Struct.new(:folders, :videos)
 
+  # Will return the first TiVo found via DNSSD/ZeroConf/Bounjour/whatever
+  # Will sleep for sleep_time (default 2 sec) to allow the async dnssd
+  # processes to locate the the tivo.
+  #
+  # This assumes the host system has everything configure properly to work
+  def TiVo.locate_via_ddns(sleep_time = 2)
+    # We'll only load these classes if we're actually called.
+    require 'socket'
+    require 'dnssd'
+
+    replies = []
+    service = DNSSD.browse '_tivo-videos._tcp' do |b|
+      resolver = DNSSD.resolve(b) do |r|
+        replies << r.target
+      end
+      sleep(sleep_time)
+      resolver.stop
+    end
+
+    sleep(sleep_time)
+    service.stop
+
+    result = nil
+    result = IPSocket.getaddress(replies[0]) if replies.size > 0
+
+    return result
+  end
+
   class TiVoItemFactory
     def TiVoItemFactory.from_xml(xml)
       document = REXML::Document.new(xml)
@@ -129,6 +157,7 @@ module TiVo
       get_detail_item('SourceSize').to_i
     end
 
+    # Helper method that class TiVoVideo.human_duration on the local object
     def human_duration
       TiVoVideo.human_duration(duration)
     end
@@ -166,7 +195,6 @@ module TiVo
       result = cp.downcase == "yes" unless cp.nil?
       return result
     end
-      
   end
 
   class TiVo
@@ -188,7 +216,7 @@ module TiVo
       end
       get_listings_from_url(query_url)
     end
-      
+
     def get_listings_from_url(url, recurse=false)
       xml = @client.get_content(url)
       listings = TiVoItemFactory.from_xml(xml)
@@ -202,6 +230,8 @@ module TiVo
       return listings
     end
 
+    # Returns all show matching the given name/regex that are not copy
+    # protected and is sorted by the time captured.
     def get_shows_by_name(showname)
       get_listings.videos.select { |s| s.title =~ /#{showname}/ &&
         !s.copy_protected? }.sort_by { |s| s.time_captured }
