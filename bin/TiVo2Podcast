@@ -82,9 +82,19 @@ db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
                                     ENV['TIVO2PODCASTDIR']) +
                                    File::SEPARATOR + '.tivo2podcast.db')
 
+# If the user didn't pass in a address or hostname via the command line,
+# try to locate it via dnssd
 if CONFIG.tivo_addr.nil?
-  printf($stderr, "TiVo hostname or IP required to run the script\n")
+  puts "Attemping to locate tivo..." if CONFIG.verbose
+  tmp = TiVo.locate_via_dnssd
+  if tmp.nil?
+    puts "TiVo not found!" if CONFIG.verbose
+    printf($stderr, "TiVo hostname or IP required to run the script\n")
   exit(1)
+  else
+    puts "TiVo found at #{tmp}" if CONFIG.verbose
+    CONFIG.tivo_addr = tmp
+  end
 end
 
 configs = db.get_configs(CONFIG.opt_config_names)
