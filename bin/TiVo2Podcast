@@ -23,9 +23,9 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
 
 require 'rubygems'
 require 'optparse'
-require 'TiVo.rb'
+require 'TiVo'
 require 'tivopodcast'
-require 'facets/progressbar.rb'
+require 'facets/progressbar'
 require 'rss'
 require 'rss/itunes'
 require 'uri'
