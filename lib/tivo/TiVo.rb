@@ -26,7 +26,7 @@ module TiVo
   # processes to locate the the tivo.
   #
   # This assumes the host system has everything configure properly to work
-  def TiVo.locate_via_dnssd(sleep_time = 2)
+  def TiVo.locate_via_dnssd(sleep_time = 5)
     # We'll only load these classes if we're actually called.
     require 'socket'
     require 'dnssd'
