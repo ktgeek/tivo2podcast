@@ -192,7 +192,7 @@ module Tivo2Podcast
         "--TVEpisode \"#{@show.episode_title(true)}\""
       command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
       command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
-      command += " --description \"#{@show.description}\"" unless @show.description.nil?
+      command += " --description \"#{@show.description.gsub(/"/, '\"')}\"" unless @show.description.nil?
       command += ' >/dev/null 2>&1' unless CONFIG.verbose
       returncode = system(command)
       if !returncode
