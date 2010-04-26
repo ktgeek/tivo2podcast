@@ -55,9 +55,13 @@ module Tivo2Podcast
                      s_ep_description TEXT,
                      s_ep_length INTEGER,
                      s_ep_timecap INTEGER,
+                     s_ep_programid TEXT NOT NULL,
                      filename TEXT UNIQUE,
                      FOREIGN KEY(configid) REFERENCES configs(id)
-                   );')
+                   );
+                   create index shows_programid_index on shows(s_ep_programid);
+                   create index shows_configid_index on shows(configid);
+                   create index configs_config_name_index on configs(config_name);')
     end
 
     # Gets the configs from the config table, by default it will get all unless
@@ -86,10 +90,10 @@ module Tivo2Podcast
     # Add a show to the database for a given config and video stored
     # in the given filename
     def add_show(show, config, filename)
-      ps = @db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, filename) values (?, ?, ?, ?, ?, ?, ?, ?);')
+      ps = @db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, s_ep_programid, filename) values (?, ?, ?, ?, ?, ?, ?, ?, ?);')
       ps.execute(config['id'], show.title, show.episode_title(true),
              show.episode_number, show.description, show.duration,
-             show.time_captured.to_i, filename)
+             show.time_captured.to_i, show.program_id, filename)
       ps.close()
     end
 
@@ -107,6 +111,19 @@ module Tivo2Podcast
       # Yes, its only in memory, but we may be called many times in here.
       @db.execute('drop table cleanup_temp;')
       return filenames
+    end
+
+    # Reports if a show is in the database by looking to see if
+    # program_id is in the database.
+    def got_show?(show, config)
+      got_one = false?
+      # There is probably a better way to test for existance, but I'll
+      # ask for help later
+      @db.query('select 1 from shows where configid=? and s_ep_programid=?',
+                config['id'], show.program_id) do |results|
+        got_one = true
+      end
+      return got_one
     end
       
   end
@@ -192,7 +209,7 @@ module Tivo2Podcast
         "--TVEpisode \"#{@show.episode_title(true)}\""
       command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
       command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
-      command += " --description \"#{@show.description.gsub(/"/, '\"')}\"" unless @show.description.nil?
+      command += " --description \"#{@show.description.gsub(/\"/, '\"')}\"" unless @show.description.nil?
       command += ' >/dev/null 2>&1' unless CONFIG.verbose
       returncode = system(command)
       if !returncode

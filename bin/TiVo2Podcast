@@ -129,9 +129,10 @@ configs.each do |config|
     download = basename + ".mpg"
     transcode = basename + ".m4v"
 
-    # I should add a check to see if the file exists or the transcoded
-    # version of it, and if so, assume we already downloaded the file
-    if (!(File.exist?(download) || File.exist?(transcode)))
+    # We'll need the later condition until everything has a program_id
+    # (this is only for my own migration.)
+    if (!db.got_show?(show) ||
+        !(File.exist?(download) || File.exist?(transcode)))
       download_show(s, download)
       
       transcoder = Tivo2Podcast::Transcoder.new(config, s)

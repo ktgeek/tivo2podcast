@@ -22,7 +22,7 @@ module TiVo
   TiVoListings = Struct.new(:folders, :videos)
 
   # Will return the first TiVo found via DNSSD/ZeroConf/Bounjour/whatever
-  # Will sleep for sleep_time (default 2 sec) to allow the async dnssd
+  # Will sleep for sleep_time (default 5 sec) to allow the async dnssd
   # processes to locate the the tivo.
   #
   # This assumes the host system has everything configure properly to work
