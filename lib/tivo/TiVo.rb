@@ -165,25 +165,24 @@ module TiVo
     # Giving a duration in milliseconds, return the duration of a
     # program as a string in HH:MM:SS or MM:SS formats, which
     # coincidently, will also make RSS Maker's itunes duration happy.
-    # This function completely ignores seconds currently.
     def TiVoVideo.human_duration(dur)
       # Duration is in milliseconds, and we don't need that percision,
-      # so lets just lop it off.  we have also multiplied that
-      # millisconds by 60, which leaves us at minutes after the
-      # calculation.
-      dur = dur / 60000.0
-      hours = (dur / 60).to_i
-      minutes = ((dur % 60.0) + 0.5).to_i
-      # Rounding can get us a situation where things are 0 hours and
-      # 60 min, and a lot of tivo shows show up at 59.95 minutes,
-      # instead of a round 60 for some reason
-      if minutes >= 60
-        hours += 1
-        minutes -= 60
-      end
+      # so lets just lop it off.  This leaves us with seconds.
+      seconds = dur / 1000
+
+      # Calculate the hours by dividing by 3600
+      hours = seconds / 3600
+      
+      # Calculate the minutes by dividing by 60 of the remainder after hours.
+      seconds = seconds % 3600
+      minutes = seconds / 60
+
+      # Calculate the left over unsloppy seconds
+      seconds = minutes % 60
+
       result = StringIO.new
       result.printf("%d:", hours) if hours > 0
-      result.printf("%02d:00", minutes)
+      result.printf("%02d:%02d", minutes, seconds)
       return result.string
     end
 
