@@ -167,8 +167,10 @@ module TiVo
     # coincidently, will also make RSS Maker's itunes duration happy.
     # This function completely ignores seconds currently.
     def TiVoVideo.human_duration(dur)
-      # Duration is in milliseconds, and we don't need that percision, so lets
-      # just lop it off.  This leaves duration in seconds
+      # Duration is in milliseconds, and we don't need that percision,
+      # so lets just lop it off.  we have also multiplied that
+      # millisconds by 60, which leaves us at minutes after the
+      # calculation.
       dur = dur / 60000.0
       hours = (dur / 60).to_i
       minutes = ((dur % 60.0) + 0.5).to_i
