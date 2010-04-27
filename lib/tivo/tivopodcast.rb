@@ -150,9 +150,6 @@ module Tivo2Podcast
   # This class encapsulates both calling out to handbrake to doing the
   # transcoding from source mpg to iPhone friendly m4v, as well as
   # calling out to AtomicParsley to add the video metadata to the file.
-  #
-  # This class assumes there is a CONFIG global with information on where
-  # to find various binaries.
   class Transcoder
     attr_writer :crop, :audio_bitrate, :video_bitrate
 
@@ -162,7 +159,8 @@ module Tivo2Podcast
     #
     # show is assumed to be an instance of TiVo::TiVoVideo which holds
     # the metadata of the show to be transcoded.
-    def initialize(show_config, show)
+    def initialize(config, show_config, show)
+      @config = config
       @show_config = show_config
       @show = show
       @crop = nil
@@ -195,14 +193,14 @@ module Tivo2Podcast
     # filename of the sourcefile, outfile is the filename to transcode
     # to
     def transcode_show(infile, outfile)
-      command = "#{CONFIG.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
+      command = "#{@config.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
       command += ' -5 default' if decomb?
       command += " --crop #{crop}" unless crop.nil?
       command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48 " +
         '-D 0.0 -f mp4 -X 480 -x ' +
         'cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 ' +
         "-i \"#{infile}\" -o \"#{outfile}\""
-      command += " >/dev/null 2>&1" unless CONFIG.verbose
+      command += " >/dev/null 2>&1" unless @config.verbose
                                   
       returncode = system(command)
       if !returncode
@@ -223,13 +221,16 @@ module Tivo2Podcast
       showtitle = showtitle + ' (' + @show.episode_number +
         ')' unless @show.episode_number.nil?
 
-      command = "#{CONFIG.atomicparsley} \"#{outfile}\" -W " +
+      command = "#{@config.atomicparsley} \"#{outfile}\" -W " +
         "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " +
         "--TVEpisode \"#{@show.episode_title(true)}\""
       command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
       command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
-      command += " --description \"#{@show.description.gsub(/\"/, '\"')}\"" unless @show.description.nil?
-      command += ' >/dev/null 2>&1' unless CONFIG.verbose
+      unless @show.description.nil?
+        desc = @show.description.gsub(/"/, '\"')
+        command += " --description \"#{@desc}\""
+      end
+      command += ' >/dev/null 2>&1' unless @config.verbose
       returncode = system(command)
       if !returncode
         puts "something isn't working right, bailing"
