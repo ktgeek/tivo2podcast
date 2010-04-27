@@ -115,8 +115,8 @@ module Tivo2Podcast
 
     # Reports if a show is in the database by looking to see if
     # program_id is in the database.
-    def got_show?(show, config)
-      got_one = false?
+    def got_show?(config, show)
+      got_one = false
       # There is probably a better way to test for existance, but I'll
       # ask for help later
       @db.query('select 1 from shows where configid=? and s_ep_programid=?',
