@@ -37,6 +37,7 @@ CONFIG = OpenStruct.new({'tivo_addr' => nil,
                           'opt_config_names' => nil,
                           'tivodecode' => 'tivodecode',
                           'handbrake' => 'HandBrakeCLI',
+                          'cleanup' => false,
                           'atomicparsley' => 'AtomicParsley'})
 
 def download_show(show, name)
@@ -54,6 +55,87 @@ def download_show(show, name)
   end
 end
 
+def create_rss(config, db)
+    rss = Tivo2Podcast::RssGenerator.new(config, db)
+    File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
+end
+
+def normal_processing
+  # If the user didn't pass in a address or hostname via the command line,
+  # try to locate it via dnssd
+  if CONFIG.tivo_addr.nil?
+    puts "Attemping to locate tivo..." if CONFIG.verbose
+    tmp = TiVo.locate_via_dnssd
+    if tmp.nil?
+      puts "TiVo not found!" if CONFIG.verbose
+      printf($stderr, "TiVo hostname or IP required to run the script\n")
+      exit(1)
+    else
+      puts "TiVo found at #{tmp}" if CONFIG.verbose
+      CONFIG.tivo_addr = tmp
+    end
+  end
+
+  configs = db.get_configs(CONFIG.opt_config_names)
+
+  # If the tivo_addr is NOT a dotted quad, do a DNS lookup for the
+  # IP. The TiVo wants us to pass the IP address for whatever reason.
+  # I should use bounjour/ZeroConf to find the local tivo
+  if /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match(CONFIG.tivo_addr).nil?
+    CONFIG.tivo_addr = IPSocket.getaddress(CONFIG.tivo_addr)
+  end
+
+  tivo = TiVo::TiVo.new(CONFIG.tivo_addr, CONFIG.mak)
+  configs.each do |config|
+
+    shows = tivo.get_shows_by_name(config['show_name'])
+
+    # Only work on the X latest shows.  That way if there are 10 on the tivo,
+    # but we only want to keep 4, we don't encode 6 of them just to throw them
+    # out later in the cleanup phase.
+    if shows.size > config['ep_to_keep']
+      shows = shows.reverse[0, config['ep_to_keep']].reverse
+    end
+
+    # So starts the giant loop that processes the shows...
+    shows.each do |s|
+      # Beef this up to capture the show title as well
+      basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
+      basename = basename + '-' + s.episode_title unless s.episode_title.nil?
+      basename = basename + '-' + s.episode_number unless s.episode_number.nil?
+      basename.sub!(/:/, '_')
+
+      download = basename + ".mpg"
+      transcode = basename + ".m4v"
+
+      # I should add a check to see if the file exists or the transcoded
+      # version of it, and if so, assume we already downloaded the file
+      if (!(File.exist?(download) || File.exist?(transcode)))
+        download_show(s, download)
+        
+        transcoder = Tivo2Podcast::Transcoder.new(config, s)
+        transcoder.transcode_show(download, transcode)
+
+        File.delete(download)
+
+        db.add_show(s, config, transcode)
+
+      else
+        puts "Skipping #{basename} because it seems to exist" if CONFIG.verbose
+      end
+    end
+
+    # cleanup phase goes here
+    deletes = db.old_show_cleanup(config)
+    deletes.each { |f| File.delete(f) }
+
+    create_rss(config, db)
+  end
+end
+
+def file_cleanup
+end
+
 # Load the mak if we have a mak file
 mak_file = ENV['HOME'] + '/.tivodecode_mak'
 CONFIG.mak = File.read(mak_file).strip if File.exist?(mak_file)
@@ -63,6 +145,9 @@ opts.on('-c CONFIG', '--config CONFIG',
         'Use the named config on this run (may be used multiple times)') do |c|
   CONFIG.opt_config_names = Array.new if CONFIG.opt_config_names.nil?
   CONFIG.opt_config_names << c
+end
+opts.on('-C', '--cleanup', 'Clean up database based on existing files') do
+  CONFIG.cleanup = true
 end
 opts.on('-m MAK', '--mak MAK',
         'The TiVo\'s media access key') { |k| CONFIG.mak = k }
@@ -82,77 +167,10 @@ db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
                                     ENV['TIVO2PODCASTDIR']) +
                                    File::SEPARATOR + '.tivo2podcast.db')
 
-# If the user didn't pass in a address or hostname via the command line,
-# try to locate it via dnssd
-if CONFIG.tivo_addr.nil?
-  puts "Attemping to locate tivo..." if CONFIG.verbose
-  tmp = TiVo.locate_via_dnssd
-  if tmp.nil?
-    puts "TiVo not found!" if CONFIG.verbose
-    printf($stderr, "TiVo hostname or IP required to run the script\n")
-  exit(1)
-  else
-    puts "TiVo found at #{tmp}" if CONFIG.verbose
-    CONFIG.tivo_addr = tmp
-  end
-end
-
-configs = db.get_configs(CONFIG.opt_config_names)
-
-# If the tivo_addr is NOT a dotted quad, do a DNS lookup for the
-# IP. The TiVo wants us to pass the IP address for whatever reason.
-# I should use bounjour/ZeroConf to find the local tivo
-if /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match(CONFIG.tivo_addr).nil?
-  CONFIG.tivo_addr = IPSocket.getaddress(CONFIG.tivo_addr)
-end
-
-tivo = TiVo::TiVo.new(CONFIG.tivo_addr, CONFIG.mak)
-configs.each do |config|
-
-  shows = tivo.get_shows_by_name(config['show_name'])
-
-  # Only work on the X latest shows.  That way if there are 10 on the tivo,
-  # but we only want to keep 4, we don't encode 6 of them just to throw them
-  # out later in the cleanup phase.
-  if shows.size > config['ep_to_keep']
-    shows = shows.reverse[0, config['ep_to_keep']].reverse
-  end
-
-  # So starts the giant loop that processes the shows...
-  shows.each do |s|
-    # Beef this up to capture the show title as well
-    basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
-    basename = basename + '-' + s.episode_title unless s.episode_title.nil?
-    basename = basename + '-' + s.episode_number unless s.episode_number.nil?
-    basename.sub!(/:/, '_')
-
-    download = basename + ".mpg"
-    transcode = basename + ".m4v"
-
-    # We'll need the later condition until everything has a program_id
-    # (this is only for my own migration.)
-    if (!db.got_show?(config, s) ||
-        !(File.exist?(download) || File.exist?(transcode)))
-      download_show(s, download)
-      
-      transcoder = Tivo2Podcast::Transcoder.new(config, s)
-      transcoder.transcode_show(download, transcode)
-
-      File.delete(download)
-
-      db.add_show(s, config, transcode)
-
-     else
-      puts "Skipping #{basename} because it seems to exist" if CONFIG.verbose
-    end
-  end
-
-  # cleanup phase goes here
-  deletes = db.show_cleanup(config)
-  deletes.each { |f| File.delete(f) }
-
-  rss = Tivo2Podcast::RssGenerator.new(config, db)
-  File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
+unless CONFIG.cleanup
+  normal_processing
+else
+  file_cleanup
 end
 
 # Local Variables:

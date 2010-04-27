@@ -98,7 +98,7 @@ module Tivo2Podcast
     end
 
     # Cleans up shows that go over the keep threshold specified in the config
-    def show_cleanup(config)
+    def old_show_cleanup(config)
       filenames = Array.new\
       @db.execute('create temp table cleanup_temp as select id,filename from shows where configid=? order by s_ep_timecap desc;', config['id'])
       @db.query('select id,filename from cleanup_temp where rowid>?',
