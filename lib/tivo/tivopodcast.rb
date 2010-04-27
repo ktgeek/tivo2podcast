@@ -80,9 +80,28 @@ module Tivo2Podcast
       return result
     end
 
+    # Gets the configs from the config table based on the Array of
+    # config ids passed in.
+    def get_configs_by_ids(configs)
+      result = Array.new
+      qms = Array.new(configs.size, '?').join(',')
+      @db.query("select * from configs where id in (#{qms})", configs) do |rs|
+        rs.each { |r| result << r }
+      end
+      return result
+    end
+
     # Select all the shows for a given config id
     def shows_by_configid(id, &block)
       @db.query("select * from shows where configid=?", id) do |rows|
+        rows.each { |row| yield row }
+      end
+    end
+
+    # Returns the filenames for everything in the show table and their
+    # associated ids and configids...
+    def get_filenames(&block)
+      @db.query("select id,configid,filename from shows") do |rows|
         rows.each { |row| yield row }
       end
     end
