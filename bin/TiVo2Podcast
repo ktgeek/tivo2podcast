@@ -165,6 +165,13 @@ class T2PMainEngine
   end
 
   def file_cleanup
+    # Get shows by id,configid,filename
+
+    # for each filename
+    #   if filename doesn't exist
+    #     put configid in Set of configs to be regenerated
+    #     delete show from database by id
+    # Regenerate rss files for configs
   end
 end
 
