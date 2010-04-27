@@ -71,10 +71,10 @@ module Tivo2Podcast
       if names.nil? || names.empty?
         @db.query("select * from configs") { |rs| rs.each { |r| result << r } }
       else
-        names.each do |n|
-          @db.query("select * from configs where config_name = ?", n) do |rs|
-            rs.each { |r| result << r }
-          end
+        qms = Array.new(names.size, '?').join(',')
+        @db.query("select * from configs where config_name in (#{qms})",
+                  names) do |rs|
+          rs.each { |r| result << r }
         end
       end
       return result
@@ -103,8 +103,8 @@ module Tivo2Podcast
       @db.execute('create temp table cleanup_temp as select id,filename from shows where configid=? order by s_ep_timecap desc;', config['id'])
       @db.query('select id,filename from cleanup_temp where rowid>?',
                 config['ep_to_keep']) do |results|
-        results.each do
-          |r| filenames << r['filename']
+        results.each do |r|
+          filenames << r['filename']
           @db.execute('delete from shows where id=?;', r['id'])
         end
       end
