@@ -16,7 +16,151 @@ require 'sqlite3'
 require 'TiVo'
 
 module Tivo2Podcast
-  # Database access facade for the state information between script runs
+  class T2PConfig
+    attr_attribute :verbose, :opt_config_names, :tivodecode
+    attr_attribute :handbrake, :cleanup, :atomicparsley
+    attr_writer :tivo_addr, :mak
+
+    def initialize
+      tivo_addr = nil
+      mak = nil
+      verbose = false
+      opt_config_names = nil
+      tivodecode = 'tivodecode'
+      handbrake = 'HandBrakeCLI'
+      cleanup = false
+      atomicparsley = 'AtomicParsley'
+    end
+
+    def tivo_factory
+      return TiVo::TiVo.new(tivo_addr, mak)
+    end
+
+    def tivo_addr
+      # If the user didn't pass in a address or hostname via the command line,
+      # try to locate it via dnssd.
+      if @tivo_addr.nil?
+        puts "Attemping to locate tivo..." if @verbose
+        tmp = TiVo.locate_via_dnssd
+        if tmp.nil?
+          puts "TiVo not found!" if @verbose
+          # Should be changed to an exception to be throw
+          printf($stderr, "TiVo hostname or IP required to run the script\n")
+          exit(1)
+        else
+          puts "TiVo found at #{tmp}" if @verbose
+          @tivo_addr = tmp
+        end
+      end
+
+      result = @tivo_addr
+      # If the tivo_addr is NOT a dotted quad, do a DNS lookup for the
+      # IP. The TiVo wants us to pass the IP address for whatever reason.
+      # I should use bounjour/ZeroConf to find the local tivo
+      if /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match(result).nil?
+        result = IPSocket.getaddress(@tivo_addr)
+      end
+      
+      return result
+    end
+
+    def mak
+      if @mak.nil?
+        # Load the mak if we have a mak file
+        mak_file = ENV['HOME'] + '/.tivodecode_mak'
+        @mak = File.read(mak_file).strip if File.exist?(mak_file)
+      end
+      return @mak
+    end
+    
+    class T2PMainEngine
+      def initialize(config)
+        @config = config
+      end
+
+      def download_show(show, name)
+        tivo = @config.tivo_factory
+
+        # downlaod the file
+        IO.popen("tivodecode -n -o \"#{name}\" -", 'wb') do |td|
+          pbar = @config.verbose ? Console::ProgressBar.new(name, show.size) : nil
+          tivo.download_show(show) do |tc|
+            td << tc
+            pbar.inc(tc.length) unless pbar.nil?
+          end
+          pbar.finish unless pbar.nil?
+          puts
+        end
+      end
+
+      def create_rss(config, db)
+        rss = Tivo2Podcast::RssGenerator.new(config, db)
+        File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
+      end
+
+      def normal_processing
+        configs = db.get_configs(@config.opt_config_names)
+
+        tivo = @config.tivo_factory
+
+        configs.each do |config|
+          shows = tivo.get_shows_by_name(config['show_name'])
+
+          # Only work on the X latest shows.  That way if there are 10 on the tivo,
+          # but we only want to keep 4, we don't encode 6 of them just to throw them
+          # out later in the cleanup phase.
+          if shows.size > config['ep_to_keep']
+            shows = shows.reverse[0, config['ep_to_keep']].reverse
+          end
+
+          # So starts the giant loop that processes the shows...
+          shows.each do |s|
+            # Beef this up to capture the show title as well
+            basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
+            basename = basename + '-' + s.episode_title unless s.episode_title.nil?
+            basename = basename + '-' + s.episode_number unless s.episode_number.nil?
+            basename.sub!(/:/, '_')
+
+            download = basename + ".mpg"
+            transcode = basename + ".m4v"
+
+            # I should add a check to see if the file exists or the transcoded
+            # version of it, and if so, assume we already downloaded the file
+            if (!(File.exist?(download) || File.exist?(transcode)))
+              download_show(s, download)
+              
+              transcoder = Tivo2Podcast::Transcoder.new(config, s)
+              transcoder.transcode_show(download, transcode)
+
+              File.delete(download)
+
+              db.add_show(s, config, transcode)
+
+            else
+              puts "Skipping #{basename} because it seems to exist" if @config.verbose
+            end
+          end
+
+          # cleanup phase goes here
+          deletes = db.old_show_cleanup(config)
+          deletes.each { |f| File.delete(f) }
+
+          create_rss(config, db)
+        end
+      end
+
+      def file_cleanup
+        # Get shows by id,configid,filename
+
+        # for each filename
+        #   if filename doesn't exist
+        #     put configid in Set of configs to be regenerated
+        #     delete show from database by id
+        # Regenerate rss files for configs
+      end
+    end
+
+    # Database access facade for the state information between script runs
   class T2PDatabase
     # filename - The name of the sqlite file.
     def initialize(filename)
