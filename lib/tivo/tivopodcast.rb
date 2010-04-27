@@ -72,95 +72,110 @@ module Tivo2Podcast
       end
       return @mak
     end
+  end
     
-    class T2PMainEngine
-      def initialize(config)
-        @config = config
-      end
+  class T2PMainEngine
+    def initialize(config)
+      @config = config
+      @db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
+                                           ENV['HOME'] :
+                                           ENV['TIVO2PODCASTDIR']) +
+                                          File::SEPARATOR + '.tivo2podcast.db')
+    end
 
-      def download_show(show, name)
-        tivo = @config.tivo_factory
+    def download_show(show, name)
+      tivo = @config.tivo_factory
 
-        # downlaod the file
-        IO.popen("tivodecode -n -o \"#{name}\" -", 'wb') do |td|
-          pbar = @config.verbose ? Console::ProgressBar.new(name, show.size) : nil
-          tivo.download_show(show) do |tc|
-            td << tc
-            pbar.inc(tc.length) unless pbar.nil?
-          end
-          pbar.finish unless pbar.nil?
-          puts
+      # downlaod the file
+      IO.popen("tivodecode -n -o \"#{name}\" -", 'wb') do |td|
+        pbar = @config.verbose ? Console::ProgressBar.new(name, show.size) : nil
+        tivo.download_show(show) do |tc|
+          td << tc
+          pbar.inc(tc.length) unless pbar.nil?
         end
-      end
-
-      def create_rss(config, db)
-        rss = Tivo2Podcast::RssGenerator.new(config, db)
-        File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
-      end
-
-      def normal_processing
-        configs = db.get_configs(@config.opt_config_names)
-
-        tivo = @config.tivo_factory
-
-        configs.each do |config|
-          shows = tivo.get_shows_by_name(config['show_name'])
-
-          # Only work on the X latest shows.  That way if there are 10 on the tivo,
-          # but we only want to keep 4, we don't encode 6 of them just to throw them
-          # out later in the cleanup phase.
-          if shows.size > config['ep_to_keep']
-            shows = shows.reverse[0, config['ep_to_keep']].reverse
-          end
-
-          # So starts the giant loop that processes the shows...
-          shows.each do |s|
-            # Beef this up to capture the show title as well
-            basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
-            basename = basename + '-' + s.episode_title unless s.episode_title.nil?
-            basename = basename + '-' + s.episode_number unless s.episode_number.nil?
-            basename.sub!(/:/, '_')
-
-            download = basename + ".mpg"
-            transcode = basename + ".m4v"
-
-            # I should add a check to see if the file exists or the transcoded
-            # version of it, and if so, assume we already downloaded the file
-            if (!(File.exist?(download) || File.exist?(transcode)))
-              download_show(s, download)
-              
-              transcoder = Tivo2Podcast::Transcoder.new(config, s)
-              transcoder.transcode_show(download, transcode)
-
-              File.delete(download)
-
-              db.add_show(s, config, transcode)
-
-            else
-              puts "Skipping #{basename} because it seems to exist" if @config.verbose
-            end
-          end
-
-          # cleanup phase goes here
-          deletes = db.old_show_cleanup(config)
-          deletes.each { |f| File.delete(f) }
-
-          create_rss(config, db)
-        end
-      end
-
-      def file_cleanup
-        # Get shows by id,configid,filename
-
-        # for each filename
-        #   if filename doesn't exist
-        #     put configid in Set of configs to be regenerated
-        #     delete show from database by id
-        # Regenerate rss files for configs
+        pbar.finish unless pbar.nil?
+        puts
       end
     end
 
-    # Database access facade for the state information between script runs
+    def create_rss(config)
+      rss = Tivo2Podcast::RssGenerator.new(config, @db)
+      File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
+    end
+
+    def normal_processing
+      configs = @db.get_configs(@config.opt_config_names)
+
+      tivo = @config.tivo_factory
+
+      configs.each do |config|
+        shows = tivo.get_shows_by_name(config['show_name'])
+
+        # Only work on the X latest shows.  That way if there are 10
+        # on the tivo, but we only want to keep 4, we don't encode 6
+        # of them just to throw them out later in the cleanup phase.
+        if shows.size > config['ep_to_keep']
+          shows = shows.reverse[0, config['ep_to_keep']].reverse
+        end
+
+        # So starts the giant loop that processes the shows...
+        shows.each do |s|
+          # Beef this up to capture the show title as well
+          basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
+          basename = basename + '-' + s.episode_title unless s.episode_title.nil?
+          basename = basename + '-' + s.episode_number unless s.episode_number.nil?
+          basename.sub!(/:/, '_')
+
+          download = basename + ".mpg"
+          transcode = basename + ".m4v"
+
+          # We'll need the later condition until everything has a program_id
+          # (this is only for my own migration.)
+          if (!db.got_show?(config, s) ||
+              !(File.exist?(download) || File.exist?(transcode)))
+            download_show(s, download)
+            
+            transcoder = Tivo2Podcast::Transcoder.new(config, s)
+            transcoder.transcode_show(download, transcode)
+
+            File.delete(download)
+
+            @db.add_show(s, config, transcode)
+
+          else
+            puts "Skipping #{basename} because it seems to exist" if @config.verbose
+          end
+        end
+
+        # cleanup phase goes here
+        deletes = @db.old_show_cleanup(config)
+        deletes.each { |f| File.delete(f) }
+
+        create_rss(config)
+      end
+    end
+
+    def file_cleanup
+      # Get shows by id,configid,filename
+      configids = Set.new
+      deleteids = Array.new
+      @db.get_filenames do |row|
+        unless File.exists?(row['filename'])
+          configids.add(row['configid'])
+          deleteids << row['id']
+        end
+      end
+
+      @db.delete_shows(deleteids) unless @deleteids.empty?
+
+      unless configids.empty?
+        configs = @db.get_configs_by_ids(configids)
+        configs.each { |c| create_rss(c) }
+      end
+    end
+  end
+
+  # Database access facade for the state information between script runs
   class T2PDatabase
     # filename - The name of the sqlite file.
     def initialize(filename)
@@ -274,6 +289,11 @@ module Tivo2Podcast
       # Yes, its only in memory, but we may be called many times in here.
       @db.execute('drop table cleanup_temp;')
       return filenames
+    end
+
+    def delete_shows(shows)
+      qms = Array.new(shows.size, '?').join(',')
+      @db.execute("delete from configs where id in (#{qms})", shows)
     end
 
     # Reports if a show is in the database by looking to see if

@@ -58,15 +58,10 @@ opts.parse(ARGV)
 
 engine = Tivo2Podcast::T2PMainEngine.new(t2pconfig)
 
-db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
-                                    ENV['HOME'] :
-                                    ENV['TIVO2PODCASTDIR']) +
-                                   File::SEPARATOR + '.tivo2podcast.db')
-
 unless t2pconfig.cleanup
-  normal_processing
+  engine.normal_processing
 else
-  file_cleanup
+  engine.file_cleanup
 end
 
 # Local Variables:
