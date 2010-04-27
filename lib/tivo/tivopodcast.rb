@@ -17,8 +17,8 @@ require 'TiVo'
 
 module Tivo2Podcast
   class T2PConfig
-    attr_attribute :verbose, :opt_config_names, :tivodecode
-    attr_attribute :handbrake, :cleanup, :atomicparsley
+    attr_accessor :verbose, :opt_config_names, :tivodecode
+    attr_accessor :handbrake, :cleanup, :atomicparsley
     attr_writer :tivo_addr, :mak
 
     def initialize
@@ -131,7 +131,7 @@ module Tivo2Podcast
 
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
-          if (!db.got_show?(config, s) ||
+          if (!@db.got_show?(config, s) ||
               !(File.exist?(download) || File.exist?(transcode)))
             download_show(s, download)
             
