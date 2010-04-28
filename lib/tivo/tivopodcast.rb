@@ -14,9 +14,10 @@
 #
 require 'sqlite3'
 require 'TiVo'
+require 'set'
 
 module Tivo2Podcast
-  class T2PConfig
+  class Config
     attr_accessor :verbose, :opt_config_names, :tivodecode
     attr_accessor :handbrake, :cleanup, :atomicparsley
     attr_writer :tivo_addr, :mak
@@ -74,13 +75,13 @@ module Tivo2Podcast
     end
   end
     
-  class T2PMainEngine
+  class MainEngine
     def initialize(config)
       @config = config
-      @db = Tivo2Podcast::T2PDatabase.new((ENV['TIVO2PODCASTDIR'].nil? ?
-                                           ENV['HOME'] :
-                                           ENV['TIVO2PODCASTDIR']) +
-                                          File::SEPARATOR + '.tivo2podcast.db')
+      @db = Tivo2Podcast::Database.new((ENV['TIVO2PODCASTDIR'].nil? ?
+                                        ENV['HOME'] :
+                                        ENV['TIVO2PODCASTDIR']) +
+                                       File::SEPARATOR + '.tivo2podcast.db')
     end
 
     def download_show(show, name)
@@ -161,6 +162,7 @@ module Tivo2Podcast
       deleteids = Array.new
       @db.get_filenames do |row|
         unless File.exists?(row['filename'])
+          puts "#{row['filename']} missing, removing from database."
           configids.add(row['configid'])
           deleteids << row['id']
         end
@@ -176,7 +178,7 @@ module Tivo2Podcast
   end
 
   # Database access facade for the state information between script runs
-  class T2PDatabase
+  class Database
     # filename - The name of the sqlite file.
     def initialize(filename)
       db_needs_init = !File.exist?(filename)
@@ -318,7 +320,7 @@ module Tivo2Podcast
     attr_writer :crop, :audio_bitrate, :video_bitrate
 
     # config is assumed to be a HashTable with the configuration information
-    # as sepecified in T2PDatabase.init_database (I should probably turn
+    # as sepecified in Database.init_database (I should probably turn
     # configuration into an object.)
     #
     # show is assumed to be an instance of TiVo::TiVoVideo which holds
@@ -408,7 +410,7 @@ module Tivo2Podcast
   # Generates the video podcast feed.
   class RssGenerator
     # Creates the RssGenerator given a config as specified by
-    # T2PDatabase.init_database and an instanstance of T2PDatabase
+    # Database.init_database and an instanstance of Database
     def initialize(config, db)
       @config = config
       @db = db

@@ -32,7 +32,7 @@ require 'uri'
 require 'ostruct'
 
 
-t2pconfig = Tivo2Podcast::T2PConfig.new
+t2pconfig = Tivo2Podcast::Config.new
 
 opts = OptionParser.new
 opts.on('-c CONFIG', '--config CONFIG',
@@ -56,7 +56,7 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
-engine = Tivo2Podcast::T2PMainEngine.new(t2pconfig)
+engine = Tivo2Podcast::MainEngine.new(t2pconfig)
 
 unless t2pconfig.cleanup
   engine.normal_processing
