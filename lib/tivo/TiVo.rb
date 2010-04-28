@@ -178,7 +178,7 @@ module TiVo
       minutes = seconds / 60
 
       # Calculate the left over unsloppy seconds
-      seconds = minutes % 60
+      seconds = seconds % 60
 
       result = StringIO.new
       result.printf("%d:", hours) if hours > 0
