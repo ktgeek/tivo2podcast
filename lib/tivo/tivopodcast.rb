@@ -135,7 +135,7 @@ module Tivo2Podcast
               !(File.exist?(download) || File.exist?(transcode)))
             download_show(s, download)
             
-            transcoder = Tivo2Podcast::Transcoder.new(config, s)
+            transcoder = Tivo2Podcast::Transcoder.new(@config, config, s)
             transcoder.transcode_show(download, transcode)
 
             File.delete(download)
