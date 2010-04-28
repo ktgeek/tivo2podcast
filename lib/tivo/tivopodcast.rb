@@ -87,7 +87,7 @@ module Tivo2Podcast
       tivo = @config.tivo_factory
 
       # downlaod the file
-      IO.popen("tivodecode -n -o \"#{name}\" -", 'wb') do |td|
+      IO.popen("#{@config.tivodecode} -n -o \"#{name}\" -", 'wb') do |td|
         pbar = @config.verbose ? Console::ProgressBar.new(name, show.size) : nil
         tivo.download_show(show) do |tc|
           td << tc
