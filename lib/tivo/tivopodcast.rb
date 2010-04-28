@@ -22,14 +22,14 @@ module Tivo2Podcast
     attr_writer :tivo_addr, :mak
 
     def initialize
-      tivo_addr = nil
-      mak = nil
-      verbose = false
-      opt_config_names = nil
-      tivodecode = 'tivodecode'
-      handbrake = 'HandBrakeCLI'
-      cleanup = false
-      atomicparsley = 'AtomicParsley'
+      @tivo_addr = nil
+      @mak = nil
+      @verbose = false
+      @opt_config_names = nil
+      @tivodecode = 'tivodecode'
+      @handbrake = 'HandBrakeCLI'
+      @cleanup = false
+      @atomicparsley = 'AtomicParsley'
     end
 
     def tivo_factory
