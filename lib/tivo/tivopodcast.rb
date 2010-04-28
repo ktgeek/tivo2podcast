@@ -168,10 +168,10 @@ module Tivo2Podcast
         end
       end
 
-      @db.delete_shows(deleteids) unless @deleteids.empty?
+      @db.delete_shows(deleteids) unless deleteids.empty?
 
       unless configids.empty?
-        configs = @db.get_configs_by_ids(configids)
+        configs = @db.get_configs_by_ids(configids.to_a)
         configs.each { |c| create_rss(c) }
       end
     end
@@ -295,7 +295,7 @@ module Tivo2Podcast
 
     def delete_shows(shows)
       qms = Array.new(shows.size, '?').join(',')
-      @db.execute("delete from configs where id in (#{qms})", shows)
+      @db.execute("delete from shows where id in (#{qms})", shows)
     end
 
     # Reports if a show is in the database by looking to see if
