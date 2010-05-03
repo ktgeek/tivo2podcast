@@ -192,37 +192,42 @@ module Tivo2Podcast
 
     # Creates the database tables that this class acts as a facade for
     def init_database()
-      @db.execute_batch('create table configs (
-                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                     config_name TEXT NOT NULL UNIQUE,
-                     show_name TEXT NOT NULL,
-                     rss_filename TEXT NOT NULL,
-                     rss_link TEXT NOT NULL,
-                     rss_baseurl TEXT NOT NULL,
-                     rss_ownername TEXT NOT NULL,
-                     rss_owneremail TEXT NOT NULL,
-                     ep_to_keep INTEGER NOT NULL DEFAULT 5,
-                     encode_crop TEXT,
-                     encode_audio_bitrate INTEGER,
-                     encode_video_bitrate INTEGER,
-                     encode_decomb INTEGER
-                   );
-                   create table shows (
-                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                     configid TEXT NOT NULL,
-                     s_name TEXT,
-                     s_ep_title TEXT,
-                     s_ep_number TEXT,
-                     s_ep_description TEXT,
-                     s_ep_length INTEGER,
-                     s_ep_timecap INTEGER,
-                     s_ep_programid TEXT NOT NULL,
-                     filename TEXT UNIQUE,
-                     FOREIGN KEY(configid) REFERENCES configs(id)
-                   );
-                   create index shows_programid_index on shows(s_ep_programid);
-                   create index shows_configid_index on shows(configid);
-                   create index configs_config_name_index on configs(config_name);')
+      @db.execute_batch(<<SQL
+create table configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    config_name TEXT NOT NULL UNIQUE,
+    show_name TEXT NOT NULL,
+    rss_filename TEXT NOT NULL,
+    rss_link TEXT NOT NULL,
+    rss_baseurl TEXT NOT NULL,
+    rss_ownername TEXT NOT NULL,
+    rss_owneremail TEXT NOT NULL,
+    ep_to_keep INTEGER NOT NULL DEFAULT 5,
+    encode_crop TEXT,
+    encode_audio_bitrate INTEGER,
+    encode_video_bitrate INTEGER,
+    encode_decomb INTEGER,
+    max_width INTEGER,
+    max_height INTEGER
+);
+create index configs_config_name_index on configs(config_name);
+create table shows (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    configid TEXT NOT NULL,
+    s_name TEXT,
+    s_ep_title TEXT,
+    s_ep_number TEXT,
+    s_ep_description TEXT,
+    s_ep_length INTEGER,
+    s_ep_timecap INTEGER,
+    s_ep_programid TEXT NOT NULL,
+    filename TEXT UNIQUE,
+    FOREIGN KEY(configid) REFERENCES configs(id)
+);
+create index shows_programid_index on shows(s_ep_programid);
+create index shows_configid_index on shows(configid);
+SQL
+                        )
     end
 
     # Gets the configs from the config table, by default it will get all unless
@@ -317,7 +322,7 @@ module Tivo2Podcast
   # transcoding from source mpg to iPhone friendly m4v, as well as
   # calling out to AtomicParsley to add the video metadata to the file.
   class Transcoder
-    attr_writer :crop, :audio_bitrate, :video_bitrate
+    attr_writer :crop, :audio_bitrate, :video_bitrate, :max_width, :max_height
 
     # config is assumed to be a HashTable with the configuration information
     # as sepecified in Database.init_database (I should probably turn
@@ -332,6 +337,8 @@ module Tivo2Podcast
       @crop = nil
       @audio_bitrate = nil
       @video_bitrate = nil
+      @max_width = nil
+      @max_height = nil
     end
 
     def crop
@@ -350,6 +357,16 @@ module Tivo2Podcast
       return vb
     end
 
+    def max_width
+      mw = @max_width.nil? ? @show_config['max_width'] : @max_width
+      mw = 480 if mw.nil?
+      return vb
+    end
+
+    def max_height
+      @max_height.nil? ? @show_config['max_height'] : @max_height
+    end
+
     def decomb?
       decomb = @decomb.nil? ? @show_config['encode_decomb'] : @decomb
       (decomb.nil? || decomb == 0) ? false : true
@@ -363,9 +380,10 @@ module Tivo2Podcast
       command += ' -5 default' if decomb?
       command += " --crop #{crop}" unless crop.nil?
       command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48 " +
-        '-D 0.0 -f mp4 -X 480 -x ' +
-        'cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 ' +
-        "-i \"#{infile}\" -o \"#{outfile}\""
+        "-D 0.0 -f mp4 -X #{max_width}"
+      command += "-Y #{max_height}" unless max_height.nil?
+      command += '-x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 '
+              + "-i \"#{infile}\" -o \"#{outfile}\""
       command += " >/dev/null 2>&1" unless @config.verbose
                                   
       returncode = system(command)
