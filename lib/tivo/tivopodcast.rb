@@ -361,7 +361,7 @@ SQL
     def max_width
       mw = @max_width.nil? ? @show_config['max_width'] : @max_width
       mw = 480 if mw.nil?
-      return vb
+      return mw
     end
 
     def max_height
