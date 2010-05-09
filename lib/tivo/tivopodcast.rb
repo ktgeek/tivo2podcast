@@ -439,7 +439,7 @@ SQL
       # Here is where I would generate RSS and also clean up older files
       rss = RSS::Maker.make("2.0") do |maker|
         maker.channel.title = @config['show_name']
-        maker.channel.description = "My " + @config['show_name'] + "how RSS feed"
+        maker.channel.description = "My " + @config['show_name'] + " RSS feed"
         maker.channel.link = @config['rss_link']
         maker.channel.lastBuildDate = Time.now
 
