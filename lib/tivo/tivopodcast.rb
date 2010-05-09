@@ -310,7 +310,9 @@ SQL
       # ask for help later
       @db.query('select 1 from shows where configid=? and s_ep_programid=?',
                 config['id'], show.program_id) do |results|
-        got_one = true
+        results.each do |rs|
+          got_one = true
+        end
       end
       return got_one
     end
