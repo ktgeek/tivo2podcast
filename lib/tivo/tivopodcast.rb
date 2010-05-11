@@ -18,8 +18,8 @@ require 'set'
 
 module Tivo2Podcast
   class Config
-    attr_accessor :verbose, :opt_config_names, :tivodecode
-    attr_accessor :handbrake, :cleanup, :atomicparsley
+    attr_accessor :verbose, :opt_config_names, :tivodecode, :mp4box
+    attr_accessor :handbrake, :cleanup, :atomicparsley, :comskip
     attr_writer :tivo_addr, :mak
 
     def initialize
@@ -31,6 +31,9 @@ module Tivo2Podcast
       @handbrake = 'HandBrakeCLI'
       @cleanup = false
       @atomicparsley = 'AtomicParsley'
+      @mp4box = 'MP4Box'
+      # TODO: Find native linux version of comskip
+      @comskip = 'wine /work/comskip80_031/comskip.exe'
     end
 
     def tivo_factory
@@ -422,7 +425,12 @@ SQL
         puts "Command that failed: " + command
         # TODO: change this to an exception
         exit(1)
-      end                                
+      end
+
+      # TODO: write this code
+      # Pseudo-code for compskip
+      # Run comskip--zpchapter on infile
+      # Run MP4Box -chap infile.chp outfile
     end
   end
 
