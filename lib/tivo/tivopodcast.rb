@@ -380,11 +380,11 @@ SQL
       command = "#{@config.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
       command += ' -5 default' if decomb?
       command += " --crop #{crop}" unless crop.nil?
-      command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48 " +
-        "-D 0.0 -f mp4 -X #{max_width}"
-      command += "-Y #{max_height}" unless max_height.nil?
-      command += '-x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0 '
-              + "-i \"#{infile}\" -o \"#{outfile}\""
+      command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48"
+	  command += " -D 0.0 -f mp4 -X #{max_width}"
+      command += " -Y #{max_height}" unless max_height.nil?
+      command += ' -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0'
+      command += " -i \"#{infile}\" -o \"#{outfile}\""
       command += " >/dev/null 2>&1" unless @config.verbose
                                   
       returncode = system(command)
