@@ -137,9 +137,11 @@ module Tivo2Podcast
 
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
-          unless (@db.got_show?(config, s) || File.exist?(download) ||
-                  File.exist?(transcode))
-            download_show(s, download)
+          unless (@db.got_show?(config, s) || File.exist?(transcode))
+            
+            # If the file exists, we'll assume the download went okay
+            # Shame on us for not checking if it isn't
+            download_show(s, download) unless File.exists?(download)
             
             transcoder = Tivo2Podcast::Transcoder.new(@config, config, s)
             transcoder.transcode_show(download, transcode)
