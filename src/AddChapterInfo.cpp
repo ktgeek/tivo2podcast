@@ -31,12 +31,19 @@ int main(int argc, char *argv[])
         if (boost::regex_search(s, rem, chpre))
         {
             int t = boost::lexical_cast<int>(rem[1]);
-            MP4AddChapter(m4vfile, chapter_track, t - last_time, rem[2].str().c_str());
-            last_time = t;
+            if (t > 0)
+            {
+                MP4AddChapter(m4vfile, chapter_track, t - last_time,
+                              rem[2].str().c_str());
+                last_time = t;
+            }
         }
     }
 
-    MP4AddChapter(m4vfile, chapter_track, total_length - last_time);
+    if (total_length - last_time > 0)
+    {
+        MP4AddChapter(m4vfile, chapter_track, total_length - last_time);
+    }
 
     MP4Close(m4vfile);
     //    MP4Optimize("test.m4v", "final.m4v");
