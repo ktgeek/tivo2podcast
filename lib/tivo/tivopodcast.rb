@@ -18,8 +18,9 @@ require 'set'
 
 module Tivo2Podcast
   class Config
-    attr_accessor :verbose, :opt_config_names, :tivodecode, :mp4box
+    attr_accessor :verbose, :opt_config_names, :tivodecode, :addchapterinfo
     attr_accessor :handbrake, :cleanup, :atomicparsley, :comskip
+    attr_accessor :comskip_ini
     attr_writer :tivo_addr, :mak
 
     def initialize
@@ -31,9 +32,10 @@ module Tivo2Podcast
       @handbrake = 'HandBrakeCLI'
       @cleanup = false
       @atomicparsley = 'AtomicParsley'
-      @mp4box = 'MP4Box'
       # TODO: Find native linux version of comskip
       @comskip = 'wine /work/comskip80_031/comskip.exe'
+      @comskip_ini = '/work/comskip80_031/comskip.ini'
+      @addchapterinfo = '/work/src/tivo/src/AddChapterInfo'
     end
 
     def tivo_factory
@@ -142,6 +144,8 @@ module Tivo2Podcast
             transcoder = Tivo2Podcast::Transcoder.new(@config, config, s)
             transcoder.transcode_show(download, transcode)
 
+            transcoder.skip_commercials(basename, download, transcode)
+            
             File.delete(download)
 
             @db.add_show(s, config, transcode)
@@ -384,7 +388,7 @@ SQL
       command += ' -5 default' if decomb?
       command += " --crop #{crop}" unless crop.nil?
       command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48"
-	  command += " -D 0.0 -f mp4 -X #{max_width}"
+      command += " -D 0.0 -f mp4 -X #{max_width}"
       command += " -Y #{max_height}" unless max_height.nil?
       command += ' -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0'
       command += " -i \"#{infile}\" -o \"#{outfile}\""
@@ -431,6 +435,33 @@ SQL
       # Pseudo-code for compskip
       # Run comskip--zpchapter on infile
       # Run MP4Box -chap infile.chp outfile
+    end
+
+    def skip_commercials(basename, download, transcode)
+      # I need to wrap this in a "if you want to do this..."
+      command = "#{@config.comskip} --ini=#{@config.comskip_ini} -q"
+      command += " \"#{transcode}\""
+      command += " >/dev/null 2>&1" unless @config.verbose
+
+      returncode = system(command)
+      if !returncode
+        puts "something isn't working right, bailing"
+        puts "Command that failed: " + command
+        # TODO: Change this to an exception
+        exit(1)
+      end
+
+      chpfile = basename + ".chp"
+      duration = @show.duration / 1000
+      command = "#{@config.addchapterinfo} \"#{transcode}\" \"#{chpfile}\""
+      command += " #{duration}"
+      returncode = system(command)
+      if !returncode
+        puts "something isn't working right, bailing"
+        puts "Command that failed: " + command
+        # TODO: Change this to an exception
+        exit(1)
+      end
     end
   end
 
