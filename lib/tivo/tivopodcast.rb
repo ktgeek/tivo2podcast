@@ -442,16 +442,18 @@ SQL
     def skip_commercials(basename, download, transcode)
       # I need to wrap this in a "if you want to do this..."
       command = "#{@config.comskip} --ini=#{@config.comskip_ini} -q"
-      command += " \"#{transcode}\""
+      command += " \"#{download}\""
       command += " >/dev/null 2>&1" unless @config.verbose
 
       returncode = system(command)
-      if !returncode
-        puts "something isn't working right, bailing"
-        puts "Command that failed: " + command
-        # TODO: Change this to an exception
-        exit(1)
-      end
+	  # Comskip doesn't seem to do the 0 return code (or is that wine?)
+	  # For now we'll just check to see if there is a > 0 length .chp file
+#      if !returncode
+#        puts "something isn't working right, bailing"
+#        puts "Command that failed: " + command
+#        # TODO: Change this to an exception
+#        exit(1)
+#      end
 
       chpfile = basename + ".chp"
       duration = @show.duration / 1000
