@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     // (We may want to set that to 1000 to go into milliseconds.)
     MP4TrackId chapter_track = MP4AddChapterTextTrack(m4vfile, 1, 1);
 
-    //    boost::regex chpre("^AddChapterBySecond\\((\\d+),(\\w+\\s+\\w+)\\)");
     boost::regex chpre("^AddChapterBySecond\\((\\d+),");
     boost::smatch rem;
     std::string s;
@@ -33,8 +32,6 @@ int main(int argc, char *argv[])
             int t = boost::lexical_cast<int>(rem[1]);
             if (t > 0)
             {
-//                 MP4AddChapter(m4vfile, chapter_track, t - last_time,
-//                               rem[2].str().c_str());
                 MP4AddChapter(m4vfile, chapter_track, t - last_time);
                 last_time = t;
             }
