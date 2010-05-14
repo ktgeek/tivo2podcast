@@ -466,6 +466,9 @@ SQL
         # TODO: Change this to an exception
         exit(1)
       end
+
+      File.delete(chpfile)
+      File.delete(basename + ".log")
     end
   end
 
