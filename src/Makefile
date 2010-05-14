@@ -5,4 +5,4 @@ AddChapterInfo: AddChapterInfo.cpp
 	g++ -o AddChapterInfo $(CFLAGS) $(LFLAGS) AddChapterInfo.cpp $(LIBS)
 
 clean:
-	rm AddChapterInfo
+	@rm -f AddChapterInfo
