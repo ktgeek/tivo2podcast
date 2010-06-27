@@ -13,6 +13,7 @@
 #       with the distribution.
 #
 require 'sqlite3'
+require 'ansi/progressbar'
 require 'TiVo'
 require 'set'
 
@@ -94,7 +95,7 @@ module Tivo2Podcast
 
       # downlaod the file
       IO.popen("#{@config.tivodecode} -n -o \"#{name}\" -", 'wb') do |td|
-        pbar = @config.verbose ? Console::ProgressBar.new(name, show.size) : nil
+        pbar = @config.verbose ? ANSI::ProgressBar.new(name, show.size) : nil
         tivo.download_show(show) do |tc|
           td << tc
           pbar.inc(tc.length) unless pbar.nil?
@@ -152,7 +153,7 @@ module Tivo2Podcast
 
             @db.add_show(s, config, transcode)
           else
-            puts "Skipping #{basename} because it seems to exist" if @config.verbose
+            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @config.verbose
           end
         end
 
