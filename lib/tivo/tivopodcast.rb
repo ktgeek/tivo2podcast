@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2010 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -417,8 +418,8 @@ SQL
         ')' unless @show.episode_number.nil?
 
       command = "#{@config.atomicparsley} \"#{outfile}\" -W " +
-        "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " +
-        "--TVEpisode \"#{@show.episode_title(true)}\""
+        "--title \"#{showtitle}\"--TVShowName \"#{@show.title}\" " +
+        "--TVEpisode \"#{@show.episode_title(true)}\" --artist \"#{@show.title}\""
       command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
       command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
       unless @show.description.nil?
