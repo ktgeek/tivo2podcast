@@ -24,7 +24,7 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
 require 'rubygems'
 require 'optparse'
 require 'TiVo.rb'
-require 'facets/progressbar.rb'
+require 'ansi/progressbar.rb'
 
 def do_menu(tivo_items, menu_size=10)
   offset = 0
@@ -98,6 +98,8 @@ def make_filename(tivo_item)
   unless ep.nil? || tivo_item.episode_number.nil?
     name = name + "-" + tivo_item.episode_number
   end
+  name.sub!(/:/, '_')
+  name.sub!(/\//, '_')
   name = name + ".mpg"
   return name
 end
@@ -135,7 +137,7 @@ downloads.each do |dl|
 
   puts "Attemping to download " + dl.printable_title()
   IO.popen("tivodecode -n -o \"#{dl_name}\" -", 'wb') do |td|
-    pbar = Console::ProgressBar.new(dl_name, dl.size)
+    pbar = ANSI::ProgressBar.new(dl_name, dl.size)
     tivo.download_show(dl) do |tc|
       td << tc
       pbar.inc(tc.length)
