@@ -36,7 +36,7 @@ module Tivo2Podcast
       @atomicparsley = 'AtomicParsley'
       # TODO: Find native linux version of comskip
       @comskip = 'wine /work/comskip80_031/comskip.exe'
-      @comskip_ini = '/work/comskip80_031/comskip.ini'
+      @comskip_ini = 'z:\work\comskip80_031\comskip.ini'
       @addchapterinfo = '/work/src/tivo/src/AddChapterInfo'
     end
 
