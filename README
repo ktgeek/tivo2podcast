@@ -36,8 +36,23 @@ TiVo2Podcast requires:
  o AtomicParsley from http://atomicparsley.sourceforge.net/
  o HandBrakeCLI from http://handbrake.fr/
 
+ o For commercial skipping you'll need:
+   o libmp4v2 and boost_regex to compile AddChapterInfo C++ binary needed
+     for chapter skipping
+   o Wine to run comskip.exe
+   o comskip - http://www.kaashoek.com/comskip/
+
 It is expected that you have your ~/.tivodecode_mak setup as both the
 script and tivodecode will will use it.
+
+You'll need to go into the src directory of TiVo2Podcast and build an
+AddChapterInfo binary and put it somewhere in the default path.  This
+C++ helper script is needed to add commercial chapters to the encoded
+files.  (I prefer to do chapters than cut the commercials off because
+"What if you're wrong?")
+
+You'll probably need to edit lib/tivo/tivopodcast.rb starting at line
+33 to make sure all the binaries and ini files can be found.
 
 By default, the script will use dnnsd/ZeroConf/Bonjour to locate a
 TiVo on your network.  This assumes you have all that stuff set up
