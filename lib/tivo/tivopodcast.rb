@@ -16,38 +16,55 @@
 require 'sqlite3'
 require 'ansi/progressbar'
 require 'TiVo'
+require 'forwardable'
 require 'set'
 
 module Tivo2Podcast
   class Config
-    attr_accessor :verbose, :opt_config_names, :tivodecode, :addchapterinfo
-    attr_accessor :handbrake, :cleanup, :atomicparsley, :comskip
-    attr_accessor :comskip_ini
-    attr_writer :tivo_addr, :mak
+    extend Forwardable
 
-    def initialize
-      @tivo_addr = nil
-      @mak = nil
-      @verbose = false
-      @opt_config_names = nil
-      @tivodecode = 'tivodecode'
-      @handbrake = 'HandBrakeCLI'
-      @cleanup = false
-      @atomicparsley = 'AtomicParsley'
-      # TODO: Find native linux version of comskip
-      @comskip = 'wine /work/comskip80_031/comskip.exe'
-      @comskip_ini = 'z:\work\comskip80_031\comskip.ini'
-      @addchapterinfo = '/work/src/tivo/src/AddChapterInfo'
+    def_delegator :@config, :[]
+
+    CONFIG_FILENAME = (ENV['TIVO2PODCASTDIR'].nil? ?
+                       ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
+      File::SEPARATOR + '.tivo2podcast.conf'
+
+    def initialize(file = nil)
+      @config = {
+        "tivo_addr" => nil,
+        "mak" => nil,
+        "verbose" => false,
+        "opt_config_names" => nil,
+        "tivodecode" => 'tivodecode',
+        "handbrake" => 'HandBrakeCLI',
+        "cleanup" => false,
+        "atomicparsley" => 'AtomicParsley',
+        "comskip" => nil,
+        "comskip_ini" => nil,
+        "addchapterinfo" => nil
+      }
+
+      config_file = file.nil? ? CONFIG_FILENAME : file
+
+      if File.exists?(config_file)
+        @config.merge(YAML.load_file(config_file))
+      end
     end
-
+    
     def tivo_factory
       return TiVo::TiVo.new(tivo_addr, mak)
     end
 
+    def tivo_addr=(value)
+      @config['tivo_addr'] = value
+    end
+    
+    # Should this throw an exception when the tivo isn't found, or should it
+    # Also, should the tivo location be moved up to 
     def tivo_addr
       # If the user didn't pass in a address or hostname via the command line,
       # try to locate it via dnssd.
-      if @tivo_addr.nil?
+      if @config['tivo_addr'].nil?
         puts "Attemping to locate tivo..." if @verbose
         tmp = TiVo.locate_via_dnssd
         if tmp.nil?
@@ -72,13 +89,28 @@ module Tivo2Podcast
       return result
     end
 
+    def mak=(value)
+      @config['mak'] = value
+    end
+    
     def mak
-      if @mak.nil?
+      if @config['mak'].nil?
         # Load the mak if we have a mak file
         mak_file = ENV['HOME'] + '/.tivodecode_mak'
-        @mak = File.read(mak_file).strip if File.exist?(mak_file)
+        @config['mak'] = File.read(mak_file).strip if File.exist?(mak_file)
       end
-      return @mak
+      return @config['mak']
+    end
+
+    # For backward compatibility with Config from when more things
+    # were attainable by methods, we'll check the configuration hash
+    # first an entry with the same name as the method being called.
+    # If there's nothing in the has, we'll call the normal
+    # method_missing to throw the exception.
+    def method_missing(method, *params)
+      puts "#{method.class} #{method} #{method.to_s.class}"
+      return @config[method.to_s] if @config.keys.include?(method.to_s)
+      super
     end
   end
     
@@ -434,11 +466,6 @@ SQL
         # TODO: change this to an exception
         exit(1)
       end
-
-      # TODO: write this code
-      # Pseudo-code for compskip
-      # Run comskip--zpchapter on infile
-      # Run MP4Box -chap infile.chp outfile
     end
 
     def skip_commercials(basename, download, transcode)

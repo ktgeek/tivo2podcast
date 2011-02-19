@@ -1,0 +1,79 @@
+# This is a YAML file at heart, so make sure you conform to YAML and
+# don't break the expected HASH this will turn into.  TiVo2Podcast has
+# a number of settings that default to certain values which are
+# documented below.  For people adding extentions to Tivo2Podcast, use
+# your own namespace for configuration issues so we can avoid certain
+# overlaps.  Uncomment or change the lines you need for your install.
+
+# The IP address or hostname of your tivo.  If not filled in,
+# TiVo2Podcast will use Zerconf/mDNS/Bonjour/Whatever to try to find
+# the tivo.
+#
+# default: nil
+#
+# tivo_addr: nil
+
+# The TiVo's MAK.  Needed by TiVo2Podcast to connect to the TiVo2Go
+# service and communicate.  If not filled in, TiVo2Podcast will look
+# for the mak in ~/.tivodecode_mak.  tivodecode needs the mac in that
+# file anyway, so there's not a lot of reason to fill this in under
+# normal circumstances.
+#
+# default: nil
+#
+# mak: nil
+
+# If set to true/yes, output what TiVo2Podcast is doing at each step and
+# echo the output of the console programs that TiVo2Podcast calls out
+# to.
+#
+# default: false
+#
+# verbose: false
+
+# The path and/or name of the tivodecode executable.
+#
+# default: tivodecode
+#
+# tivodecode: tivodecode
+
+# The path and/or name of the HandBrake command line tool.
+#
+# default: HandBrakeCLI
+#
+# handbrake: HandBrakeCLI
+
+# The path and/or name of the AtomicParsley command line tool
+#
+# default: AtomicParsley
+#
+# atomicparsley: AtomicParsley
+
+# The path and/or command of the comskip tool
+#
+# default: wine comskip.exe
+#
+# comskip: wine /sample/path/comskip80_031/comskip.exe
+
+# The path to the comskip.ini file
+#
+# default: nil
+#
+# comskip_ini: z:\sample\path\comskip80_031\comskip.ini
+
+# Path to the AddChapterInfo utility that comes with TiVo2Podcast
+#
+# default: nil
+#
+# addchapterinfo: /sample/path/tivo/src/AddChapterInfo
+
+# A comma seperate list of which notifiers to use when transcoding is complete
+#
+# default: nil
+#
+# notifiers: Boxcar, Email
+
+# Notifier specific setup options.
+#
+# boxcar.user:
+# boxcar.password: 
