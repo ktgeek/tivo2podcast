@@ -67,11 +67,13 @@
 #
 # addchapterinfo: /sample/path/tivo/src/AddChapterInfo
 
-# A comma seperate list of which notifiers to use when transcoding is complete
+# An array of which notifiers to use when transcoding is complete
 #
 # default: nil
 #
-# notifiers: Boxcar, Email
+# notifiers:
+# - Boxcar
+# - Email
 
 # Notifier specific setup options.
 #

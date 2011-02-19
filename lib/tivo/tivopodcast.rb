@@ -41,7 +41,8 @@ module Tivo2Podcast
         "atomicparsley" => 'AtomicParsley',
         "comskip" => nil,
         "comskip_ini" => nil,
-        "addchapterinfo" => nil
+        "addchapterinfo" => nil,
+        "notifiers" => []
       }
 
       config_file = file.nil? ? CONFIG_FILENAME : file
