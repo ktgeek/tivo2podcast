@@ -17,6 +17,7 @@ require 'ansi/progressbar'
 require 'TiVo'
 require 'forwardable'
 require 'set'
+require 'notifiers'
 
 module Tivo2Podcast
   class Config
@@ -102,6 +103,10 @@ module Tivo2Podcast
       return @config['mak']
     end
 
+    def verbose=(value)
+      @config['verbose'] = true
+    end
+
     # For backward compatibility with Config from when more things
     # were attainable by methods, we'll check the configuration hash
     # first an entry with the same name as the method being called.
@@ -121,6 +126,7 @@ module Tivo2Podcast
                                         ENV['HOME'] :
                                         ENV['TIVO2PODCASTDIR']) +
                                        File::SEPARATOR + '.tivo2podcast.db')
+      @notifier = TiVo2Podcast::Notifier.new(@config)
     end
 
     def download_show(show, name)
@@ -195,6 +201,9 @@ module Tivo2Podcast
         deletes.each { |f| File.delete(f) }
 
         create_rss(config)
+
+        # Put notification here
+        @notification.notify_all("Finished processing #{config['config_name']}")
       end
     end
 
