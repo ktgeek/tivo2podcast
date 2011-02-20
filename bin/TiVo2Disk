@@ -122,6 +122,11 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
+if tivo_addr.nil?
+  tivo_addr = TiVo.locate_via_dnssd
+  $stderr.puts "TiVo not found!" if tivo_addr.nil?
+end
+
 if tivo_addr.nil? || mak.nil?
   puts "Must have TiVo IP address and MAK to function."
   exit(1)
