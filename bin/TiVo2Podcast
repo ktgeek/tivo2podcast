@@ -36,7 +36,6 @@ t2pconfig = Tivo2Podcast::Config.new
 opts = OptionParser.new
 opts.on('-c CONFIG', '--config CONFIG',
         'Use the named config on this run (may be used multiple times)') do |c|
-  t2pconfig.opt_config_names = Array.new if t2pconfig.opt_config_names.nil?
   t2pconfig.opt_config_names << c
 end
 opts.on('-C', '--cleanup', 'Clean up database based on existing files') do

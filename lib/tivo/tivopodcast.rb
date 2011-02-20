@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2010 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,7 +33,7 @@ module Tivo2Podcast
         "tivo_addr" => nil,
         "mak" => nil,
         "verbose" => false,
-        "opt_config_names" => nil,
+        "opt_config_names" => Array.new,
         "tivodecode" => 'tivodecode',
         "handbrake" => 'HandBrakeCLI',
         "cleanup" => false,
@@ -42,7 +41,7 @@ module Tivo2Podcast
         "comskip" => nil,
         "comskip_ini" => nil,
         "addchapterinfo" => nil,
-        "notifiers" => []
+        "notifiers" => Array.new
       }
 
       config_file = file.nil? ? CONFIG_FILENAME : file
@@ -109,8 +108,8 @@ module Tivo2Podcast
     # If there's nothing in the has, we'll call the normal
     # method_missing to throw the exception.
     def method_missing(method, *params)
-      puts "#{method.class} #{method} #{method.to_s.class}"
-      return @config[method.to_s] if @config.keys.include?(method.to_s)
+      method_name = method.to_s
+      return @config[method_name] if @config.keys.include?(method_name)
       super
     end
   end
