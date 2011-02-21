@@ -51,16 +51,18 @@ C++ helper script is needed to add commercial chapters to the encoded
 files.  (I prefer to do chapters than cut the commercials off because
 "What if you're wrong?")
 
-You'll probably need to edit lib/tivo/tivopodcast.rb starting at line
-33 to make sure all the binaries and ini files can be found.
+You'll want to copy doc/tivo2podcast.conf.sample to
+~/.tivo2podcast.conf to make sure that TiVo2Podcast can find all the
+helper applications and ini files it needs.
 
 By default, the script will use dnnsd/ZeroConf/Bonjour to locate a
 TiVo on your network.  This assumes you have all that stuff set up
 correctly on your host computer.  If this doesn't work, or you have
 multiple TiVos and you want to specify a particular one, you can also
 pass the IP and/or hostname to your tivo to the script via the -t
-flag, which bypasses using dnssd. You don't need the dnnsd gem if you
-always pass a -t.
+flag, which bypasses using dnssd. You can also specify the TiVo's
+address in the tivo2podcast.conf file.  You don't need the dnnsd gem
+if you always configure the conf file or pass a -t.
 
 You'll need to run TiVo2Podcast once to create the sqlite database
 that TiVo2Podcast uses to store its data.  This database is at
