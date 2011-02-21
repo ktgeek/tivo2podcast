@@ -10,13 +10,15 @@ module TiVo2Podcast
 
     def init_notifiers
       @config["notifiers"].each do |n|
-        # TODO: I should check to see if the require was successful.
-        #       If not, I should probably toss an exception.
-
         # This require makes the assumption that if __FILE__ is in the
         # path, We can naturally look down one level.
-        require "notifiers/#{n + '_notifier'}"
-        @notifiers << Kernel.const_get("TiVo2Podcast").const_get(n.capitalize + "Notifier").new(@config)
+        begin
+          require "notifiers/#{n + '_notifier'}"
+          @notifiers << Kernel.const_get("TiVo2Podcast").const_get(n.capitalize + "Notifier").new(@config)
+        rescue LoadError
+          # Should this toss an exception instead of an error message?
+          puts "Could not find #{n} notifier... Ignoring."
+        end
       end
     end
 
