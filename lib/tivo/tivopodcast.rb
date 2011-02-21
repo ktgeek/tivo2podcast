@@ -13,11 +13,14 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
+require 'forwardable'
+require 'set'
+require 'uri'
+require 'rss'
+require 'rss/itunes'
 require 'sqlite3'
 require 'ansi/progressbar'
 require 'TiVo'
-require 'forwardable'
-require 'set'
 require 'notifier'
 
 module Tivo2Podcast
