@@ -1,4 +1,3 @@
-#require 'Notifier'
 require 'rubygems'
 require 'boxcar_api'
 
