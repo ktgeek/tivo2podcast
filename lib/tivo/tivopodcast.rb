@@ -23,8 +23,6 @@ module Tivo2Podcast
   class Config
     extend Forwardable
 
-    def_delegator :@config, :[]
-
     CONFIG_FILENAME = (ENV['TIVO2PODCASTDIR'].nil? ?
                        ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
       File::SEPARATOR + '.tivo2podcast.conf'
@@ -48,7 +46,7 @@ module Tivo2Podcast
       config_file = file.nil? ? CONFIG_FILENAME : file
 
       if File.exists?(config_file)
-        @config.merge(YAML.load_file(config_file))
+        @config.merge!(YAML.load_file(config_file))
       end
     end
     
@@ -110,13 +108,15 @@ module Tivo2Podcast
     # For backward compatibility with Config from when more things
     # were attainable by methods, we'll check the configuration hash
     # first an entry with the same name as the method being called.
-    # If there's nothing in the has, we'll call the normal
+    # If there's nothing in the hash, we'll call the normal
     # method_missing to throw the exception.
     def method_missing(method, *params)
       method_name = method.to_s
       return @config[method_name] if @config.keys.include?(method_name)
       super
     end
+
+    def_delegator :@config, :[]
   end
     
   class MainEngine
@@ -178,6 +178,7 @@ module Tivo2Podcast
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
           unless (@db.got_show?(config, s) || File.exist?(transcode))
+            @notifier.notify("Starting download and transcode of #{basename}")
             
             # If the file exists, we'll assume the download went okay
             # Shame on us for not checking if it isn't
@@ -191,6 +192,7 @@ module Tivo2Podcast
             File.delete(download)
 
             @db.add_show(s, config, transcode)
+            @notifier.notify("Finished download and transcode of #{basename}")
           else
             puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @config.verbose
           end
@@ -203,7 +205,7 @@ module Tivo2Podcast
         create_rss(config)
 
         # Put notification here
-        @notification.notify_all("Finished processing #{config['config_name']}")
+        @notification.notify("Finished processing #{config['config_name']}")
       end
     end
 
