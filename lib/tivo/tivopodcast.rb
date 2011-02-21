@@ -1,4 +1,5 @@
-# Copyright 2010 Keith T. Garner. All rights reserved.
+# -*- coding: utf-8 -*-
+# Copyright 2011 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -12,12 +13,15 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
+require 'forwardable'
+require 'set'
+require 'uri'
+require 'rss'
+require 'rss/itunes'
 require 'sqlite3'
 require 'ansi/progressbar'
 require 'TiVo'
-require 'forwardable'
-require 'set'
-require 'notifiers'
+require 'notifier'
 
 module Tivo2Podcast
   class Config

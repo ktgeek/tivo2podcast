@@ -11,26 +11,32 @@
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
-require 'rubygems'
-require 'boxcar_api'
 
 module TiVo2Podcast
-  class BoxcarNotifier
+  class Notifier
     def initialize(config)
       @config = config
-      user, password = @config["boxcar.user"], @config["boxcar.password"]
-      puts "about to talk about user and password"
-      if user.nil? || password.nil?
-        raise ArgumentError, 'Both boxcar.user and boxcar.password must be defined for the Boxcar notifier'
-      else
-        @boxcar = BoxcarAPI::User.new(@config["boxcar.user"], @config["boxcar.password"])
+      @notifiers = Array.new
+      init_notifiers
+    end
+
+    def init_notifiers
+      @config["notifiers"].each do |n|
+        # This require makes the assumption that if __FILE__ is in the
+        # path, We can naturally look down one level.
+        begin
+          require "notifiers/#{n + '_notifier'}"
+          @notifiers << Kernel.const_get("TiVo2Podcast").const_get(n.capitalize + "Notifier").new(@config)
+        rescue LoadError
+          # Should this toss an exception instead of an error message?
+          puts "Could not find #{n} notifier... Ignoring."
+        end
       end
     end
 
     def notify(message)
-      # TODO: I should check for failure here (based on the result of
-      #       a call) and then disable doing the notify
-      @boxcar.notify(message, 'TiVo2Podcast') unless @boxcar.nil?
+      @notifiers.each { |n| n.notify(message) }
     end
   end
 end
+
