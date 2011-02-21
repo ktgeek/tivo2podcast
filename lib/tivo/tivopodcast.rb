@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2010 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -17,7 +18,7 @@ require 'ansi/progressbar'
 require 'TiVo'
 require 'forwardable'
 require 'set'
-require 'notifiers'
+require 'notifier'
 
 module Tivo2Podcast
   class Config
