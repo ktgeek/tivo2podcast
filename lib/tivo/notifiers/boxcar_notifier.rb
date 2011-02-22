@@ -19,7 +19,6 @@ module TiVo2Podcast
     def initialize(config)
       @config = config
       user, password = @config["boxcar.user"], @config["boxcar.password"]
-      puts "about to talk about user and password"
       if user.nil? || password.nil?
         raise ArgumentError, 'Both boxcar.user and boxcar.password must be defined for the Boxcar notifier'
       else
