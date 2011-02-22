@@ -106,7 +106,11 @@ module Tivo2Podcast
     end
 
     def verbose=(value)
-      @config['verbose'] = true
+      @config['verbose'] = value
+    end
+
+    def cleanup=(value)
+      @config['cleanup'] = value
     end
 
     # For backward compatibility with Config from when more things
@@ -209,7 +213,7 @@ module Tivo2Podcast
         create_rss(config)
 
         # Put notification here
-        @notification.notify("Finished processing #{config['config_name']}")
+        @notifier.notify("Finished processing #{config['config_name']}")
       end
     end
 
