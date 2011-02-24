@@ -15,6 +15,7 @@
 #
 require 'forwardable'
 require 'set'
+require 'thread'
 require 'uri'
 require 'rss'
 require 'rss/itunes'
@@ -135,7 +136,45 @@ module Tivo2Podcast
                                         ENV['TIVO2PODCASTDIR']) +
                                        File::SEPARATOR + '.tivo2podcast.db')
       @notifier = TiVo2Podcast::Notifier.new(@config)
+
+
+      @transcode_queue = Queue.new
+      create_transcode_thread
     end
+
+    class TranscodeThreadConfig
+      attr_reader :config, :show, :basename, :download, :transcode
+      
+      def initialize(config, show, basename, download, transcode)
+        @config, @show, @basename = config, show, basename
+        @download, @transcode = download, transcode
+      end
+    end
+
+    def create_transcode_thread
+      @transcode_thread = Thread.new do
+        while true
+          tc = @transcode_queue.deq
+          break if tc == :END_OF_WORK
+
+          # I need config, s/show, basename, download, transcode
+
+          @notifier.notify("Starting transcode of #{tc.basename}")
+          
+          transcoder = Tivo2Podcast::Transcoder.new(@config, tc.config, tc.show)
+          transcoder.transcode_show(tc.download, tc.transcode)
+
+          transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
+            
+          File.delete(tc.download)
+
+          @db.add_show(tc.show, tc.config, tc.transcode)
+          @notifier.notify("Finished transcode of #{tc.basename}")
+        end
+      end
+    end
+          
+        
 
     def download_show(show, name)
       tivo = @config.tivo_factory
@@ -191,30 +230,31 @@ module Tivo2Podcast
             # If the file exists, we'll assume the download went okay
             # Shame on us for not checking if it isn't
             download_show(s, download) unless File.exists?(download)
-            
-            transcoder = Tivo2Podcast::Transcoder.new(@config, config, s)
-            transcoder.transcode_show(download, transcode)
 
-            transcoder.skip_commercials(basename, download, transcode)
-            
-            File.delete(download)
-
-            @db.add_show(s, config, transcode)
-            @notifier.notify("Finished download and transcode of #{basename}")
+            # Code was removed here to put into thread
+            #   Create arugments for thread
+            @transcode_queue.enq(TranscodeThreadConfig.new(config, s, basename,
+                                                           download, transcode))
           else
             puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @config.verbose
           end
         end
+      end
 
+      @transcode_queue.enq(:END_OF_WORK)
+
+      # configs are done being worked on here
+      @transcode_thread.join
+      
+      configs.each do |config|
         # cleanup phase goes here
         deletes = @db.old_show_cleanup(config)
         deletes.each { |f| File.delete(f) }
 
         create_rss(config)
-
         # Put notification here
         @notifier.notify("Finished processing #{config['config_name']}")
-      end
+      end        
     end
 
     def file_cleanup
