@@ -135,7 +135,7 @@ module Tivo2Podcast
                                         ENV['HOME'] :
                                         ENV['TIVO2PODCASTDIR']) +
                                        File::SEPARATOR + '.tivo2podcast.db')
-      @notifier = TiVo2Podcast::Notifier.new(@config)
+      @notifier = TiVo2Podcast::NotifierEngine.new(@config)
     end
 
     class TranscodeThreadConfig

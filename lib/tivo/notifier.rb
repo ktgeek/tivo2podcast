@@ -13,7 +13,7 @@
 #       with the distribution.
 
 module TiVo2Podcast
-  class Notifier
+  class NotifierEngine
     def initialize(config)
       @config = config
       @notifiers = Array.new
@@ -36,6 +36,16 @@ module TiVo2Podcast
 
     def notify(message)
       @notifiers.each { |n| n.notify(message) }
+    end
+  end
+
+  # Base class for doing notifications. Will respond to notify, but will do nothing.
+  class Notifier
+    def initialize(config)
+      @config = config
+    end
+
+    def notify(message)
     end
   end
 end

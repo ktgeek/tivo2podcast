@@ -11,25 +11,15 @@
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
-require 'rubygems'
-require 'boxcar_api'
 
 module TiVo2Podcast
-  class BoxcarNotifier < Notifier
+  class ConsoleNotifier < Notifier
     def initialize(config)
       super(config)
-      user, password = @config["boxcar.user"], @config["boxcar.password"]
-      if user.nil? || password.nil?
-        raise ArgumentError, 'Both boxcar.user and boxcar.password must be defined for the Boxcar notifier'
-      else
-        @boxcar = BoxcarAPI::User.new(@config["boxcar.user"], @config["boxcar.password"])
-      end
     end
 
     def notify(message)
-      # TODO: I should check for failure here (based on the result of
-      #       a call) and then disable doing the notify
-      @boxcar.notify(message, 'TiVo2Podcast') unless @boxcar.nil?
+      puts message
     end
   end
 end
