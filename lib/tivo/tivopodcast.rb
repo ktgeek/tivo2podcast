@@ -136,10 +136,6 @@ module Tivo2Podcast
                                         ENV['TIVO2PODCASTDIR']) +
                                        File::SEPARATOR + '.tivo2podcast.db')
       @notifier = TiVo2Podcast::Notifier.new(@config)
-
-
-      @transcode_queue = Queue.new
-      create_transcode_thread
     end
 
     class TranscodeThreadConfig
@@ -151,10 +147,11 @@ module Tivo2Podcast
       end
     end
 
-    def create_transcode_thread
-      @transcode_thread = Thread.new do
+    def create_transcode_thread(queue)
+      raise ArgumentError if queue.nil?
+      Thread.new do
         loop do
-          tc = @transcode_queue.deq
+          tc = queue.deq
           break if tc == :END_OF_WORK
 
           # I need config, s/show, basename, download, transcode
@@ -201,6 +198,9 @@ module Tivo2Podcast
 
       tivo = @config.tivo_factory
 
+      transcode_queue = Queue.new
+      transcode_thread = create_transcode_thread(transcode_queue)
+      
       configs.each do |config|
         shows = tivo.get_shows_by_name(config['show_name'])
 
@@ -235,8 +235,8 @@ module Tivo2Podcast
 
             # Code was removed here to put into thread
             #   Create arugments for thread
-            @transcode_queue.enq(TranscodeThreadConfig.new(config, s, basename,
-                                                           download, transcode))
+            transcode_queue.enq(TranscodeThreadConfig.new(config, s, basename,
+                                                          download, transcode))
           else
             puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @config.verbose
           end
@@ -244,10 +244,10 @@ module Tivo2Podcast
       end
 
       # configs are done being worked on here, thereis no more work.
-      @transcode_queue.enq(:END_OF_WORK)
+      transcode_queue.enq(:END_OF_WORK)
 
       # Wait for this thread to complete before finishing
-      @transcode_thread.join
+      transcode_thread.join
       
       configs.each do |config|
         # cleanup phase goes here
