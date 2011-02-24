@@ -72,8 +72,8 @@
 # default: nil
 #
 # notifiers:
-# - Boxcar
-# - Email
+# - boxcar
+# - console
 
 # Notifier specific setup options.
 #
