@@ -138,40 +138,76 @@ module Tivo2Podcast
       @notifier = TiVo2Podcast::NotifierEngine.new(@config)
     end
 
-    class TranscodeThreadConfig
-      attr_reader :config, :show, :basename, :download, :transcode
-      
-      def initialize(config, show, basename, download, transcode)
-        @config, @show, @basename = config, show, basename
-        @download, @transcode = download, transcode
+    class WorkOrder
+      attr_reader :type, :config
+      def initialize(config)
+        @config = config
+        @type = nil
       end
     end
 
-    def create_transcode_thread(queue)
+    class NoMoreWorkOrder < WorkOrder
+      def initialize
+        super(nil)
+        @type = :NO_MORE_WORK
+      end
+    end
+    
+    class TranscodeWorkOrder < WorkOrder
+      attr_reader :show, :basename, :download, :transcode
+
+      def initialize(config, show, basename, download, transcode)
+        super(config)
+        @show, @basename = show, basename
+        @download, @transcode = download, transcode
+        @type = :TRANSCODE
+      end
+    end
+
+    class CleanupWorkOrder < WorkOrder
+      def initialize(config)
+        super(config)
+        @type = :CLEANUP
+      end
+    end
+
+    # This method feels like its still doing too much...
+    def create_work_thread(queue)
       raise ArgumentError if queue.nil?
       Thread.new do
         loop do
           tc = queue.deq
-          break if tc == :END_OF_WORK
 
-          # I need config, s/show, basename, download, transcode
+          case tc.type
+          when :NO_MORE_WORK
+            break;
 
-          @notifier.notify("Starting transcode of #{tc.basename}")
+          when :TRANSCODE
+            # I need config, s/show, basename, download, transcode
+
+            @notifier.notify("Starting transcode of #{tc.basename}")
           
-          transcoder = Tivo2Podcast::Transcoder.new(@config, tc.config, tc.show)
-          transcoder.transcode_show(tc.download, tc.transcode)
+            transcoder = Tivo2Podcast::Transcoder.new(@config, tc.config, tc.show)
+            transcoder.transcode_show(tc.download, tc.transcode)
 
-          transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
+            transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
             
-          File.delete(tc.download)
+            File.delete(tc.download)
 
-          @db.add_show(tc.show, tc.config, tc.transcode)
-          @notifier.notify("Finished transcode of #{tc.basename}")
+            @db.add_show(tc.show, tc.config, tc.transcode)
+            @notifier.notify("Finished transcode of #{tc.basename}")
+
+          when :CLEANUP
+            deletes = @db.old_show_cleanup(tc.config)
+            deletes.each { |f| File.delete(f) }
+
+            create_rss(tc.config)
+            # Put notification here
+            @notifier.notify("Finished processing #{tc.config['config_name']}")
+          end
         end
       end
     end
-          
-        
 
     def download_show(show, name)
       tivo = @config.tivo_factory
@@ -198,8 +234,8 @@ module Tivo2Podcast
 
       tivo = @config.tivo_factory
 
-      transcode_queue = Queue.new
-      transcode_thread = create_transcode_thread(transcode_queue)
+      work_queue = Queue.new
+      work_thread = create_work_thread(work_queue)
       
       configs.each do |config|
         shows = tivo.get_shows_by_name(config['show_name'])
@@ -235,29 +271,21 @@ module Tivo2Podcast
 
             # Code was removed here to put into thread
             #   Create arugments for thread
-            transcode_queue.enq(TranscodeThreadConfig.new(config, s, basename,
-                                                          download, transcode))
+            work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
+                                                  download, transcode))
           else
             puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @config.verbose
           end
         end
+
+        work_queue.enq(CleanupWorkOrder.new(config))
       end
 
       # configs are done being worked on here, thereis no more work.
-      transcode_queue.enq(:END_OF_WORK)
+      work_queue.enq(NoMoreWorkOrder.new)
 
       # Wait for this thread to complete before finishing
-      transcode_thread.join
-      
-      configs.each do |config|
-        # cleanup phase goes here
-        deletes = @db.old_show_cleanup(config)
-        deletes.each { |f| File.delete(f) }
-
-        create_rss(config)
-        # Put notification here
-        @notifier.notify("Finished processing #{config['config_name']}")
-      end        
+      work_thread.join
     end
 
     def file_cleanup
