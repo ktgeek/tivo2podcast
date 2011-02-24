@@ -153,7 +153,7 @@ module Tivo2Podcast
 
     def create_transcode_thread
       @transcode_thread = Thread.new do
-        while true
+        loop do
           tc = @transcode_queue.deq
           break if tc == :END_OF_WORK
 
@@ -225,11 +225,13 @@ module Tivo2Podcast
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
           unless (@db.got_show?(config, s) || File.exist?(transcode))
-            @notifier.notify("Starting download and transcode of #{basename}")
+            @notifier.notify("Starting download of #{basename}")
             
             # If the file exists, we'll assume the download went okay
             # Shame on us for not checking if it isn't
             download_show(s, download) unless File.exists?(download)
+
+            @notifier.notify("Finished download of #{basename}")
 
             # Code was removed here to put into thread
             #   Create arugments for thread
@@ -241,9 +243,10 @@ module Tivo2Podcast
         end
       end
 
+      # configs are done being worked on here, thereis no more work.
       @transcode_queue.enq(:END_OF_WORK)
 
-      # configs are done being worked on here
+      # Wait for this thread to complete before finishing
       @transcode_thread.join
       
       configs.each do |config|
