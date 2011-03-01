@@ -15,13 +15,11 @@
 #
 require 'set'
 require 'thread'
-require 'uri'
-require 'rss'
-require 'rss/itunes'
 require 'ansi/progressbar'
 require 'notifier'
 require 'tivopodcast/transcoder'
 require 'tivopodcast/database'
+require 'tivopodcast/rss_generator'
 
 module Tivo2Podcast
   class MainEngine
@@ -202,59 +200,6 @@ module Tivo2Podcast
         configs = @db.get_configs_by_ids(configids.to_a)
         configs.each { |c| create_rss(c) }
       end
-    end
-  end
-
-  # Generates the video podcast feed.
-  class RssGenerator
-    # Creates the RssGenerator given a config as specified by
-    # Database.init_database and an instanstance of Database
-    def initialize(config, db)
-      @config = config
-      @db = db
-    end
-
-    # Generates the RSS and returns it as a string.
-    def generate()
-      # Here is where I would generate RSS and also clean up older files
-      rss = RSS::Maker.make("2.0") do |maker|
-        maker.channel.title = @config['show_name']
-        maker.channel.description = "My " + @config['show_name'] + " RSS feed"
-        maker.channel.link = @config['rss_link']
-        maker.channel.lastBuildDate = Time.now
-
-        maker.channel.itunes_author = maker.channel.title
-        maker.channel.itunes_owner.itunes_name=@config['rss_ownername']
-        maker.channel.itunes_owner.itunes_email=@config['rss_owneremail']
-        
-        maker.items.do_sort = true
-
-        @db.shows_by_configid(@config['id']) do |show|
-          maker.items.new_item do |item|
-            item.title = show['s_ep_title']
-            item.link = URI.escape(@config['rss_baseurl'] + show['filename'])
-
-            item.guid.content = item.link
-            item.guid.isPermaLink = true
-            item.pubDate = Time.at(show['s_ep_timecap'])
-            item.description = show['s_ep_description']
-            item.itunes_summary = show['s_ep_description']
-            item.itunes_explicit = "No"
-
-            # I need to come back and do the time.  For now, I'm hard coding
-            # to 32 minutes
-            # time = show['s_ep_length']
-            item.itunes_duration =
-              TiVo::TiVoVideo.human_duration(show['s_ep_length'])
-
-            item.enclosure.url = item.link
-            item.enclosure.length = File.size(show['filename'])
-            item.enclosure.type = 'video/x-m4v'
-          end
-        end
-      end
-
-      return rss.to_s
     end
   end
 end
