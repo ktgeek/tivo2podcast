@@ -26,6 +26,7 @@ rescue LoadError
   # Not an error, but we'll swallow it for now.
 end
 require 'optparse'
+require 'tivopodcast/config'
 require 'tivopodcast'
 
 t2pconfig = Tivo2Podcast::Config.new
