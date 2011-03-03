@@ -16,7 +16,7 @@
 require 'set'
 require 'thread'
 require 'ansi/progressbar'
-require 'notifier'
+require 'tivopodcast/notifier'
 require 'tivopodcast/transcoder'
 require 'tivopodcast/database'
 require 'tivopodcast/rss_generator'
