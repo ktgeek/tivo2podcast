@@ -47,7 +47,8 @@ create table configs (
     encode_video_bitrate INTEGER,
     encode_decomb INTEGER,
     max_width INTEGER,
-    max_height INTEGER
+    max_height INTEGER,
+    aggregate BOOLEAN
 );
 create index configs_config_name_index on configs(config_name);
 create table shows (
@@ -99,6 +100,13 @@ SQL
     # Select all the shows for a given config id
     def shows_by_configid(id, &block)
       @db.query("select * from shows where configid=?", id) do |rows|
+        rows.each { |row| yield row }
+      end
+    end
+
+    # Select all shows for the aggregated feed
+    def aggregate_shows(&block)
+      @db.query("select * from shows where configid in (select id from configs where aggregate=1) order by ids") do |rows|
         rows.each { |row| yield row }
       end
     end
