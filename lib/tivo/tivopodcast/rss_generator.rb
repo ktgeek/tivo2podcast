@@ -22,9 +22,10 @@ module Tivo2Podcast
   class RssGenerator
     # Creates the RssGenerator given a config as specified by
     # Database.init_database and an instanstance of Database
-    def initialize(config, db)
+    def initialize(config, db, aggregate = false)
       @config = config
       @db = db
+      @aggregate = aggregate
     end
 
     # Generates the RSS and returns it as a string.
@@ -42,7 +43,7 @@ module Tivo2Podcast
         
         maker.items.do_sort = true
 
-        @db.shows_by_configid(@config['id']) do |show|
+        buildp = lambda do |show|
           maker.items.new_item do |item|
             item.title = show['s_ep_title']
             item.link = URI.escape(@config['rss_baseurl'] + show['filename'])
@@ -54,9 +55,6 @@ module Tivo2Podcast
             item.itunes_summary = show['s_ep_description']
             item.itunes_explicit = "No"
 
-            # I need to come back and do the time.  For now, I'm hard coding
-            # to 32 minutes
-            # time = show['s_ep_length']
             item.itunes_duration =
               TiVo::TiVoVideo.human_duration(show['s_ep_length'])
 
@@ -65,13 +63,18 @@ module Tivo2Podcast
             item.enclosure.type = 'video/x-m4v'
           end
         end
+          
+        unless @aggregate
+          @db.shows_by_configid(@config['id'], &buildp)
+        else
+          @db.get_aggregate_shows(&buildp)
+        end
       end
 
       return rss.to_s
     end
   end
 end
-
 
 # Local Variables:
 # mode: ruby
