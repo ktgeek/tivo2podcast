@@ -180,6 +180,9 @@ module Tivo2Podcast
 
       # Wait for this thread to complete before finishing
       work_thread.join
+
+      # Create the aggregated feed
+      create_rss(@config.aggregate_config) if @config.aggregate?
     end
 
     def file_cleanup
@@ -199,6 +202,7 @@ module Tivo2Podcast
       unless configids.empty?
         configs = @db.get_configs_by_ids(configids.to_a)
         configs.each { |c| create_rss(c) }
+        create_rss(@config.aggregate_config) if @config.aggregate?
       end
     end
   end

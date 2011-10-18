@@ -37,6 +37,8 @@ module Tivo2Podcast
         "comskip" => nil,
         "comskip_ini" => nil,
         "addchapterinfo" => nil,
+        "baseurl" => nil,
+        "aggregate_file" => nil,
         "notifiers" => Array.new
       }
 
@@ -45,6 +47,18 @@ module Tivo2Podcast
       if File.exists?(config_file)
         @config.merge!(YAML.load_file(config_file))
       end
+    end
+
+    def aggregate?
+      !(@config['aggregate_file'].nil? || @config['baseurl'].nil?)
+    end
+
+    def aggregate_config
+      {
+        'show_name' => 'Aggregated',
+        'rss_baseurl' => @config['baseurl'],
+        'rss_filename' => @config['aggregate_file']
+      }
     end
     
     def tivo_factory
