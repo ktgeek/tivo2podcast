@@ -57,7 +57,8 @@ module Tivo2Podcast
       {
         'show_name' => 'Aggregated',
         'rss_baseurl' => @config['baseurl'],
-        'rss_filename' => @config['aggregate_file']
+        'rss_filename' => @config['aggregate_file'],
+        'rss_link' => 'http://example.com/'
       }
     end
     

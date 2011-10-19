@@ -118,8 +118,8 @@ module Tivo2Podcast
       end
     end
 
-    def create_rss(config)
-      rss = Tivo2Podcast::RssGenerator.new(config, @db)
+    def create_rss(config, aggregate=false)
+      rss = Tivo2Podcast::RssGenerator.new(config, @db, aggregate)
       File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
     end
 
@@ -182,7 +182,7 @@ module Tivo2Podcast
       work_thread.join
 
       # Create the aggregated feed
-      create_rss(@config.aggregate_config) if @config.aggregate?
+      create_rss(@config.aggregate_config, true) if @config.aggregate?
     end
 
     def file_cleanup
@@ -202,7 +202,7 @@ module Tivo2Podcast
       unless configids.empty?
         configs = @db.get_configs_by_ids(configids.to_a)
         configs.each { |c| create_rss(c) }
-        create_rss(@config.aggregate_config) if @config.aggregate?
+        create_rss(@config.aggregate_config, true) if @config.aggregate?
       end
     end
   end

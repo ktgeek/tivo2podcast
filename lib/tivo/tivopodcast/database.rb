@@ -106,7 +106,7 @@ SQL
 
     # Select all shows for the aggregated feed
     def get_aggregate_shows(&block)
-      @db.query("select * from shows where configid in (select id from configs where aggregate=1) order by ids") do |rows|
+      @db.query("select * from shows where configid in (select id from configs where aggregate=1) order by id") do |rows|
         rows.each { |row| yield row }
       end
     end
