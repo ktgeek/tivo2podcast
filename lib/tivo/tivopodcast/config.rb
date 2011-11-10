@@ -17,13 +17,18 @@ require 'forwardable'
 require 'TiVo'
 
 module Tivo2Podcast
+  # This class makes up the configuation for the TiVo2Podcast engine
+  # and includes factory and convenience methods
   class Config
     extend Forwardable
 
+    # The default configuration filename
     CONFIG_FILENAME = (ENV['TIVO2PODCASTDIR'].nil? ?
                        ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
       File::SEPARATOR + '.tivo2podcast.conf'
 
+    # Inialize the configuration with an optional file to pull the
+    # base config from.
     def initialize(file = nil)
       @config = {
         "tivo_addr" => nil,
@@ -61,7 +66,9 @@ module Tivo2Podcast
         'rss_link' => 'http://example.com/'
       }
     end
-    
+
+    # Creates an instance of a TiVo object based on the configurations
+    # tivo_addr and mak
     def tivo_factory
       return TiVo::TiVo.new(tivo_addr, mak)
     end
@@ -69,12 +76,10 @@ module Tivo2Podcast
     def tivo_addr=(value)
       @config['tivo_addr'] = value
     end
-    
-    # Should this throw an exception when the tivo isn't found, or should it
-    # Also, should the tivo location be moved up to 
+
+    # Returns the tivo_address defined in the config.  If one is not
+    # defined in the config, try to locate the tivo vi dnssd
     def tivo_addr
-      # If the user didn't pass in a address or hostname via the command line,
-      # try to locate it via dnssd.
       if @config['tivo_addr'].nil?
         puts "Attemping to locate tivo..." if @verbose
         tmp = TiVo.locate_via_dnssd
@@ -103,7 +108,9 @@ module Tivo2Podcast
     def mak=(value)
       @config['mak'] = value
     end
-    
+
+    # Returns the mak from the configuration file or look it up via
+    # the .tivodecode_make file
     def mak
       if @config['mak'].nil?
         # Load the mak if we have a mak file
@@ -123,8 +130,8 @@ module Tivo2Podcast
 
     # For backward compatibility with Config from when more things
     # were attainable by methods, we'll check the configuration hash
-    # first an entry with the same name as the method being called.
-    # If there's nothing in the hash, we'll call the normal
+    # first for an entry with the same name as the method being
+    # called.  If there's nothing in the hash, we'll call the normal
     # method_missing to throw the exception.
     def method_missing(method, *params)
       method_name = method.to_s
