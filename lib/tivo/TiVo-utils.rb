@@ -1,7 +1,7 @@
 module TiVo
   module Utils
     # Do a really cheap ass text based menu
-    def do_menu(tivo_items, menu_size=10)
+    def Utils.do_menu(tivo_items, menu_size=10)
       offset = 0
       display_items = nil
       filter_copyprotected = true
@@ -19,35 +19,38 @@ module TiVo
         end
         print "\nSelect vid, (n)ext/(p)rev #{menu_size}," +
           " # to change menu, (s)ort, (d)ownload, (q)uit: "
+        $stdout.flush
         selection = nil
         input = $stdin.readline.strip
         case input
         when 'p':
-            t_offset = offset - menu_size
+          t_offset = offset - menu_size
           offset = t_offset if t_offset >= 0
         when 'n':
-            t_offset = offset + menu_size
+          t_offset = offset + menu_size
           offset = t_offset if t_offset < tivo_items.videos.length
         when '#':
-            print "Enter the number of lines to display: "
+          print "Enter the number of lines to display: "
+          $stdout.flush
           numInput= $stdin.readline.strip.to_i
           if !numInput.nil? && numInput > 0
             menu_size=numInput
           end
         when 's':
             print "Select sort: t/T=title, d/D=date, c/C=chan, cap to reverse, other to abort:"
+          $stdout.flush
           sortInput= $stdin.readline.strip
           case sortInput
           when 't','T':
-              tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.printable_title }
+            tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.printable_title }
             tivo_items.videos.reverse! if sortInput=='T'
             offset=0
           when 'c','C':
-              tivo_items.videos=tivo_items.videos.sort_by { |a| a.channel }
+            tivo_items.videos=tivo_items.videos.sort_by { |a| a.channel }
             tivo_items.videos.reverse! if sortInput=='C'
             offset=0
           when 'd', 'D':
-              tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.time_captured }
+            tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.time_captured }
             tivo_items.videos.reverse! if sortInput=='D'
             offset=0
           end
