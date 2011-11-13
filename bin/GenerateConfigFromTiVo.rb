@@ -55,12 +55,7 @@ db = Tivo2Podcast::Database.new((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
                                  ENV['TIVO2PODCASTDIR']) +
                                 File::SEPARATOR + '.tivo2podcast.db')
 
-# tivo = t2pconfig.tivo_factory
-
-tivo_items = nil
-File.open('test/tivo.xml') do |xml| 
-  tivo_items = TiVo::TiVoItemFactory.from_xml(xml.read)
-end
+tivo = t2pconfig.tivo_factory
 
 # fuck = {
 #   "aggregate"=>0,
