@@ -57,29 +57,7 @@ db = Tivo2Podcast::Database.new((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
 
 tivo = t2pconfig.tivo_factory
 
-# fuck = {
-#   "aggregate"=>0,
-#   "max_width"=>960,
-#   "encode_video_bitrate"=>768,
-#   "rss_owneremail"=>"ass",
-#   "rss_link"=>"http://foo.bar/",
-#   "ep_to_keep"=>4,
-#   "encode_decomb"=>1,
-#   "rss_baseurl"=>"http://fuck.stuck/",
-#   "encode_crop"=>"",
-#   "rss_ownername"=>"Keith",
-#   "encode_audio_bitrate"=>48,
-#   "rss_filename"=>"glee.xml",
-#   "config_name"=>"Glee"
-# }
-
-# begin
-#   db.add_config(fuck)
-# rescue => ex
-#   pp ex
-# end
-
-basis = TiVo::Utils::do_menu(tivo_items)
+basis = TiVo::Utils::do_menu(tivo.get_listings)
 
 printf("\n\n")
 hl = HighLine.new
