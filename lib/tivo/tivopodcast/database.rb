@@ -29,6 +29,14 @@ module Tivo2Podcast
       init_database if db_needs_init
     end
 
+    def debug(debug_on = true)
+      if debug_on
+        @db.trace { |sql| puts sql }
+      else
+        @db.trace
+      end
+    end
+
     # Creates the database tables that this class acts as a facade for
     def init_database()
       @db.execute_batch(<<SQL
@@ -84,6 +92,23 @@ SQL
         end
       end
       return result
+    end
+
+    def add_config(kvpairs)
+      ps = @db.prepare('insert into configs(config_name, show_name, rss_filename,
+                      rss_link, rss_baseurl, rss_ownername, rss_owneremail,
+                      ep_to_keep, encode_crop, encode_audio_bitrate,
+                      encode_video_bitrate, max_width, encode_decomb, aggregate)
+                      values (:config_name, :show_name, :rss_filename,
+                      :rss_link, :rss_baseurl, :rss_ownername, :rss_owneremail,
+                      :ep_to_keep, :encode_crop, :encode_audio_bitrate,
+                      :encode_video_bitrate, :max_width, :encode_decomb,
+                      :aggregate)')
+      ps.bind_params(kvpairs)
+      pp ps
+      puts ps.to_s
+      ps.execute()
+      ps.close()
     end
 
     # Gets the configs from the config table based on the Array of
