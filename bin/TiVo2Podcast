@@ -39,6 +39,9 @@ end
 opts.on('-C', '--cleanup', 'Clean up database based on existing files') do
   t2pconfig.cleanup = true
 end
+opts.on('-R', '--regenerate_rss', 'Regenerate all the RSS files') do
+  t2pconfig.regenerate_rss = true
+end
 opts.on('-m MAK', '--mak MAK',
         'The TiVo\'s media access key') { |k| t2pconfig.mak = k }
 opts.on('-t ADDR', '--tivo_addr ADDR',
@@ -54,12 +57,13 @@ opts.parse(ARGV)
 
 engine = Tivo2Podcast::MainEngine.new(t2pconfig)
 
-unless t2pconfig.cleanup
-  engine.normal_processing
+case
+when t2pconfig.cleanup: engine.file_cleanup
+when t2pconfig.regenerate_rss: engine.regenerate_rss_files
 else
   engine.file_cleanup
 end
-
+  
 # Local Variables:
 # mode: ruby
 # End:
