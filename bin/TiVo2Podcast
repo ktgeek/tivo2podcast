@@ -61,7 +61,7 @@ case
 when t2pconfig.cleanup: engine.file_cleanup
 when t2pconfig.regenerate_rss: engine.regenerate_rss_files
 else
-  engine.file_cleanup
+  engine.normal_processing
 end
   
 # Local Variables:
