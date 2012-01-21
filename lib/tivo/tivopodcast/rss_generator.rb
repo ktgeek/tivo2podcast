@@ -45,7 +45,11 @@ module Tivo2Podcast
 
         buildp = lambda do |show|
           maker.items.new_item do |item|
-            item.title = show['s_ep_title']
+            unless @aggregate
+              item.title = show['s_ep_title']
+            else
+              item.title = show['s_name'] + ": " + show['s_ep_title']
+            end
             item.link = URI.escape(@config['rss_baseurl'] + show['filename'])
 
             item.guid.content = item.link

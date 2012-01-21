@@ -205,6 +205,12 @@ module Tivo2Podcast
         create_rss(@config.aggregate_config, true) if @config.aggregate?
       end
     end
+
+    def regenerate_rss_files
+      configs = @db.get_configs
+      configs.each { |c| create_rss(c) }
+      create_rss(@config.aggregate_config, true) if @config.aggregate?
+    end
   end
 end
 

@@ -44,7 +44,8 @@ module Tivo2Podcast
         "addchapterinfo" => nil,
         "baseurl" => nil,
         "aggregate_file" => nil,
-        "notifiers" => Array.new
+        "notifiers" => Array.new,
+        "regenerate_rss" => false
       }
 
       config_file = file.nil? ? CONFIG_FILENAME : file
@@ -126,6 +127,10 @@ module Tivo2Podcast
 
     def cleanup=(value)
       @config['cleanup'] = value
+    end
+
+    def regenerate_rss=(value)
+      @config['regenerate_rss'] = value
     end
 
     # For backward compatibility with Config from when more things
