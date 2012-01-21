@@ -211,7 +211,13 @@ module TiVo
     end
 
     def get_listings(recurse=true)
-      query_url = @base_url + '?Command=QueryContainer&Container=/NowPlaying'
+      # Something changed in the tivo software and it seemed to be
+      # only returning the last 16 items if ItemCount as not
+      # specified.  I've hard coded it to 50 until
+      # get_listings_from_url can be rewritten to get more data with
+      # an offset
+      query_url = @base_url +
+        '?Command=QueryContainer&Container=/NowPlaying&ItemCount=50'
       if recurse
         query_url += '&Recurse=Yes'
       end
@@ -219,6 +225,9 @@ module TiVo
     end
 
     def get_listings_from_url(url, recurse=false)
+      # This needs to be expanded to loop around if all the videos
+      # weren't snagged in the first grab.  We'll need to make some
+      # URL assumptions we hadn't before.
       xml = @client.get_content(url)
       listings = TiVoItemFactory.from_xml(xml)
       if recurse
