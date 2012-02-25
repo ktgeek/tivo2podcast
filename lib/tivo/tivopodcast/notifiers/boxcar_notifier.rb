@@ -16,20 +16,29 @@ require 'boxcar_api'
 
 module TiVo2Podcast
   class BoxcarNotifier < Notifier
+    # This is set for the generic provider from boxcar.  This won't
+    # allow us to broadcast, which is fine, since we only care about
+    # notifying a single user.
+    PROVIDER_KEY = 'MH0S7xOFSwVLNvNhTpiC'
+    
     def initialize(config)
       super(config)
-      user, password = @config["boxcar.user"], @config["boxcar.password"]
-      if user.nil? || password.nil?
+
+      @user = @config["boxcar.user"]
+      if @user.nil?
         raise ArgumentError, 'Both boxcar.user and boxcar.password must be defined for the Boxcar notifier'
-      else
-        @boxcar = BoxcarAPI::User.new(@config["boxcar.user"], @config["boxcar.password"])
       end
+      
+      @boxcar = BoxcarAPI::Provider.new(PROVIDER_KEY)
+      @boxcar.subscribe(@user)
     end
 
     def notify(message)
       # TODO: I should check for failure here (based on the result of
       #       a call) and then disable doing the notify
-      @boxcar.notify(message, 'TiVo2Podcast') unless @boxcar.nil?
+      unless @boxcar.nil?
+        @boxcar.notify(@user, message, {:from_screen_name => "Tivo2Podcast"})
+      end
     end
   end
 end
