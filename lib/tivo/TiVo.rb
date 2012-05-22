@@ -210,7 +210,7 @@ module TiVo
       @client.set_auth(@base_url, USER, @mak)
     end
 
-    def get_listings(recurse=true)
+    def get_listings(recurse=true, get_xml=false)
       # Something changed in the tivo software and it seemed to be
       # only returning the last 16 items if ItemCount as not
       # specified.  I've hard coded it to 50 until
@@ -221,7 +221,11 @@ module TiVo
       if recurse
         query_url += '&Recurse=Yes'
       end
-      get_listings_from_url(query_url)
+      unless get_xml
+        get_listings_from_url(query_url)
+      else
+        get_listings_xml(query_url)
+      end
     end
 
     def get_listings_from_url(url, recurse=false)
@@ -238,6 +242,13 @@ module TiVo
         listings.folders = nil
       end
       return listings
+    end
+
+    # Returns the raw XML for listings.  This is really useful for
+    # debugging and learning new fields from the TiVo.  Not really
+    # expected to be used by end user programs
+    def get_listings_xml(url)
+      @client.get_content(url)
     end
 
     # Returns all show matching the given name/regex that are not copy
