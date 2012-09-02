@@ -14,6 +14,7 @@
 #       with the distribution.
 #
 require 'forwardable'
+require 'yaml'
 require 'TiVo'
 
 module Tivo2Podcast
