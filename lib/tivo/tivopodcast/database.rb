@@ -26,6 +26,23 @@ module Tivo2Podcast
       @db.results_as_hash = true
       @db.type_translation = true
 
+      # The latest version of ruby-sqlite seems to have a bug, where
+      # sometimes the value is actually a fixnum, so the string
+      # comparisons don't work.  This isn't the best fix, but it works
+      # for now.
+      [ "bit",
+        "bool",
+        "boolean" ].each do |type|
+        @db.translator.add_translator( type ) do |t,v|
+          v2 = v.to_s
+          !( v2.strip.gsub(/00+/,"0") == "0" ||
+             v2.downcase == "false" ||
+             v2.downcase == "f" ||
+             v2.downcase == "no" ||
+             v2.downcase == "n" )
+        end
+      end
+
       init_database if db_needs_init
     end
 
