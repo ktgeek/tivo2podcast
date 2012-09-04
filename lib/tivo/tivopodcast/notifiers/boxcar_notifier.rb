@@ -28,16 +28,29 @@ module TiVo2Podcast
       if @user.nil?
         raise ArgumentError, 'Both boxcar.user and boxcar.password must be defined for the Boxcar notifier'
       end
-      
+
       @boxcar = BoxcarAPI::Provider.new(PROVIDER_KEY)
-      @boxcar.subscribe(@user)
+      begin
+        @boxcar.subscribe(@user)
+      rescue Exception => e
+        # TODO: replace this with some form of logging. For now, stderr
+        $stderr.puts "Error subscribing to boxcar api"
+        @boxcar = nil
+      end
     end
 
     def notify(message)
       # TODO: I should check for failure here (based on the result of
       #       a call) and then disable doing the notify
       unless @boxcar.nil?
-        @boxcar.notify(@user, message, {:from_screen_name => "Tivo2Podcast"})
+        Thread.new do
+          begin
+            @boxcar.notify(@user, message, {:from_screen_name => "Tivo2Podcast"})
+            rescue Exception => e
+            # TODO: replace this with some form of logging. For now, stderr
+            $stderr.puts "Error sending message to boxcar api"
+          end
+        end
       end
     end
   end
