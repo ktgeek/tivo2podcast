@@ -198,8 +198,9 @@ SQL
       got_one = false
       # There is probably a better way to test for existance, but I'll
       # ask for help later
-      @db.query('select 1 from shows where configid=? and s_ep_programid=?',
-                config['id'], show.program_id) do |results|
+      @db.query('select 1 from shows
+                where configid=:id and s_ep_programid=:pid',
+                "id" => config['id'], "pid" => show.program_id) do |results|
         results.each do |rs|
           got_one = true
         end
