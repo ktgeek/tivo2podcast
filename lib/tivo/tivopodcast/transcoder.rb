@@ -149,8 +149,8 @@ module Tivo2Podcast
         exit(1)
       end
 
-      File.delete(chpfile)
-      File.delete(basename + ".log")
+      File.delete(chpfile) if File.exist(chpfile)
+      File.delete(basename + ".log") if File.exist(basename + ".log")
     end
   end
 end
