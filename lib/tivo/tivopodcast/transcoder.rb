@@ -103,7 +103,7 @@ module Tivo2Podcast
         ')' unless @show.episode_number.nil?
 
       command = "#{@config.atomicparsley} \"#{outfile}\" -W " +
-        "--title \"#{showtitle}\"--TVShowName \"#{@show.title}\" " +
+        "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " +
         "--TVEpisode \"#{@show.episode_title(true)}\" --artist \"#{@show.title}\""
       command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
       command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
@@ -149,8 +149,8 @@ module Tivo2Podcast
         exit(1)
       end
 
-      File.delete(chpfile)
-      File.delete(basename + ".log")
+      File.delete(chpfile) if File.exist(chpfile)
+      File.delete(basename + ".log") if File.exist(basename + ".log")
     end
   end
 end
