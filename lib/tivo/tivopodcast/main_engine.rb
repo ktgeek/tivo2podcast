@@ -86,7 +86,7 @@ module Tivo2Podcast
 
             transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
             
-            File.delete(tc.download)
+            File.delete(tc.download) if File.exists?(tc.download)
 
             @db.add_show(tc.show, tc.config, tc.transcode)
             @notifier.notify("Finished transcode of #{tc.basename}")
@@ -144,7 +144,7 @@ module Tivo2Podcast
         # So starts the giant loop that processes the shows...
         shows.each do |s|
           # Beef this up to capture the show title as well
-          basename = s.title + '-' + s.time_captured.strftime("%Y%m%d")
+          basename = s.title + '-' + s.time_captured.strftime("%Y%m%d%H&M")
           basename = basename + '-' + s.episode_title unless s.episode_title.nil?
           basename = basename + '-' + s.episode_number unless s.episode_number.nil?
           basename.gsub!(/[:\?]/, '_')
