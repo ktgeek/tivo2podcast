@@ -30,13 +30,13 @@ module TiVo2Podcast
       end
 
       @boxcar = BoxcarAPI::Provider.new(PROVIDER_KEY)
-      begin
-        @boxcar.subscribe(@user)
-      rescue Exception => e
-        # TODO: replace this with some form of logging. For now, stderr
-        $stderr.puts "Error subscribing to boxcar api"
-        @boxcar = nil
-      end
+      # begin
+      #   @boxcar.subscribe(@user)
+      # rescue Exception => e
+      #   # TODO: replace this with some form of logging. For now, stderr
+      #   $stderr.puts "Error subscribing to boxcar api"
+      #   @boxcar = nil
+      # end
     end
 
     def notify(message)
@@ -46,7 +46,7 @@ module TiVo2Podcast
         Thread.new do
           begin
             @boxcar.notify(@user, message, {:from_screen_name => "Tivo2Podcast"})
-            rescue Exception => e
+          rescue Exception => e
             # TODO: replace this with some form of logging. For now, stderr
             $stderr.puts "Error sending message to boxcar api"
           end
