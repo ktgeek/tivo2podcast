@@ -51,9 +51,9 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
-Tivo2Podcast.connect_database((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
-                               ENV['TIVO2PODCASTDIR']) +
-                              File::SEPARATOR + '.tivo2podcast.db')
+Tivo2Podcast::connect_database((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
+                                ENV['TIVO2PODCASTDIR']) +
+                               File::SEPARATOR + '.tivo2podcast.db')
 
 tivo = t2pconfig.tivo_factory
 

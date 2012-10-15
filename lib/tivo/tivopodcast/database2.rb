@@ -14,8 +14,10 @@
 #       with the distribution.
 #
 
+require 'active_record'
+
 module Tivo2Podcast
-  def connect_database(filename)
+  def Tivo2Podcast.connect_database(filename)
     ActiveRecord::Base.establish_connection(:adapter => 'sqlite3',
                                             :database  => filename)
   end
