@@ -42,7 +42,6 @@ module Tivo2Podcast
         "atomicparsley" => 'AtomicParsley',
         "comskip" => nil,
         "comskip_ini" => nil,
-        "addchapterinfo" => nil,
         "baseurl" => nil,
         "aggregate_file" => nil,
         "notifiers" => Array.new,

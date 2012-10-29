@@ -61,12 +61,6 @@
 #
 # comskip_ini: z:\sample\path\comskip80_031\comskip.ini
 
-# Path to the AddChapterInfo utility that comes with TiVo2Podcast
-#
-# default: nil
-#
-# addchapterinfo: /sample/path/tivo/src/AddChapterInfo
-
 # The default base url to use for the rss feeds.  Can be overridden on
 # a per-config basis.  Required for aggregated_file
 #
