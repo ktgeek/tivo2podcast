@@ -14,6 +14,8 @@
 #       with the distribution.
 #
 
+require 'ffi-mp4v2'
+
 module Tivo2Podcast
   # This class encapsulates both calling out to handbrake to doing the
   # transcoding from source mpg to iPhone friendly m4v, as well as
@@ -67,6 +69,36 @@ module Tivo2Podcast
     def decomb?
       decomb = @decomb.nil? ? @show_config['encode_decomb'] : @decomb
       (decomb.nil? || decomb == 0) ? false : true
+    end
+
+    def add_chapter_info(m4vfilename, chapfilename, total_length)
+      m4vfile = Mp4v2::mp4_modify(m4vfilename)
+
+      # Add the chapter track, have it reference the first track
+      # (should be the video) and set the "clock ticks per second" to 1.
+      # (We may want to set that to 1000 to go into milliseconds.)
+      chapter_track = Mp4v2::add_chapter_text_track(m4vfile, 1, 1)
+
+      re = /^AddChapterBySecond\((\d+),/
+      last_time = 0
+      File.open(chapfilename) do |f|
+        f.each_line do |l|
+          md = re.match(l.chomp)
+          unless md.nil?
+            if ((t = md[1].to_i) > 0)
+              Mp4v2::mp4_add_chapter(m4vfile, chapter_track, t - last_time)
+              last_time = t
+            end
+          end
+        end
+      end
+
+      if (total_length - last_time > 0)
+        Mp4v2::mp4_add_chapter(m4vfile, chapter_track, total_length - last_time)
+      end
+
+      Mp4v2::mp4_close(m4vfile)
+      Mp4v2::mp4_optimize(m4vfilename)
     end
 
     # This transcodes and properly tags the show.  infile is the
@@ -139,15 +171,7 @@ module Tivo2Podcast
 
       chpfile = basename + ".chp"
       duration = @show.duration / 1000
-      command = "#{@config.addchapterinfo} \"#{transcode}\" \"#{chpfile}\""
-      command += " #{duration}"
-      returncode = system(command)
-      if !returncode
-        puts "something isn't working right, bailing"
-        puts "Command that failed: " + command
-        # TODO: Change this to an exception
-        exit(1)
-      end
+      add_chapter_info(transcode, chpfile, duration)
 
       File.delete(chpfile) if File.exist?(chpfile)
       File.delete(basename + ".log") if File.exist?(basename + ".log")
