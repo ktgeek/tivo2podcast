@@ -46,7 +46,9 @@ packages = [Requirement.new('sqlite3', 'SQLite3 Bindings',
             Requirement.new('httpclient', 'httpclient',
                             'http://rubygems.org/gems/httpclient'),
             Requirement.new('dnssd', 'DNS Service Discovery API for Ruby',
-                            'http://rubygems.org/gems/dnssd')]
+                            'http://rubygems.org/gems/dnssd'),
+            Requirement.new('ffi', 'Foreign Function Interface for Ruby',
+                            'http://rubygems.org/games/ffi')]
 
 puts "Trying without rubygems"
 packages.each { |p| p.test }
