@@ -14,7 +14,7 @@
 #       with the distribution.
 #
 
-require 'ffi-mp4v2'
+require 'tivopodcast/ffi-mp4v2'
 
 module Tivo2Podcast
   # This class encapsulates both calling out to handbrake to doing the
