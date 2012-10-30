@@ -77,7 +77,7 @@ module Tivo2Podcast
       # Add the chapter track, have it reference the first track
       # (should be the video) and set the "clock ticks per second" to 1.
       # (We may want to set that to 1000 to go into milliseconds.)
-      chapter_track = Mp4v2::add_chapter_text_track(m4vfile, 1, 1)
+      chapter_track = Mp4v2::mp4_add_chapter_text_track(m4vfile, 1, 1)
 
       re = /^AddChapterBySecond\((\d+),/
       last_time = 0
