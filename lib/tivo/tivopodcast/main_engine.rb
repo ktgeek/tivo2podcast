@@ -101,12 +101,22 @@ module Tivo2Podcast
             @notifier.notify("Finished transcode of #{tc.basename}")
 
           when :CLEANUP
-            deletes = @db.old_show_cleanup(tc.config)
-            deletes.each { |f| File.delete(f) }
+            newest_shows = Tivo2Podcast::Db::Show.where(
+              :configid => tc.config, :on_disk => 1).order(
+              'shows.s_ep_timecap desc').limit(tc.config.ep_to_keep)
+            unless newest_shows.nil? || newest_shows.empty?
+              Tivo2Podcast::Db::Show.where(
+                  :configid => tc.config, :on_disk => 1).where(
+                  ['id not in (?)', newest_shows]).each do |show|
+                File.delete(show.filename)
+                show.on_disk = 0
+                show.save!
+              end
+            end
 
             create_rss(tc.config)
             # Put notification here
-            @notifier.notify("Finished processing #{tc.config['config_name']}")
+            @notifier.notify("Finished processing #{tc.config.config_name]}")
           end
         end
       end
@@ -133,7 +143,13 @@ module Tivo2Podcast
     end
 
     def normal_processing
-      configs = @db.get_configs(@config.opt_config_names)
+      configs = nil
+      if @config.opt_config_names.nil? || @config.opt_config_names.empty?
+        configs = Tivo2Podcast::Db::Config.all
+      else
+        configs = Tivo2Podcast::Db::Config.where(
+                    :config_name => @config.opt_config_names)
+      end
 
       tivo = @config.tivo_factory
 
@@ -141,13 +157,13 @@ module Tivo2Podcast
       work_thread = create_work_thread(work_queue)
       
       configs.each do |config|
-        shows = tivo.get_shows_by_name(config['show_name'])
+        shows = tivo.get_shows_by_name(config.show_name)
 
         # Only work on the X latest shows.  That way if there are 10
         # on the tivo, but we only want to keep 4, we don't encode 6
         # of them just to throw them out later in the cleanup phase.
-        if shows.size > config['ep_to_keep']
-          shows = shows.reverse[0, config['ep_to_keep']].reverse
+        if shows.size > config.ep_to_keep
+          shows = shows.reverse[0, config.ep_to_keep].reverse
         end
 
         # So starts the giant loop that processes the shows...
@@ -163,7 +179,7 @@ module Tivo2Podcast
 
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
-          unless (@db.got_show?(config, s) || File.exist?(transcode))
+          unless (Tivo2Podcast::Db::Show.where(:configid => config, :s_ep_programid => s.program_id).exists? || File.exist?(transcode))
             @notifier.notify("Starting download of #{basename}")
             
             # If the file exists, we'll assume the download went okay
@@ -196,27 +212,26 @@ module Tivo2Podcast
 
     def file_cleanup
       # Get shows by id,configid,filename
-      configids = Set.new
+      configs = Set.new
       deleteids = Array.new
-      @db.get_filenames do |row|
-        unless File.exists?(row['filename'])
-          puts "#{row['filename']} missing, removing from database."
-          configids.add(row['configid'])
-          deleteids << row['id']
+
+      Tivo2Podcast::Db::Show.where(:on_disk => 1).each do |result|
+        unless File.exists?(result.filename)
+          puts "#{result.filename} missing, removing from database."
+          configs.add(result.config)
+          result.on_disk = 0
+          result.save!
         end
       end
 
-      @db.delete_shows(deleteids) unless deleteids.empty?
-
-      unless configids.empty?
-        configs = @db.get_configs_by_ids(configids.to_a)
+      unless config.empty?
         configs.each { |c| create_rss(c) }
         create_rss(@config.aggregate_config, true) if @config.aggregate?
       end
     end
 
     def regenerate_rss_files
-      configs = @db.get_configs
+      configs = Tivo2Podcast::Db::Config.all
       configs.each { |c| create_rss(c) }
       create_rss(@config.aggregate_config, true) if @config.aggregate?
     end

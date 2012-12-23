@@ -96,59 +96,6 @@ SQL
                         )
     end
 
-    # Gets the configs from the config table, by default it will get all unless
-    # an array of names is passed in.
-    def get_configs(names=nil)
-      result = Array.new
-      if names.nil? || names.empty?
-        @db.query("select * from configs") { |rs| rs.each { |r| result << r } }
-      else
-        qms = Array.new(names.size, '?').join(',')
-        @db.query("select * from configs where config_name in (#{qms})",
-                  names) do |rs|
-          rs.each { |r| result << r }
-        end
-      end
-      return result
-    end
-
-    def add_config(kvpairs)
-      ps = @db.prepare('insert into configs(config_name, show_name, rss_filename,
-                      rss_link, rss_baseurl, rss_ownername, rss_owneremail,
-                      ep_to_keep, encode_crop, encode_audio_bitrate,
-                      encode_video_bitrate, max_width, encode_decomb, aggregate)
-                      values (:config_name, :show_name, :rss_filename,
-                      :rss_link, :rss_baseurl, :rss_ownername, :rss_owneremail,
-                      :ep_to_keep, :encode_crop, :encode_audio_bitrate,
-                      :encode_video_bitrate, :max_width, :encode_decomb,
-                      :aggregate)')
-      ps.bind_params(kvpairs)
-      pp ps
-      puts ps.to_s
-      ps.execute()
-      ps.close()
-    end
-
-    # Gets the configs from the config table based on the Array of
-    # config ids passed in.
-    def get_configs_by_ids(configs)
-      result = Array.new
-      qms = Array.new(configs.size, '?').join(',')
-      @db.query("select * from configs where id in (#{qms})", configs) do |rs|
-        rs.each { |r| result << r }
-      end
-      return result
-    end
-
-    # Returns the filenames for everything in the show table and their
-    # associated ids and configids...
-    def get_filenames(on_disk=1, &block)
-      @db.query("select id,configid,filename from shows where on_disk=?",
-                [on_disk]) do |rows|
-        rows.each { |row| yield row }
-      end
-    end
-
     # Add a show to the database for a given config and video stored
     # in the given filename.
     def add_show(show, config, filename)
@@ -157,46 +104,6 @@ SQL
              show.episode_number, show.description, show.duration,
              show.time_captured.to_i, show.program_id, filename)
       ps.close()
-    end
-
-    # Cleans up shows that go over the keep threshold specified in the config
-    def old_show_cleanup(config)
-      filenames = Array.new\
-      @db.execute('create temp table cleanup_temp as select id,filename from shows where configid=? and on_disk=1 order by s_ep_timecap desc;', config['id'])
-      @db.query('select id,filename from cleanup_temp where rowid>?',
-                config['ep_to_keep']) do |results|
-        results.each do |r|
-          filenames << r['filename']
-          @db.execute('update shows set on_disk=0 where id=?;', r['id'])
-        end
-      end
-      # Yes, its only in memory, but we may be called many times in here.
-      @db.execute('drop table cleanup_temp;')
-      return filenames
-    end
-
-    # Our delete doesn't really delete the shows from the
-    # database. (That's a legacy name that will need to be corrected.)
-    # This method now sets shows.on_delete to false.
-    def delete_shows(shows)
-      qms = Array.new(shows.size, '?').join(',')
-      @db.execute("update shows set on_disk=0 where id in (#{qms})", shows)
-    end
-
-    # Reports if a show is in the database by looking to see if
-    # program_id is in the database.  This checks items both on disk and off disk.
-    def got_show?(config, show)
-      got_one = false
-      # There is probably a better way to test for existance, but I'll
-      # ask for help later
-      @db.query('select 1 from shows
-                where configid=:id and s_ep_programid=:pid',
-                "id" => config['id'], "pid" => show.program_id) do |results|
-        results.each do |rs|
-          got_one = true
-        end
-      end
-      return got_one
     end
   end
 end

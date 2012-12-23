@@ -55,6 +55,7 @@ module Tivo2Podcast
 #     s_ep_timecap INTEGER,
 #     s_ep_programid TEXT NOT NULL,
 #     filename TEXT UNIQUE,
+#     on_disk BOOLEAN DEFAULT 1,
 #     FOREIGN KEY(configid) REFERENCES configs(id)
 # );
 # create index shows_programid_index on shows(s_ep_programid);
@@ -70,6 +71,19 @@ module Tivo2Podcast
 
     class Show < ActiveRecord::Base
       belongs_to :config, :foreign_key => 'configid'
+
+      def Show.new_from_tivo_show(tivo_show)
+        show = Show.new
+        show.s_name = show.title
+        show.s_ep_title = tivo_show.episode_title(true)
+        show.s_ep_number = tivo_show.episode_number
+        show.s_ep_description = tivo_show.description
+        show.s_ep_length = tivo_show.duration
+        show.s_ep_timecap = tivo_show.time_captured.to_i
+        show.s_ep_programid = tivo_show.program_id
+
+        return show
+      end
     end
   end
 end

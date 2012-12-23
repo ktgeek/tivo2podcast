@@ -41,33 +41,33 @@ module Tivo2Podcast
     end
 
     def crop
-      @crop.nil? ? @show_config['encode_crop'] : @crop
+      @crop.nil? ? @show_config.encode_crop : @crop
     end
 
     def audio_bitrate
-      ab = @audio_bitrate.nil? ? @show_config['encode_audio_bitrate'] : @audio_bitrate
+      ab = @audio_bitrate.nil? ? @show_config.encode_audio_bitrate : @audio_bitrate
       ab = 48 if ab.nil?
       return ab
     end
 
     def video_bitrate
-      vb = @video_bitrate.nil? ? @show_config['encode_video_bitrate'] : @video_bitrate
+      vb = @video_bitrate.nil? ? @show_config.encode_video_bitrate : @video_bitrate
       vb = 768 if vb.nil?
       return vb
     end
 
     def max_width
-      mw = @max_width.nil? ? @show_config['max_width'] : @max_width
+      mw = @max_width.nil? ? @show_config.max_width : @max_width
       mw = 480 if mw.nil?
       return mw
     end
 
     def max_height
-      @max_height.nil? ? @show_config['max_height'] : @max_height
+      @max_height.nil? ? @show_config.max_height : @max_height
     end
 
     def decomb?
-      decomb = @decomb.nil? ? @show_config['encode_decomb'] : @decomb
+      decomb = @decomb.nil? ? @show_config.encode_decomb : @decomb
       (decomb.nil? || decomb == 0) ? false : true
     end
 

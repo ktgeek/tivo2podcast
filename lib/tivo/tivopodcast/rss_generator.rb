@@ -32,14 +32,14 @@ module Tivo2Podcast
     def generate()
       # Here is where I would generate RSS and also clean up older files
       rss = RSS::Maker.make("2.0") do |maker|
-        maker.channel.title = @config['show_name']
-        maker.channel.description = "My " + @config['show_name'] + " RSS feed"
-        maker.channel.link = @config['rss_link']
+        maker.channel.title = @config.show_name
+        maker.channel.description = "My " + @config.show_name + " RSS feed"
+        maker.channel.link = @config.rss_link
         maker.channel.lastBuildDate = Time.now
 
         maker.channel.itunes_author = maker.channel.title
-        maker.channel.itunes_owner.itunes_name=@config['rss_ownername']
-        maker.channel.itunes_owner.itunes_email=@config['rss_owneremail']
+        maker.channel.itunes_owner.itunes_name=@config.rss_ownername
+        maker.channel.itunes_owner.itunes_email=@config.rss_owneremail
         
         maker.items.do_sort = true
 
@@ -50,7 +50,7 @@ module Tivo2Podcast
             else
               item.title = show.s_name + ": " + show.s_ep_title
             end
-            item.link = URI.escape(@config['rss_baseurl'] + show.filename)
+            item.link = URI.escape(@config.rss_baseurl + show.filename)
 
             item.guid.content = item.link
             item.guid.isPermaLink = true
@@ -69,7 +69,7 @@ module Tivo2Podcast
         end
           
         unless @aggregate
-          Tivo2Podcast::Db::Show.where(:configid => @config['id'],
+          Tivo2Podcast::Db::Show.where(:configid => @config.id,
                                        :on_disk => 1).all.each &buildp
         else
           Tivo2Podcast::Db::Show.where(
