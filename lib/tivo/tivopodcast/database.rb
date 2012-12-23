@@ -87,6 +87,7 @@ create table shows (
     s_ep_timecap INTEGER,
     s_ep_programid TEXT NOT NULL,
     filename TEXT UNIQUE,
+    on_disk BOOLEAN DEFAULT 1,
     FOREIGN KEY(configid) REFERENCES configs(id)
 );
 create index shows_programid_index on shows(s_ep_programid);
@@ -140,29 +141,31 @@ SQL
     end
 
     # Select all the shows for a given config id
-    def shows_by_configid(id, &block)
-      @db.query("select * from shows where configid=?", id) do |rows|
+    def shows_by_configid(id, on_disk=1, &block)
+      @db.query("select * from shows where configid=? and on_disk=?",
+                [id, on_disk]) do |rows|
         rows.each { |row| yield row }
       end
     end
 
     # Select all shows for the aggregated feed
-    def get_aggregate_shows(&block)
-      @db.query("select * from shows where configid in (select id from configs where aggregate=1) order by id") do |rows|
+    def get_aggregate_shows(on_disk=1, &block)
+      @db.query("select * from shows where configid in (select id from configs where aggregate=1) and on_disk=? order by id", [on_disk]) do |rows|
         rows.each { |row| yield row }
       end
     end
 
     # Returns the filenames for everything in the show table and their
     # associated ids and configids...
-    def get_filenames(&block)
-      @db.query("select id,configid,filename from shows") do |rows|
+    def get_filenames(on_disk=1, &block)
+      @db.query("select id,configid,filename from shows where on_disk=?",
+                [on_disk]) do |rows|
         rows.each { |row| yield row }
       end
     end
 
     # Add a show to the database for a given config and video stored
-    # in the given filename
+    # in the given filename.
     def add_show(show, config, filename)
       ps = @db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, s_ep_programid, filename) values (?, ?, ?, ?, ?, ?, ?, ?, ?);')
       ps.execute(config['id'], show.title, show.episode_title(true),
@@ -174,12 +177,12 @@ SQL
     # Cleans up shows that go over the keep threshold specified in the config
     def old_show_cleanup(config)
       filenames = Array.new\
-      @db.execute('create temp table cleanup_temp as select id,filename from shows where configid=? order by s_ep_timecap desc;', config['id'])
+      @db.execute('create temp table cleanup_temp as select id,filename from shows where configid=? and on_disk=1 order by s_ep_timecap desc;', config['id'])
       @db.query('select id,filename from cleanup_temp where rowid>?',
                 config['ep_to_keep']) do |results|
         results.each do |r|
           filenames << r['filename']
-          @db.execute('delete from shows where id=?;', r['id'])
+          @db.execute('update shows set on_disk=0 where id=?;', r['id'])
         end
       end
       # Yes, its only in memory, but we may be called many times in here.
@@ -187,13 +190,16 @@ SQL
       return filenames
     end
 
+    # Our delete doesn't really delete the shows from the
+    # database. (That's a legacy name that will need to be corrected.)
+    # This method now sets shows.on_delete to false.
     def delete_shows(shows)
       qms = Array.new(shows.size, '?').join(',')
-      @db.execute("delete from shows where id in (#{qms})", shows)
+      @db.execute("update shows set on_disk=0 where id in (#{qms})", shows)
     end
 
     # Reports if a show is in the database by looking to see if
-    # program_id is in the database.
+    # program_id is in the database.  This checks items both on disk and off disk.
     def got_show?(config, show)
       got_one = false
       # There is probably a better way to test for existance, but I'll
