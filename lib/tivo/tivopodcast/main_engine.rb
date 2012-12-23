@@ -19,6 +19,7 @@ require 'ansi/progressbar'
 require 'tivopodcast/notifier'
 require 'tivopodcast/transcoder'
 require 'tivopodcast/database'
+require 'tivopodcast/database2'
 require 'tivopodcast/rss_generator'
 
 module Tivo2Podcast
