@@ -29,6 +29,14 @@ module Tivo2Podcast
                                         ENV['HOME'] :
                                         ENV['TIVO2PODCASTDIR']) +
                                        File::SEPARATOR + '.tivo2podcast.db')
+
+      # This will need to find a better home as the transition to
+      # ActiveRecord is complete.  It probably belongs in the startup
+      # script.
+      Tivo2Podcast::connect_database((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
+                                      ENV['TIVO2PODCASTDIR']) +
+                                     File::SEPARATOR + '.tivo2podcast.db')
+      
       @notifier = TiVo2Podcast::NotifierEngine.new(@config)
     end
 

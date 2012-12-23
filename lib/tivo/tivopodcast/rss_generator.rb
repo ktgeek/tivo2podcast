@@ -46,32 +46,35 @@ module Tivo2Podcast
         buildp = lambda do |show|
           maker.items.new_item do |item|
             unless @aggregate
-              item.title = show['s_ep_title']
+              item.title = show.s_ep_title
             else
-              item.title = show['s_name'] + ": " + show['s_ep_title']
+              item.title = show.s_name + ": " + show.s_ep_title
             end
-            item.link = URI.escape(@config['rss_baseurl'] + show['filename'])
+            item.link = URI.escape(@config['rss_baseurl'] + show.filename)
 
             item.guid.content = item.link
             item.guid.isPermaLink = true
-            item.pubDate = Time.at(show['s_ep_timecap'])
-            item.description = show['s_ep_description']
-            item.itunes_summary = show['s_ep_description']
+            item.pubDate = Time.at(show.s_ep_timecap)
+            item.description = show.s_ep_description
+            item.itunes_summary = show.s_ep_description
             item.itunes_explicit = "No"
 
             item.itunes_duration =
-              TiVo::TiVoVideo.human_duration(show['s_ep_length'])
+              TiVo::TiVoVideo.human_duration(show.s_ep_length)
 
             item.enclosure.url = item.link
-            item.enclosure.length = File.size(show['filename'])
+            item.enclosure.length = File.size(show.filename)
             item.enclosure.type = 'video/x-m4v'
           end
         end
           
         unless @aggregate
-          @db.shows_by_configid(@config['id'], &buildp)
+          Tivo2Podcast::Show.where(:configid => @config['id'],
+                                   :on_disk => 1).all.each &buildp
         else
-          @db.get_aggregate_shows(&buildp)
+          Tivo2Podcast::Show.where(:configid =>
+                                   Tivo2Podcast::Config.where(:aggregate => 1),
+                                   :on_disk => 1).order(:id).each &buildp
         end
       end
 
