@@ -140,21 +140,6 @@ SQL
       return result
     end
 
-    # Select all the shows for a given config id
-    def shows_by_configid(id, on_disk=1, &block)
-      @db.query("select * from shows where configid=? and on_disk=?",
-                [id, on_disk]) do |rows|
-        rows.each { |row| yield row }
-      end
-    end
-
-    # Select all shows for the aggregated feed
-    def get_aggregate_shows(on_disk=1, &block)
-      @db.query("select * from shows where configid in (select id from configs where aggregate=1) and on_disk=? order by id", [on_disk]) do |rows|
-        rows.each { |row| yield row }
-      end
-    end
-
     # Returns the filenames for everything in the show table and their
     # associated ids and configids...
     def get_filenames(on_disk=1, &block)
