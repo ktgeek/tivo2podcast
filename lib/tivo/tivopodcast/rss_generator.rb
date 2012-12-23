@@ -69,12 +69,12 @@ module Tivo2Podcast
         end
           
         unless @aggregate
-          Tivo2Podcast::Show.where(:configid => @config['id'],
-                                   :on_disk => 1).all.each &buildp
+          Tivo2Podcast::Db::Show.where(:configid => @config['id'],
+                                       :on_disk => 1).all.each &buildp
         else
-          Tivo2Podcast::Show.where(:configid =>
-                                   Tivo2Podcast::Config.where(:aggregate => 1),
-                                   :on_disk => 1).order(:id).each &buildp
+          Tivo2Podcast::Db::Show.where(
+              :configid => Tivo2Podcast::Db::Config.where(:aggregate => 1),
+              :on_disk => 1).order(:id).each &buildp
         end
       end
 

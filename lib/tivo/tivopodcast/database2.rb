@@ -63,11 +63,13 @@ module Tivo2Podcast
 #                         )
 #     end
 
+  module Db
     class Config < ActiveRecord::Base
-    has_many :shows, :foreign_key => 'configid'
-  end
+      has_many :shows, :foreign_key => 'configid'
+    end
 
-  class Show < ActiveRecord::Base
-    belongs_to :config, :foreign_key => 'configid'
+    class Show < ActiveRecord::Base
+      belongs_to :config, :foreign_key => 'configid'
+    end
   end
 end
