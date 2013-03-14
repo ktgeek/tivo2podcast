@@ -72,17 +72,21 @@ module Tivo2Podcast
     class Show < ActiveRecord::Base
       belongs_to :config, :foreign_key => 'configid'
 
-      def Show.new_from_tivo_show(tivo_show)
+      def Show.new_from_transcode_work_order(work_order)
         show = Show.new
-        show.s_name = show.title
-        show.s_ep_title = tivo_show.episode_title(true)
-        show.s_ep_number = tivo_show.episode_number
-        show.s_ep_description = tivo_show.description
-        show.s_ep_length = tivo_show.duration
-        show.s_ep_timecap = tivo_show.time_captured.to_i
-        show.s_ep_programid = tivo_show.program_id
+        show.config = work_order.config
 
-        return show
+        show.s_name = work_order.show.title
+        show.s_ep_title = work_order.show.episode_title(true)
+        show.s_ep_number = work_order.show.episode_number
+        show.s_ep_description = work_order.show.description
+        show.s_ep_length = work_order.show.duration
+        show.s_ep_timecap = work_order.show.time_captured.to_i
+        show.s_ep_programid = work_order.show.program_id
+        
+        show.filename = work_order.transcode
+          
+        return show.
       end
     end
   end

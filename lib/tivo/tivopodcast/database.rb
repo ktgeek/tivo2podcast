@@ -96,15 +96,6 @@ SQL
                         )
     end
 
-    # Add a show to the database for a given config and video stored
-    # in the given filename.
-    def add_show(show, config, filename)
-      ps = @db.prepare('insert into shows(configid, s_name, s_ep_title, s_ep_number, s_ep_description, s_ep_length, s_ep_timecap, s_ep_programid, filename) values (?, ?, ?, ?, ?, ?, ?, ?, ?);')
-      ps.execute(config['id'], show.title, show.episode_title(true),
-             show.episode_number, show.description, show.duration,
-             show.time_captured.to_i, show.program_id, filename)
-      ps.close()
-    end
   end
 end
 

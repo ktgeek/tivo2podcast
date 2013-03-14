@@ -97,7 +97,8 @@ module Tivo2Podcast
             
             File.delete(tc.download) if File.exists?(tc.download)
 
-            @db.add_show(tc.show, tc.config, tc.transcode)
+            show = Show.new_from_transcode_work_order(tc)
+            show.save!
             @notifier.notify("Finished transcode of #{tc.basename}")
 
           when :CLEANUP
