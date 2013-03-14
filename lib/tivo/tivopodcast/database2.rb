@@ -18,59 +18,81 @@ require 'active_record'
 
 module Tivo2Podcast
   def Tivo2Podcast.connect_database(filename)
+    database_exists = File.exists?(filename)
+    
     ActiveRecord::Base.establish_connection(:adapter => 'sqlite3',
                                             :database  => filename)
+
+    unless database_exists
+      # $log.debug { "Creating database schema" }
+#      ActiveRecord::Migration.verbose = false
+      AddConfig.new.up
+      AddShow.new.up
+    end
   end
-  
-    # Creates the database tables that this class acts as a facade for
-#     def init_database()
-#       @db.execute_batch(<<SQL
-# create table configs (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     config_name TEXT NOT NULL UNIQUE,
-#     show_name TEXT NOT NULL,
-#     rss_filename TEXT NOT NULL,
-#     rss_link TEXT NOT NULL,
-#     rss_baseurl TEXT NOT NULL,
-#     rss_ownername TEXT NOT NULL,
-#     rss_owneremail TEXT NOT NULL,
-#     ep_to_keep INTEGER NOT NULL DEFAULT 5,
-#     encode_crop TEXT,
-#     encode_audio_bitrate INTEGER,
-#     encode_video_bitrate INTEGER,
-#     encode_decomb INTEGER,
-#     max_width INTEGER,
-#     max_height INTEGER,
-#     aggregate BOOLEAN
-# );
-# create index configs_config_name_index on configs(config_name);
-# create table shows (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     configid TEXT NOT NULL,
-#     s_name TEXT,
-#     s_ep_title TEXT,
-#     s_ep_number TEXT,
-#     s_ep_description TEXT,
-#     s_ep_length INTEGER,
-#     s_ep_timecap INTEGER,
-#     s_ep_programid TEXT NOT NULL,
-#     filename TEXT UNIQUE,
-#     on_disk BOOLEAN DEFAULT 1,
-#     FOREIGN KEY(configid) REFERENCES configs(id)
-# );
-# create index shows_programid_index on shows(s_ep_programid);
-# create index shows_configid_index on shows(configid);
-# SQL
-#                         )
-#     end
 
   module Db
+    class AddConfig < ActiveRecord::Migration
+      def up
+        create_table :configs do |t|
+          t.string :config_name, null: false
+          t.string :show_name, null: false
+          t.string :rss_filename, null: false
+          t.string :rss_link, null: false
+          t.string :rss_baseurl, null: false
+          t.string :rss_ownername, null: false
+          t.string :rss_owneremail, null: false
+          t.integer :ep_to_keep, null: false, default: 5
+          t.string :encode_crop
+          t.integer :encode_audio_bitrate
+          t.integer :encode_video_bitrate
+          t.integer :video_decomb
+          t.integer :max_width
+          t.integer :max_height
+          t.boolean :aggregate
+        end
+        add_index :configs, :config_name, unique: true
+      end
+
+      def down
+        raise ActiveRecord::IrreversibleMigration
+      end
+    end
+
+    class AddShows < ActiveRecord::Migration
+      def up
+        create_table :shows do |t|
+          # TODO: Need to add configid and specify a forgein key to it
+          t.integer :configid
+          t.string :s_name
+          t.string :s_ep_title
+          t.string :s_ep_number
+          t.string :s_ep_description
+          t.integer :s_ep_length
+          t.integer :s_ep_timecape
+          t.string :s_ep_programid, null: false
+          t.string :filename
+          t.boolean :on_disk, default: 1
+          #add execute for foreign key enforcement by db?
+          #FOREIGN KEY(configid) REFERENCES configs(id)
+        end
+        add_index :shows, :configid
+        add_index :shows, :s_ep_programid
+        add_index :shows, :filename, unique: true
+      end
+
+      def down
+        raise ActiveRecord::IrreversibleMigration
+      end
+    end 
+        
     class Config < ActiveRecord::Base
       has_many :shows, :foreign_key => 'configid'
     end
 
     class Show < ActiveRecord::Base
       belongs_to :config, :foreign_key => 'configid'
+      validates_presence_of :config
 
       def Show.new_from_transcode_work_order(work_order)
         show = Show.new
