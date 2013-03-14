@@ -25,7 +25,7 @@ rescue LoadError
   # Ruby gems wasn't found, maybe someone loaded the prereqs directly
   # Not an error, but we'll swallow it for now.
 end
-require 'tivopodcast/database2'
+require 'tivopodcast/database'
 require 'optparse'
 require 'TiVo'
 require 'TiVo-utils'
