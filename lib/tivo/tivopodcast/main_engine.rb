@@ -208,6 +208,9 @@ module Tivo2Podcast
 
       # Create the aggregated feed
       create_rss(@config.aggregate_config, true) if @config.aggregate?
+
+      # Sleep briefly to let the notifiers finish notifying
+      sleep 5
     end
 
     def file_cleanup
