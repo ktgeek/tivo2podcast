@@ -22,9 +22,8 @@ module Tivo2Podcast
   class RssGenerator
     # Creates the RssGenerator given a config as specified by
     # Database.init_database and an instanstance of Database
-    def initialize(config, db, aggregate = false)
+    def initialize(config, aggregate = false)
       @config = config
-      @db = db
       @aggregate = aggregate
     end
 

@@ -18,7 +18,6 @@ require 'thread'
 require 'ansi/progressbar'
 require 'tivopodcast/notifier'
 require 'tivopodcast/transcoder'
-require 'tivopodcast/database'
 require 'tivopodcast/database2'
 require 'tivopodcast/rss_generator'
 
@@ -26,11 +25,6 @@ module Tivo2Podcast
   class MainEngine
     def initialize(config)
       @config = config
-      @db = Tivo2Podcast::Database.new((ENV['TIVO2PODCASTDIR'].nil? ?
-                                        ENV['HOME'] :
-                                        ENV['TIVO2PODCASTDIR']) +
-                                       File::SEPARATOR + '.tivo2podcast.db')
-
       # This will need to find a better home as the transition to
       # ActiveRecord is complete.  It probably belongs in the startup
       # script.
@@ -139,7 +133,7 @@ module Tivo2Podcast
     end
 
     def create_rss(config, aggregate=false)
-      rss = Tivo2Podcast::RssGenerator.new(config, @db, aggregate)
+      rss = Tivo2Podcast::RssGenerator.new(config, aggregate)
       File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
     end
 
