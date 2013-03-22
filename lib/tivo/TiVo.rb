@@ -42,7 +42,11 @@ module TiVo
     end
 
     sleep(sleep_time)
-    service.stop
+
+# TODO: Determine if this stop is needed or not. Original code had it
+# with no problem in ruby 1.8, it started hanging in ruby 1.9 (or
+# with an updated dnssd.
+#    service.stop
 
     result = nil
     result = IPSocket.getaddress(replies[0]) if replies.size > 0
