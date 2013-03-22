@@ -111,7 +111,7 @@ module Tivo2Podcast
 
             create_rss(tc.config)
             # Put notification here
-            @notifier.notify("Finished processing #{tc.config.config_name]}")
+            @notifier.notify("Finished processing #{tc.config.config_name}")
           end
         end
       end

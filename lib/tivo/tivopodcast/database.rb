@@ -108,7 +108,7 @@ module Tivo2Podcast
         
         show.filename = work_order.transcode
           
-        return show.
+        return show
       end
     end
   end
