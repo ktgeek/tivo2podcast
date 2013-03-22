@@ -222,7 +222,7 @@ module Tivo2Podcast
         end
       end
 
-      unless config.empty?
+      unless configs.empty?
         configs.each { |c| create_rss(c) }
         create_rss(@config.aggregate_config, true) if @config.aggregate?
       end
