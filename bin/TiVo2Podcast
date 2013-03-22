@@ -58,8 +58,8 @@ opts.parse(ARGV)
 engine = Tivo2Podcast::MainEngine.new(t2pconfig)
 
 case
-when t2pconfig.cleanup: engine.file_cleanup
-when t2pconfig.regenerate_rss: engine.regenerate_rss_files
+when t2pconfig.cleanup then engine.file_cleanup
+when t2pconfig.regenerate_rss then engine.regenerate_rss_files
 else
   engine.normal_processing
 end
