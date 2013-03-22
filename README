@@ -31,25 +31,19 @@ TiVo2Podcast requires:
  o httpclient gem
  o facets gem
  o dnnsd gem
+ o ffi gem
  o sqlite3 and its ruby interface
  o tivodecode - http://tivodecode.sourceforge.net/
  o AtomicParsley from http://atomicparsley.sourceforge.net/
  o HandBrakeCLI from http://handbrake.fr/
 
  o For commercial skipping you'll need:
-   o libmp4v2 and boost_regex to compile AddChapterInfo C++ binary needed
-     for chapter skipping
+   o libmp4v2 which we use ffi to call out to
    o Wine to run comskip.exe
    o comskip - http://www.kaashoek.com/comskip/
 
 It is expected that you have your ~/.tivodecode_mak setup as both the
 script and tivodecode will will use it.
-
-You'll need to go into the src directory of TiVo2Podcast and build an
-AddChapterInfo binary and put it somewhere in the default path.  This
-C++ helper script is needed to add commercial chapters to the encoded
-files.  (I prefer to do chapters than cut the commercials off because
-"What if you're wrong?")
 
 You'll want to copy doc/tivo2podcast.conf.sample to
 ~/.tivo2podcast.conf to make sure that TiVo2Podcast can find all the
@@ -103,9 +97,5 @@ insert into configs (config_name, show_name, rss_filename, rss_link,
 You can then put the script into cron.  Without a -c flag it will run
 for all configs found, if a -c is passed it will only run for that
 config.  You may pass -c multiple times.
-
-Currently the script will download and then transcode in a serial
-progression.  A future enhancement would be to configure this to have
-multiple work queues.
 
 This has been tested (and used daily) on Linux
