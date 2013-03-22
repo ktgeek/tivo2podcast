@@ -60,12 +60,12 @@ module Tivo2Podcast
     end
 
     def aggregate_config
-      {
-        'show_name' => 'Aggregated',
-        'rss_baseurl' => @config['baseurl'],
-        'rss_filename' => @config['aggregate_file'],
-        'rss_link' => 'http://example.com/'
-      }
+      config = Tivo2Podcast::Db::Config.new
+      config.show_name = 'Aggregated'
+      config.rss_baseurl = @config['baseurl']
+      config.rss_filename = @config['aggregate_file']
+      config.rss_link = 'http://example.com/'
+      return config
     end
 
     # Creates an instance of a TiVo object based on the configurations
