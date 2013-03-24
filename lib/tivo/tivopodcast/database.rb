@@ -72,7 +72,7 @@ module Tivo2Podcast
           t.integer :s_ep_timecape
           t.string :s_ep_programid, null: false
           t.string :filename
-          t.boolean :on_disk, default: 1
+          t.boolean :on_disk, default: true
           #add execute for foreign key enforcement by db?
           #FOREIGN KEY(configid) REFERENCES configs(id)
         end

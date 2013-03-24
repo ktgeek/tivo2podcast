@@ -91,20 +91,20 @@ module Tivo2Podcast
             
             File.delete(tc.download) if File.exists?(tc.download)
 
-            show = Show.new_from_transcode_work_order(tc)
+            show = Tivo2Podcast::Db::Show.new_from_transcode_work_order(tc)
             show.save!
             @notifier.notify("Finished transcode of #{tc.basename}")
 
           when :CLEANUP
             newest_shows = Tivo2Podcast::Db::Show.where(
-              :configid => tc.config, :on_disk => 1).order(
+              :configid => tc.config, :on_disk => true).order(
               'shows.s_ep_timecap desc').limit(tc.config.ep_to_keep)
             unless newest_shows.nil? || newest_shows.empty?
               Tivo2Podcast::Db::Show.where(
-                  :configid => tc.config, :on_disk => 1).where(
+                  :configid => tc.config, :on_disk => true).where(
                   ['id not in (?)', newest_shows]).each do |show|
                 File.delete(show.filename)
-                show.on_disk = 0
+                show.on_disk = false
                 show.save!
               end
             end
@@ -213,11 +213,11 @@ module Tivo2Podcast
       configs = Set.new
       deleteids = Array.new
 
-      Tivo2Podcast::Db::Show.where(:on_disk => 1).each do |result|
+      Tivo2Podcast::Db::Show.where(:on_disk => true).each do |result|
         unless File.exists?(result.filename)
           puts "#{result.filename} missing, removing from database."
           configs.add(result.config)
-          result.on_disk = 0
+          result.on_disk = false
           result.save!
         end
       end
