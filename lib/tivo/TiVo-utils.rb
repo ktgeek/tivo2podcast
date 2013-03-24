@@ -23,40 +23,40 @@ module TiVo
         selection = nil
         input = $stdin.readline.strip
         case input
-        when 'p':
+        when 'p'
           t_offset = offset - menu_size
           offset = t_offset if t_offset >= 0
-        when 'n':
+        when 'n'
           t_offset = offset + menu_size
           offset = t_offset if t_offset < tivo_items.videos.length
-        when '#':
+        when '#'
           print "Enter the number of lines to display: "
           $stdout.flush
           numInput= $stdin.readline.strip.to_i
           if !numInput.nil? && numInput > 0
             menu_size=numInput
           end
-        when 's':
+        when 's'
             print "Select sort: t/T=title, d/D=date, c/C=chan, cap to reverse, other to abort:"
           $stdout.flush
           sortInput= $stdin.readline.strip
           case sortInput
-          when 't','T':
+          when 't','T'
             tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.printable_title }
             tivo_items.videos.reverse! if sortInput=='T'
             offset=0
-          when 'c','C':
+          when 'c','C'
             tivo_items.videos=tivo_items.videos.sort_by { |a| a.channel }
             tivo_items.videos.reverse! if sortInput=='C'
             offset=0
-          when 'd', 'D':
+          when 'd', 'D'
             tivo_items.videos=tivo_items.videos.sort_by { |ti| ti.time_captured }
             tivo_items.videos.reverse! if sortInput=='D'
             offset=0
           end
-        when 'd':
+        when 'd'
             break
-        when 'q':
+        when 'q'
             exit(0)
         else
           selection = input.to_i if input.eql?(input.to_i.to_s)
