@@ -1,0 +1,18 @@
+# tivo.gems generated gem export file. Note that any env variable settings will be missing. Append these after using a ';' field separator
+
+activemodel -v3.2.13
+activerecord -v3.2.13
+activesupport -v3.2.13
+ansi -v1.4.3
+arel -v3.0.2
+boxcar_api -v1.2.0
+builder -v3.0.4
+dnssd -v2.0
+ffi -v1.5.0
+httparty -v0.10.2
+httpclient -v2.3.3
+i18n -v0.6.1
+multi_json -v1.7.2
+multi_xml -v0.5.3
+sqlite3 -v1.3.7
+tzinfo -v0.3.37
