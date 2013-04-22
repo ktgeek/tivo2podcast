@@ -87,11 +87,14 @@ module Tivo2Podcast
     end 
         
     class Config < ActiveRecord::Base
+      # The has_and_belogs_to_many expects a configs_rss_files table.
+      has_and_belongs_to_many :rss_files
       has_many :shows, :foreign_key => 'configid'
     end
 
     class Show < ActiveRecord::Base
       belongs_to :config, :foreign_key => 'configid'
+      has_many :rss_files, :through => :config
       validates_presence_of :config
 
       def Show.new_from_transcode_work_order(work_order)
@@ -110,6 +113,11 @@ module Tivo2Podcast
           
         return show
       end
+    end
+
+    class RssFile < ActiveRecord::Base
+      # The has_and_belogs_to_many expects a configs_rss_files table.
+      has_and_belongs_to_many :configs
     end
   end
 end
