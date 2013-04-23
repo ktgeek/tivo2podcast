@@ -109,7 +109,7 @@ module Tivo2Podcast
               end
             end
 
-            create_rss(tc.config)
+            Tivo2Podcast::RssGenerator.new(tc.config).generate()
             # Put notification here
             @notifier.notify("Finished processing #{tc.config.config_name}")
           end
@@ -130,11 +130,6 @@ module Tivo2Podcast
         pbar.finish unless pbar.nil?
         puts
       end
-    end
-
-    def create_rss(config, aggregate=false)
-      rss = Tivo2Podcast::RssGenerator.new(config, aggregate)
-      File.open(config['rss_filename'], 'w') { |f| f << rss.generate() }
     end
 
     def normal_processing
@@ -201,9 +196,6 @@ module Tivo2Podcast
       # Wait for this thread to complete before finishing
       work_thread.join
 
-      # Create the aggregated feed
-      create_rss(@config.aggregate_config, true) if @config.aggregate?
-
       # Sleep briefly to let the notifiers finish notifying
       sleep 5
     end
@@ -223,15 +215,13 @@ module Tivo2Podcast
       end
 
       unless configs.empty?
-        configs.each { |c| create_rss(c) }
-        create_rss(@config.aggregate_config, true) if @config.aggregate?
+        configs.each { |c| Tivo2Podcast::RssGenerator.new(c).generate() }
       end
     end
 
     def regenerate_rss_files
       configs = Tivo2Podcast::Db::Config.all
-      configs.each { |c| create_rss(c) }
-      create_rss(@config.aggregate_config, true) if @config.aggregate?
+      configs.each { |c| Tivo2Podcast::RssGenerator.new(c).generate() }
     end
   end
 end
