@@ -68,14 +68,6 @@
 #
 # baseurl: http://example.com/stuff/
 
-# If given a filename, it will produce an aggregated feed.  You can
-# specificy if a config should be included in the aggregated feed or
-# not per config.
-#
-# default: nil
-#
-# aggregate_file: aggregated.xml
-
 # An array of which notifiers to use when transcoding is complete
 #
 # default: nil

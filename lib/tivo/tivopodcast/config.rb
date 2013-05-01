@@ -55,19 +55,6 @@ module Tivo2Podcast
       end
     end
 
-    def aggregate?
-      !(@config['aggregate_file'].nil? || @config['baseurl'].nil?)
-    end
-
-    def aggregate_config
-      config = Tivo2Podcast::Db::Config.new
-      config.show_name = 'Aggregated'
-      config.rss_baseurl = @config['baseurl']
-      config.rss_filename = @config['aggregate_file']
-      config.rss_link = 'http://example.com/'
-      return config
-    end
-
     # Creates an instance of a TiVo object based on the configurations
     # tivo_addr and mak
     def tivo_factory
