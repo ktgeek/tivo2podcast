@@ -51,7 +51,7 @@ insert into new_configs(id, config_name, show_name, ep_to_keep, encode_crop, enc
 pragma foreign_keys = off;
 
 -- Swap the config tables
-drop table old_configs;
+drop table configs;
 alter table new_configs rename to configs;
 
 pragma foreign_keys = on;
