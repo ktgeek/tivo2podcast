@@ -8,7 +8,9 @@ arel -v3.0.2
 boxcar_api -v1.2.0
 builder -v3.0.4
 dnssd -v2.0
+facets -v2.9.3
 ffi -v1.5.0
+httparty -v0.11.0
 httparty -v0.10.2
 httpclient -v2.3.3
 i18n -v0.6.1
