@@ -109,7 +109,7 @@ module Tivo2Podcast
               end
             end
 
-            Tivo2Podcast::RssGenerator.new(tc.config).generate()
+            Tivo2Podcast::RssGenerator.generate_for_config(tc.config)
             # Put notification here
             @notifier.notify("Finished processing #{tc.config.config_name}")
           end
@@ -215,13 +215,13 @@ module Tivo2Podcast
       end
 
       unless configs.empty?
-        configs.each { |c| Tivo2Podcast::RssGenerator.new(c).generate() }
+        Tivo2Podcast::RssGenerator.generate_from_configs(configs)
       end
     end
 
     def regenerate_rss_files
-      configs = Tivo2Podcast::Db::Config.all
-      configs.each { |c| Tivo2Podcast::RssGenerator.new(c).generate() }
+      rss_files = Tivo2Podcast::Db::RssFile.all
+      Tivo2Podcast::RssGenerator.generate_from_rssfiles(rss_files)
     end
   end
 end

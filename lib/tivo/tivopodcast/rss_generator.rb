@@ -16,20 +16,27 @@
 require 'uri'
 require 'rss'
 require 'rss/itunes'
+require 'facets/enumerable/accumulate'
+require 'tivo'
 
 module Tivo2Podcast
   # Generates the video podcast feed.
   class RssGenerator
-    # Creates the RssGenerator given a config as specified by
-    # Database.init_database and an instanstance of Database
-    def initialize(config)
-      @config = config
+    # Temporary measure to make sure I've excized all the bad code.
+    def initialize(config = nil)
+      raise ArgumentError, "You shouldn't be calling me"
     end
 
-    # Generates the RSS and writes out the files of each RSS feed touched
-    # by the config
-    def generate()
-      @config.rss_files.each do |rss_file|
+    def RssGenerator.generate_from_config(config)
+      RssGenerator.generate_from_rssfiles(config.rss_files)
+    end
+      
+    def RssGenerator.generate_from_configs(configs)
+      RssGenerator.generate_from_rssfiles(configs.accumulate.rss_files)
+    end
+
+    def RssGenerator.generate_from_rssfiles(rssfiles)
+      rssfiles.each do |rss_file|
         rss = RSS::Maker.make("2.0") do |maker|
           maker.channel.title = rss_file.feed_title
           maker.channel.description = rss_file.feed_description
@@ -44,12 +51,12 @@ module Tivo2Podcast
 
           buildp = lambda do |show|
             maker.items.new_item do |item|
-              if rss_file.configs > 1
+              if rss_file.configs.size > 1
                 item.title = show.s_name + ": " + show.s_ep_title
               else
                 item.title = show.s_ep_title
               end
-              item.link = URI.escape(rss_file.rss_baseurl + show.filename)
+              item.link = URI.escape(rss_file.base_url + show.filename)
 
               item.guid.content = item.link
               item.guid.isPermaLink = true
