@@ -133,7 +133,7 @@ module TiVo
     def description
       desc = get_detail_item('Description')
       unless desc.nil?
-        desc.sub!('Copyright Tribune Media Services, Inc.', '')
+        desc.sub!(' Copyright Tribune Media Services, Inc.', '')
       end
       return desc
     end
