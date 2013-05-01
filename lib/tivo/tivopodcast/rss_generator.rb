@@ -17,7 +17,7 @@ require 'uri'
 require 'rss'
 require 'rss/itunes'
 require 'facets/enumerable/accumulate'
-require 'tivo'
+require 'TiVo'
 
 module Tivo2Podcast
   # Generates the video podcast feed.
