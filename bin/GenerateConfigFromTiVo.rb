@@ -74,9 +74,9 @@ basis.each do |show|
 #  sconfig.rss_link = hl.ask('Show info URL:') do |q|
 #    q.validate = URL_REGEXP
 #  end
-  sconfig.rss_filename = hl.ask('RSS Filename:') do |q|
-    q.default = show.title.delete(' ').downcase + ".xml"
-  end
+#  sconfig.rss_filename = hl.ask('RSS Filename:') do |q|
+#    q.default = show.title.delete(' ').downcase + ".xml"
+#  end
 #  sconfig.rss_baseurl = hl.ask('RSS Base URL:') do |q|
 #    q.default = t2pconfig['baseurl']
 #    q.validate = URL_REGEXP
