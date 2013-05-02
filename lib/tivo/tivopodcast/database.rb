@@ -120,6 +120,7 @@ module Tivo2Podcast
         show.s_ep_length = work_order.show.duration
         show.s_ep_timecap = work_order.show.time_captured.to_i
         show.s_ep_programid = work_order.show.program_id
+        show.on_disk = true
         
         show.filename = work_order.transcode
           
