@@ -17,16 +17,16 @@
 require 'active_record'
 
 # Monkey patch for 1 and 0 for boolean to get around an ActiveRecord bug
-require 'active_record/connection_adapters/sqlite_adapter'
-class ActiveRecord::ConnectionAdapters::SQLiteAdapter
-  def quoted_true
-    '1'
-  end
+# require 'active_record/connection_adapters/sqlite_adapter'
+# class ActiveRecord::ConnectionAdapters::SQLiteAdapter
+#   def quoted_true
+#     '1'
+#   end
 
-  def quoted_false
-    '0'
-  end
-end
+#   def quoted_false
+#     '0'
+#   end
+# end
 
 module Tivo2Podcast
   def Tivo2Podcast.connect_database(filename)
