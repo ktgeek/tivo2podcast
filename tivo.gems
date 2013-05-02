@@ -10,6 +10,7 @@ builder -v3.0.4
 dnssd -v2.0
 facets -v2.9.3
 ffi -v1.5.0
+highline -v1.6.18
 httparty -v0.11.0
 httparty -v0.10.2
 httpclient -v2.3.3
