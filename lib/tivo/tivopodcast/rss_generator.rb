@@ -22,11 +22,6 @@ require 'TiVo'
 module Tivo2Podcast
   # Generates the video podcast feed.
   class RssGenerator
-    # Temporary measure to make sure I've excized all the bad code.
-    def initialize(config = nil)
-      raise ArgumentError, "You shouldn't be calling me"
-    end
-
     def RssGenerator.generate_from_config(config)
       RssGenerator.generate_from_rssfiles(config.rss_files)
     end
