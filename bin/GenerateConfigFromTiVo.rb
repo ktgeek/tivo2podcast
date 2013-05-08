@@ -71,22 +71,6 @@ basis.each do |show|
   sconfig.show_name = hl.ask('Show name:') do |q|
     q.default = show.title
   end
-#  sconfig.rss_link = hl.ask('Show info URL:') do |q|
-#    q.validate = URL_REGEXP
-#  end
-#  sconfig.rss_filename = hl.ask('RSS Filename:') do |q|
-#    q.default = show.title.delete(' ').downcase + ".xml"
-#  end
-#  sconfig.rss_baseurl = hl.ask('RSS Base URL:') do |q|
-#    q.default = t2pconfig['baseurl']
-#    q.validate = URL_REGEXP
-#  end
-  # sconfig.rss_ownername = hl.ask('RSS owner name:') do |q|
-  #   q.validate = required_response_proc
-  # end
-  # sconfig.rss_owneremail = hl.ask('RSS owner e-mail:') do |q|
-  #   q.validate = required_response_proc
-  # end
   sconfig.ep_to_keep = hl.ask('Episodes to keep in the feed:', Integer) do |q|
     q.default = 4
   end
