@@ -45,30 +45,34 @@ module Tivo2Podcast
           maker.items.do_sort = true
 
           buildp = lambda do |show|
-            maker.items.new_item do |item|
-              if rss_file.configs.size > 1
-                item.title = show.s_name + ": " + show.s_ep_title
-              else
-                item.title = show.s_ep_title
+            # If the file got removed and no one ran a database clean
+            # let's not add it to the RSS feed.
+            if File.exists?(show.filename)
+              maker.items.new_item do |item|
+                if rss_file.configs.size > 1
+                  item.title = show.s_name + ": " + show.s_ep_title
+                else
+                  item.title = show.s_ep_title
+                end
+                item.link = URI.escape(rss_file.base_url + show.filename)
+
+                item.guid.content = item.link
+                item.guid.isPermaLink = true
+                item.pubDate = Time.at(show.s_ep_timecap)
+                item.description = show.s_ep_description
+                item.itunes_summary = show.s_ep_description
+                item.itunes_explicit = "No"
+
+                item.itunes_duration =
+                  TiVo::TiVoVideo.human_duration(show.s_ep_length)
+
+                item.enclosure.url = item.link
+                item.enclosure.length = File.size(show.filename)
+                item.enclosure.type = 'video/x-m4v'
               end
-              item.link = URI.escape(rss_file.base_url + show.filename)
-
-              item.guid.content = item.link
-              item.guid.isPermaLink = true
-              item.pubDate = Time.at(show.s_ep_timecap)
-              item.description = show.s_ep_description
-              item.itunes_summary = show.s_ep_description
-              item.itunes_explicit = "No"
-
-              item.itunes_duration =
-                TiVo::TiVoVideo.human_duration(show.s_ep_length)
-
-              item.enclosure.url = item.link
-              item.enclosure.length = File.size(show.filename)
-              item.enclosure.type = 'video/x-m4v'
             end
           end
-          
+            
           Tivo2Podcast::Db::Show.where(:configid => rss_file.configs,
                                        :on_disk => true).
             order(:s_ep_timecap).each &buildp
