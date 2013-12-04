@@ -20,7 +20,24 @@ module TiVo
   FOLDER = 'x-tivo-container/folder'
   VIDEO = 'video/x-tivo-raw-tts'
 
-  TiVoListings = Struct.new(:folders, :videos)
+  class TiVoListings
+    attr_accessor :folders, :videos
+
+    def initialize(folders = nil, videos = nil)
+      @folders = folders.nil? ? Array.new : folders
+      @videos = videos.nil? ? Array.new : videos
+    end
+
+    def total_size
+      @folders.size + @videos.size
+    end
+    
+    # We expect another TiVoListings to be passed in here.
+    def concat(tl)
+      @folders.concat(tl.folders)
+      @videos.concat(tl.videos)
+    end
+  end
 
   # Will return the first TiVo found via DNSSD/ZeroConf/Bounjour/whatever
   # Will sleep for sleep_time (default 5 sec) to allow the async dnssd
@@ -69,7 +86,7 @@ module TiVo
         end
       end
       
-      TiVoListings.new(folders=folders, videos=videos)
+      TiVoListings.new(folders, videos)
     end
   end
 
@@ -228,9 +245,9 @@ module TiVo
       end
     end
 
+    # Constant for the internal batch size around get_listings
+    BATCH_SIZE = 50
     def get_listings(recurse=true, get_xml=false)
-      BATCH_SIZE = 50
-      
       query_url = @base_url +
         "?Command=QueryContainer&Container=/NowPlaying&ItemCount=#{BATCH_SIZE}"
       if recurse
@@ -242,13 +259,13 @@ module TiVo
       if get_xml
         listings = get_listings_xml(query_url)
       else
-        listings = Array.new
+        listings = TiVoListings.new
         offset = 0
 
         loop do
           url = query_url + "&AnchorOffset=#{offset}"
           new_listings = get_listings_from_url(url)
-          break if new_listings.size >= BATCH_SIZE
+          break if new_listings.total_size < BATCH_SIZE
           listings.concat(new_listings)
           offset += BATCH_SIZE
         end
