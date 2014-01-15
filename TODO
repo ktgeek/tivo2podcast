@@ -1,5 +1,22 @@
 Just a list of things I'd eventually like to get to.
 
 * Make the file locations configurable
+
 * Add support for feed images
+
 * Make a helper script/interface for configuring the config to rss file mappings (and rss files themselves.)
+
+* Handle exceptions from the HTTP library gracefully.  Example of a non-graceful handling:
+/usr/local/rvm/gems/ruby-1.9.3-p392@tivo/gems/httpclient-2.3.3/lib/httpclient.rb:975:in `success_content': unexpected response: #<HTTP::Message::Headers:0x000000024cc118 @http_version="1.1", @body_size=0, @chunked=false, @request_method="GET", @request_uri=#<URI::HTTP:0x000000024d67d0 URL:http://<some-ip-removed>/download/The%20Soup.TiVo?Container=%2FNowPlaying&id=2584639>, @request_query=nil, @request_absolute_uri=nil, @status_code=403, @reason_phrase="Forbidden", @body_type=nil, @body_charset=nil, @body_date=nil, @body_encoding=nil, @is_request=false, @header_item=[["Server", "tivo-httpd-1:20.3.7.1a-01-2:746"], ["Content-Length", "50"], ["TiVo-Message", "recording is in progress"], ["Connection", "close"]], @dumped=false> (HTTPClient::BadResponseError)
+	from /usr/local/rvm/gems/ruby-1.9.3-p392@tivo/gems/httpclient-2.3.3/lib/httpclient.rb:594:in `get_content'
+	from /work/src/tivo/lib/tivo/TiVo.rb:295:in `download_show'
+	from /work/src/tivo/lib/tivo/tivopodcast/main_engine.rb:126:in `block in download_show'
+	from /work/src/tivo/lib/tivo/tivopodcast/main_engine.rb:124:in `popen'
+	from /work/src/tivo/lib/tivo/tivopodcast/main_engine.rb:124:in `download_show'
+	from /work/src/tivo/lib/tivo/tivopodcast/main_engine.rb:177:in `block (2 levels) in normal_processing'
+	from /work/src/tivo/lib/tivo/tivopodcast/main_engine.rb:160:in `each'
+	from /work/src/tivo/lib/tivo/tivopodcast/main_engine.rb:160:in `block in normal_processing'
+	from /usr/local/rvm/gems/ruby-1.9.3-p392@tivo/gems/activerecord-3.2.13/lib/active_record/relation/delegation.rb:6:in `each'
+	from /usr/local/rvm/gems/ruby-1.9.3-p392@tivo/gems/activerecord-3.2.13/lib/active_record/relation/delegation.rb:6:in `each'
+	from /work/src/tivo/lib/tivo/tivopodcast/main_engine.rb:149:in `normal_processing'
+	from /work/src/tivo/bin/TiVo2Podcast:64:in `<main>'
