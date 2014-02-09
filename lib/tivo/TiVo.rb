@@ -265,8 +265,8 @@ module TiVo
         loop do
           url = query_url + "&AnchorOffset=#{offset}"
           new_listings = get_listings_from_url(url)
-          break if new_listings.total_size < BATCH_SIZE
           listings.concat(new_listings)
+          break if new_listings.total_size < BATCH_SIZE
           offset += BATCH_SIZE
         end
       end
