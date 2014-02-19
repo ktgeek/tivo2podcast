@@ -80,6 +80,8 @@ module Tivo2Podcast
           puts "TiVo found at #{tmp}" if @verbose
           @tivo_addr = tmp
         end
+      else
+        @tivo_addr = @config['tivo_addr']
       end
 
       result = @tivo_addr
