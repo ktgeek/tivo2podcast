@@ -14,7 +14,6 @@
 #
 require 'rexml/document'
 require 'httpclient'
-require 'pp'
 
 module TiVo
   FOLDER = 'x-tivo-container/folder'
@@ -46,21 +45,24 @@ module TiVo
   # This assumes the host system has everything configure properly to
   # work for DNSSD, it also assumes your TiVos are assigned different
   # names.
-  def TiVo.locate_via_dnssd(name = nil)
+  def TiVo.locate_via_dnssd(name = nil, sleep_time = 5)
     # We'll only load these classes if we're actually called.
     require 'socket'
     require 'dnssd'
 
     replies = []
-    DNSSD.browse '_tivo-videos._tcp' do |r|
-      replies << r
+    DNSSD.browse '_tivo-videos._tcp' do |b|
+      DNSSD.resolve(b) do |r|
+        replies << r
+      end
     end
+    sleep(sleep_time)
 
     return nil if replies.size < 1
 
     result = nil
     if name.nil?
-      result = IPSocket.getaddress(replies[0].target)
+      result = IPSocket.getaddress(replies.first.target)
     else
       # For a tivo, DNSSD returns the assigned named such as "Family
       # Room" as r.name below.
