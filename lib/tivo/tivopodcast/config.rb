@@ -70,15 +70,15 @@ module Tivo2Podcast
     # defined in the config, try to locate the tivo vi dnssd
     def tivo_addr
       if @config['tivo_addr'].nil?
-        puts "Attemping to locate tivo..." if @verbose
+        puts "Attemping to locate tivo #{@config['tivo_name'] unless @config['tivo_name'].nil?}..." if @config['verbose']
         tmp = TiVo.locate_via_dnssd(@config['tivo_name'])
         if tmp.nil?
-          puts "TiVo not found!" if @verbose
+          puts "TiVo not found!" if @config['verbose']
           # Should be changed to an exception to be throw
           printf($stderr, "TiVo hostname or IP required to run the script\n")
           exit(1)
         else
-          puts "TiVo found at #{tmp}" if @verbose
+          puts "TiVo found at #{tmp}" if @config['verbose']
           @tivo_addr = tmp
         end
       else
