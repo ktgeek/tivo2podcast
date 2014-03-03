@@ -50,7 +50,7 @@ opts.on('-t ADDR', '--tivo_addr ADDR',
 end
 opts.on('-n NAME', '--tivo_name NAME',
         'The name assigned to the tivo via the my.tivo service') do |n|
-  t2pconfig.tivo_name = t
+  t2pconfig.tivo_name = n
 end
 opts.on('-v', '--verbose') { t2pconfig.verbose = true }
 opts.on_tail('-h', '--help', 'Show this message') do
