@@ -48,6 +48,10 @@ opts.on('-t ADDR', '--tivo_addr ADDR',
         'The hostname or IP address of the tivo to get the data from') do |t|
   t2pconfig.tivo_addr = t
 end
+opts.on('-n NAME', '--tivo_name NAME',
+        'The name assigned to the tivo via the my.tivo service') do |n|
+  t2pconfig.tivo_name = t
+end
 opts.on('-v', '--verbose') { t2pconfig.verbose = true }
 opts.on_tail('-h', '--help', 'Show this message') do
   puts opts

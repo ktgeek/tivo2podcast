@@ -39,35 +39,34 @@ module TiVo
     end
   end
 
-  # Will return the first TiVo found via DNSSD/ZeroConf/Bounjour/whatever
-  # Will sleep for sleep_time (default 5 sec) to allow the async dnssd
-  # processes to locate the the tivo.
+  # Will return the first TiVo found via
+  # DNSSD/ZeroConf/Bounjour/whatever or nil unless a name for the TiVo is
+  # given then it will return the TiVo that matches that name or nil.
   #
-  # This assumes the host system has everything configure properly to work
-  def TiVo.locate_via_dnssd(sleep_time = 5)
+  # This assumes the host system has everything configure properly to
+  # work for DNSSD, it also assumes your TiVos are assigned different
+  # names.
+  def TiVo.locate_via_dnssd(name = nil)
     # We'll only load these classes if we're actually called.
     require 'socket'
     require 'dnssd'
 
     replies = []
-    service = DNSSD.browse '_tivo-videos._tcp' do |b|
-      resolver = DNSSD.resolve(b) do |r|
-        replies << r.target
-      end
-      sleep(sleep_time)
-      resolver.stop
+    DNSSD.browse '_tivo-videos._tcp' do |r|
+      replies << r
     end
 
-    sleep(sleep_time)
-
-# TODO: Determine if this stop is needed or not. Original code had it
-# with no problem in ruby 1.8, it started hanging in ruby 1.9 (or
-# with an updated dnssd.
-#    service.stop
+    return nil if replies.size < 1
 
     result = nil
-    result = IPSocket.getaddress(replies[0]) if replies.size > 0
-
+    if name.nil?
+      result = IPSocket.getaddress(replies[0].target)
+    else
+      # For a tivo, DNSSD returns the assigned named such as "Family
+      # Room" as r.name below.
+      i = replies.index { |r| r.name == name }
+      result = IPSocket.getaddress(replies[i].target) unless i.nil?
+    end
     return result
   end
 

@@ -33,6 +33,7 @@ module Tivo2Podcast
     def initialize(file = nil)
       @config = {
         "tivo_addr" => nil,
+        "tivo_name" => nil,
         "mak" => nil,
         "verbose" => false,
         "opt_config_names" => Array.new,
@@ -70,7 +71,7 @@ module Tivo2Podcast
     def tivo_addr
       if @config['tivo_addr'].nil?
         puts "Attemping to locate tivo..." if @verbose
-        tmp = TiVo.locate_via_dnssd
+        tmp = TiVo.locate_via_dnssd(@config['tivo_name'])
         if tmp.nil?
           puts "TiVo not found!" if @verbose
           # Should be changed to an exception to be throw
@@ -93,6 +94,10 @@ module Tivo2Podcast
       end
       
       return result
+    end
+
+    def tivo_name=(value)
+      @config['tivo_name'] = value
     end
 
     def mak=(value)
