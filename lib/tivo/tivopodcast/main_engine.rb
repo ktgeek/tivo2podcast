@@ -170,18 +170,25 @@ module Tivo2Podcast
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
           unless (Tivo2Podcast::Db::Show.where(:configid => config, :s_ep_programid => s.program_id).exists? || File.exist?(transcode))
-            @notifier.notify("Starting download of #{basename}")
-            
-            # If the file exists, we'll assume the download went okay
-            # Shame on us for not checking if it isn't
-            download_show(s, download) unless File.exists?(download)
+            begin
+              @notifier.notify("Starting download of #{basename}")
+              
+              # If the file exists, we'll assume the download went okay
+              # Shame on us for not checking if it isn't
+              download_show(s, download) unless File.exists?(download)
 
-            @notifier.notify("Finished download of #{basename}")
+              @notifier.notify("Finished download of #{basename}")
 
-            # Code was removed here to put into thread
-            #   Create arugments for thread
-            work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
-                                                  download, transcode))
+              # Code was removed here to put into thread
+              #   Create arugments for thread
+              work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
+                                                    download, transcode))
+            rescue IOError => e
+              # If there was an IOError, we'll assume a file turd of
+              # some sort was left behind and clean it up
+              File.delete(download) if File.exist?(download)
+              @notifier.notify("Error downloading #{basename}: #{e}")
+            end
           else
             puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @config.verbose
           end

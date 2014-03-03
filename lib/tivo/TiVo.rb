@@ -313,9 +313,6 @@ module TiVo
       begin
         url = tivo_item.url
         @client.set_auth(url, USER, @mak)
-        # We ignore the first chunk to work around a bug in
-        # http client where we see the "Auth required" digest-auth
-        # header.
         @client.get_content(url, nil, {'Connection' => 'close'}) do |c|
           if block
             block.call(c)
@@ -323,11 +320,16 @@ module TiVo
             file << c
           end
         end
+      rescue HTTPClient::BadResponseError => e
+        raise TiVoDownloadError, "Error downloading from TiVo", caller
       ensure
         file.close unless file.nil?
       end
     end
 
     private :get_listings_from_url
+  end
+
+  class TiVoDownloadError < IOError
   end
 end
