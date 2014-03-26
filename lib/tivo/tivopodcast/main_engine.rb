@@ -162,7 +162,7 @@ module Tivo2Podcast
           basename = s.title + '-' + s.time_captured.strftime("%Y%m%d%H%M")
           basename = basename + '-' + s.episode_title unless s.episode_title.nil?
           basename = basename + '-' + s.episode_number unless s.episode_number.nil?
-          basename.gsub!(/[:\?]/, '_')
+          basename.gsub!(/[:\?;]/, '_')
 
           download = basename + ".mpg"
           transcode = basename + ".m4v"
