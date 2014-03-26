@@ -46,11 +46,17 @@ mak = nil
 mak = File.read(mak_file).strip if File.exist?(mak_file)
 
 # Parse the options to get the rest (or override the above)
-tivo_addr = nil
+tivo_name,tivo_addr = nil, nil
+decode = true
 opts = OptionParser.new
 opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
 opts.on('-t IP', '--tivo IP', 'The IP address of your TiVo') do |ip|
   tivo_addr = ip
+end
+opts.on('-d', '--no-decode', 'Will not use tivodecode.') { |d| decode = false }
+opts.on('-n NAME', '--tivo_name NAME',
+        'The name assigned to the tivo via the my.tivo service') do |n|
+  tivo_name = n
 end
 opts.on_tail('-h', '--help', 'Show this message') do
   puts opts
@@ -59,11 +65,11 @@ end
 opts.parse(ARGV)
 
 if tivo_addr.nil?
-  tivo_addr = TiVo.locate_via_dnssd
+  tivo_addr = TiVo.locate_via_dnssd(tivo_name)
   $stderr.puts "TiVo not found!" if tivo_addr.nil?
 end
 
-if tivo_addr.nil? || mak.nil?
+if (tivo_addr.nil? && tivo_name.nil?) || mak.nil?
   puts "Must have TiVo IP address and MAK to function."
   exit(1)
 end
@@ -77,14 +83,26 @@ downloads.each do |dl|
   dl_name = make_filename(dl)
 
   puts "Attemping to download " + dl.printable_title()
-  IO.popen("tivodecode -n -o \"#{dl_name}\" -", 'wb') do |td|
-    pbar = ANSI::ProgressBar.new(dl_name, dl.size)
-    tivo.download_show(dl) do |tc|
-      td << tc
-      pbar.inc(tc.length)
+  if decode
+    IO.popen("tivodecode -n -o \"#{dl_name}\" -", 'wb') do |td|
+      pbar = ANSI::ProgressBar.new(dl_name, dl.size)
+      tivo.download_show(dl) do |tc|
+        td << tc
+        pbar.inc(tc.length)
+      end
+      pbar.finish
+      puts
     end
-    pbar.finish
-    puts
+  else
+    File.open(dl_name, 'wb') do |file|
+      pbar = ANSI::ProgressBar.new(dl_name, dl.size)
+      tivo.download_show(dl) do |tc|
+        file << tc
+        pbar.inc(tc.length)
+      end
+      pbar.finish
+      puts
+    end
   end
   sleep 60
 end
