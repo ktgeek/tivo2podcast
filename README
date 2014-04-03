@@ -1,5 +1,4 @@
-This is my package of two scripts I wrote up to work with my TiVo
-Series 3 to my linux box in terms of downloading content.
+This is my package of two scripts I wrote up to work with my TiVo to my linux box in terms of downloading content.
 
 TiVo2Disk
 ---------
@@ -53,10 +52,11 @@ By default, the script will use dnnsd/ZeroConf/Bonjour to locate a
 TiVo on your network.  This assumes you have all that stuff set up
 correctly on your host computer.  If this doesn't work, or you have
 multiple TiVos and you want to specify a particular one, you can also
-pass the IP and/or hostname to your tivo to the script via the -t
-flag, which bypasses using dnssd. You can also specify the TiVo's
-address in the tivo2podcast.conf file.  You don't need the dnnsd gem
-if you always configure the conf file or pass a -t.
+pass the IP and/or hostname to your tivo to the script via the -t flag
+which bypasses using dnssd, or the -n flag which looks for a TiVo with
+a specific name via dnssd. You can also specify the TiVo's address in
+the tivo2podcast.conf file.  You don't need the dnnsd gem if you
+always configure the conf file or pass a -t.
 
 You'll need to run TiVo2Podcast once to create the sqlite database
 that TiVo2Podcast uses to store its data.  This database is at
@@ -66,7 +66,7 @@ $TIVO2PODCASTDIR/.tivo2podcast.db
 
 After the database is created, you can use the sqlite command line
 tool to open the database and edit the 'configs' table to set up a
-show.
+show.  *THIS SECTION NEEDS TO BE UPDATED TO RELFECT THE NEW RSS LAYOUT*
 
 The config table has the following fields:
 config_name TEXT NOT NULL UNIQUE - Config name for use with the -c flag
