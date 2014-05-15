@@ -23,16 +23,13 @@ require 'tivopodcast/rss_generator'
 
 module Tivo2Podcast
   class MainEngine
-    def initialize(config)
-      @config = config
+    def initialize
       # This will need to find a better home as the transition to
       # ActiveRecord is complete.  It probably belongs in the startup
       # script.
       Tivo2Podcast::connect_database((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
                                       ENV['TIVO2PODCASTDIR']) +
                                      File::SEPARATOR + '.tivo2podcast.db')
-      
-      @notifier = TiVo2Podcast::NotifierEngine.new(@config)
     end
 
     class WorkOrder
@@ -92,9 +89,10 @@ module Tivo2Podcast
     def transcode_shows(tc)
       # I need config, s/show, basename, download, transcode
 
-      @notifier.notify("Starting transcode of #{tc.basename}")
+      notifier = TiVo2Podcast::NotifierEngine.instance
+      notifier.notify("Starting transcode of #{tc.basename}")
       
-      transcoder = Tivo2Podcast::Transcoder.new(@config, tc.config, tc.show)
+      transcoder = Tivo2Podcast::Transcoder.new(tc.config, tc.show)
       transcoder.transcode_show(tc.download, tc.transcode)
 
       transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
@@ -103,7 +101,7 @@ module Tivo2Podcast
 
       show = Tivo2Podcast::Db::Show.new_from_transcode_work_order(tc)
       show.save!
-      @notifier.notify("Finished transcode of #{tc.basename}")
+      notifier.notify("Finished transcode of #{tc.basename}")
     end
 
     def show_cleanup(tc)
@@ -124,15 +122,17 @@ module Tivo2Podcast
 
       Tivo2Podcast::RssGenerator.generate_from_config(tc.config)
       # Put notification here
-      @notifier.notify("Finished processing #{tc.config.config_name}")
+      TiVo2Podcast::NotifierEngine.instance.notify(
+        "Finished processing #{tc.config.config_name}")
     end
 
     def download_show(show, name)
-      tivo = @config.tivo_factory
+      t2pconfig = Tivo2Podcast::Config.instance
+      tivo = t2pconfig.tivo_factory
 
       # downlaod the file
-      IO.popen("#{@config.tivodecode} -n -o \"#{name}\" -", 'wb') do |td|
-        pbar = @config.verbose ? ANSI::ProgressBar.new(name, show.size) : nil
+      IO.popen("#{t2pconfig.tivodecode} -n -o \"#{name}\" -", 'wb') do |td|
+        pbar = t2pconfig.verbose ? ANSI::ProgressBar.new(name, show.size) : nil
         tivo.download_show(show) do |tc|
           td << tc
           pbar.inc(tc.length) unless pbar.nil?
@@ -144,14 +144,15 @@ module Tivo2Podcast
 
     def normal_processing
       configs = nil
-      if @config.opt_config_names.nil? || @config.opt_config_names.empty?
+      t2pconfig = Tivo2Podcast::Config.instance
+      if t2pconfig.opt_config_names.nil? || t2pconfig.opt_config_names.empty?
         configs = Tivo2Podcast::Db::Config.all
       else
         configs = Tivo2Podcast::Db::Config.where(
-                    :config_name => @config.opt_config_names)
+                    :config_name => t2pconfig.opt_config_names)
       end
 
-      tivo = @config.tivo_factory
+      tivo = t2pconfig.tivo_factory
 
       work_queue = Queue.new
       work_thread = create_work_thread(work_queue)
@@ -177,17 +178,18 @@ module Tivo2Podcast
           download = basename + ".mpg"
           transcode = basename + ".m4v"
 
+          notifier = TiVo2Podcast::NotifierEngine.instance
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
           unless (Tivo2Podcast::Db::Show.where(:configid => config, :s_ep_programid => s.program_id).exists? || File.exist?(transcode))
             begin
-              @notifier.notify("Starting download of #{basename}")
+              notifier.notify("Starting download of #{basename}")
               
               # If the file exists, we'll assume the download went okay
               # Shame on us for not checking if it isn't
               download_show(s, download) unless File.exists?(download)
 
-              @notifier.notify("Finished download of #{basename}")
+              notifier.notify("Finished download of #{basename}")
 
               # Code was removed here to put into thread
               #   Create arugments for thread
@@ -197,10 +199,10 @@ module Tivo2Podcast
               # If there was an IOError, we'll assume a file turd of
               # some sort was left behind and clean it up
               File.delete(download) if File.exist?(download)
-              @notifier.notify("Error downloading #{basename}: #{e}")
+              notifier.notify("Error downloading #{basename}: #{e}")
             end
           else
-            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @config.verbose
+            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if t2pconfig.verbose
           end
         end
 
