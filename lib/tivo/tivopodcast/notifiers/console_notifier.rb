@@ -14,6 +14,10 @@
 
 module Tivo2Podcast
   class ConsoleNotifier < Notifier
+    def initialize
+      super
+    end
+
     def notify(message)
       puts message
     end

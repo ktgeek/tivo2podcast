@@ -21,8 +21,8 @@ module Tivo2Podcast
     # notifying a single user.
     PROVIDER_KEY = 'MH0S7xOFSwVLNvNhTpiC'
     
-    def initialize(config)
-      super(config)
+    def initialize
+      super
 
       @user = Tivo2Podcast::Config.instance.config["boxcar.user"]
       if @user.nil?
