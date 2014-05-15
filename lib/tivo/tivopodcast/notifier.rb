@@ -11,22 +11,24 @@
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
+require 'singleton'
 
 module TiVo2Podcast
   class NotifierEngine
-    def initialize(config)
-      @config = config
+    include Singleton
+
+    def initialize
       @notifiers = Array.new
       init_notifiers
     end
 
     def init_notifiers
-      @config["notifiers"].each do |n|
+      TiVo2Config::Config.instance["notifiers"].each do |n|
         # This require makes the assumption that if __FILE__ is in the
         # path, We can naturally look down one level.
         begin
           require "tivopodcast/notifiers/#{n + '_notifier'}"
-          @notifiers << Kernel.const_get("TiVo2Podcast").const_get(n.capitalize + "Notifier").new(@config)
+          @notifiers << Kernel.const_get("TiVo2Podcast").const_get(n.capitalize + "Notifier").new
         rescue LoadError
           # Should this toss an exception instead of an error message?
           puts "Could not find #{n} notifier... Ignoring."
@@ -39,12 +41,9 @@ module TiVo2Podcast
     end
   end
 
-  # Base class for doing notifications. Will respond to notify, but will do nothing.
+  # Base class for doing notifications. Will respond to notify, but
+  # will do nothing.
   class Notifier
-    def initialize(config)
-      @config = config
-    end
-
     def notify(message)
     end
   end

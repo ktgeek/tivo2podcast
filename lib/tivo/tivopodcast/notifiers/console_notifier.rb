@@ -14,10 +14,6 @@
 
 module TiVo2Podcast
   class ConsoleNotifier < Notifier
-    def initialize(config)
-      super(config)
-    end
-
     def notify(message)
       puts message
     end

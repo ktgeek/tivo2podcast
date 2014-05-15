@@ -24,7 +24,7 @@ module TiVo2Podcast
     def initialize(config)
       super(config)
 
-      @user = @config["boxcar.user"]
+      @user = Tivo2Podcast::Config.instance.config["boxcar.user"]
       if @user.nil?
         raise ArgumentError, 'Both boxcar.user and boxcar.password must be defined for the Boxcar notifier'
       end
@@ -45,7 +45,8 @@ module TiVo2Podcast
       unless @boxcar.nil?
         Thread.new do
           begin
-            @boxcar.notify(@user, message, {:from_screen_name => "Tivo2Podcast"})
+            @boxcar.notify(@user, message,
+                           {:from_screen_name => "Tivo2Podcast"})
           rescue Exception => e
             # TODO: replace this with some form of logging. For now, stderr
             $stderr.puts "Error sending message to boxcar api"

@@ -29,8 +29,7 @@ module Tivo2Podcast
     #
     # show is assumed to be an instance of TiVo::TiVoVideo which holds
     # the metadata of the show to be transcoded.
-    def initialize(config, show_config, show)
-      @config = config
+    def initialize(show_config, show)
       @show_config = show_config
       @show = show
       @crop = nil
@@ -105,7 +104,8 @@ module Tivo2Podcast
     # filename of the sourcefile, outfile is the filename to transcode
     # to
     def transcode_show(infile, outfile)
-      command = "#{@config.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
+      t2pconfig = Tivo2Podcast::Config.instance
+      command = "#{t2pconfig.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
       command += ' -5 default' if decomb?
       command += " --crop #{crop}" unless crop.nil?
       command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48"
@@ -113,7 +113,7 @@ module Tivo2Podcast
       command += " -Y #{max_height}" unless max_height.nil?
       command += ' -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0'
       command += " -i \"#{infile}\" -o \"#{outfile}\""
-      command += " >/dev/null 2>&1" unless @config.verbose
+      command += " >/dev/null 2>&1" unless t2pconfig.verbose
                                   
       returncode = system(command)
       if !returncode
@@ -134,7 +134,7 @@ module Tivo2Podcast
       showtitle = showtitle + ' (' + @show.episode_number +
         ')' unless @show.episode_number.nil?
 
-      command = "#{@config.atomicparsley} \"#{outfile}\" -W " +
+      command = "#{t2pconfig.atomicparsley} \"#{outfile}\" -W " +
         "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " +
         "--TVEpisode \"#{@show.episode_title(true)}\" --artist \"#{@show.title}\""
       command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
@@ -143,7 +143,7 @@ module Tivo2Podcast
         desc = @show.description.gsub(/"/, '\"')
         command += " --description \"#{@desc}\""
       end
-      command += ' >/dev/null 2>&1' unless @config.verbose
+      command += ' >/dev/null 2>&1' unless t2pconfig.verbose
       returncode = system(command)
       if !returncode
         puts "something isn't working right, bailing"
@@ -154,10 +154,11 @@ module Tivo2Podcast
     end
 
     def skip_commercials(basename, download, transcode)
+      t2pconfig = TiVo2Podcast::Config.instance
       # I need to wrap this in a "if you want to do this..."
-      command = "#{@config.comskip} --ini=#{@config.comskip_ini} -q"
+      command = "#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q"
       command += " \"#{download}\""
-      command += " >/dev/null 2>&1" unless @config.verbose
+      command += " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
 	  # Comskip doesn't seem to do the 0 return code (or is that wine?)
