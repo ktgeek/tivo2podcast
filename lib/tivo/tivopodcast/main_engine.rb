@@ -84,7 +84,7 @@ module Tivo2Podcast
       end
 
       def do_work
-        newest_shows = Tivo2Podcast::Db::Show.where(:configid => tc.config,
+        newest_shows = Tivo2Podcast::Db::Show.where(:configid => @config,
           :on_disk => true).order('shows.s_ep_timecap desc').limit(
           @config.ep_to_keep)
         unless newest_shows.nil? || newest_shows.empty?

@@ -24,7 +24,7 @@ module Tivo2Podcast
     def initialize
       super
 
-      @user = Tivo2Podcast::Config.instance.config["boxcar.user"]
+      @user = Tivo2Podcast::Config.instance["boxcar.user"]
       if @user.nil?
         raise ArgumentError, 'Both boxcar.user and boxcar.password must be defined for the Boxcar notifier'
       end
