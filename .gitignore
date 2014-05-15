@@ -1,0 +1,6 @@
+# Mac OS X
+*.DS_Store
+
+/sandbox
+/rdoc
+/dev_scripts/tivotidy.xml

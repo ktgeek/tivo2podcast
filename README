@@ -66,7 +66,8 @@ $TIVO2PODCASTDIR/.tivo2podcast.db
 
 After the database is created, you can use the sqlite command line
 tool to open the database and edit the 'configs' table to set up a
-show.  *THIS SECTION NEEDS TO BE UPDATED TO RELFECT THE NEW RSS LAYOUT*
+show.  *THIS SECTION NEEDS TO BE UPDATED TO RELFECT THE NEW RSS
+LAYOUT*
 
 The config table has the following fields:
 config_name TEXT NOT NULL UNIQUE - Config name for use with the -c flag
