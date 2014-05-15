@@ -13,7 +13,7 @@
 #       with the distribution.
 require 'singleton'
 
-module TiVo2Podcast
+module Tivo2Podcast
   class NotifierEngine
     include Singleton
 
@@ -23,12 +23,12 @@ module TiVo2Podcast
     end
 
     def init_notifiers
-      TiVo2Podcast::Config.instance["notifiers"].each do |n|
+      Tivo2Podcast::Config.instance["notifiers"].each do |n|
         # This require makes the assumption that if __FILE__ is in the
         # path, We can naturally look down one level.
         begin
           require "tivopodcast/notifiers/#{n + '_notifier'}"
-          @notifiers << Kernel.const_get("TiVo2Podcast").const_get(n.capitalize + "Notifier").new
+          @notifiers << Kernel.const_get("Tivo2Podcast").const_get(n.capitalize + "Notifier").new
         rescue LoadError
           # Should this toss an exception instead of an error message?
           puts "Could not find #{n} notifier... Ignoring."

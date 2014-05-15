@@ -12,7 +12,7 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 
-module TiVo2Podcast
+module Tivo2Podcast
   class ConsoleNotifier < Notifier
     def notify(message)
       puts message

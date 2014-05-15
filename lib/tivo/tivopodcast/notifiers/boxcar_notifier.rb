@@ -14,7 +14,7 @@
 require 'rubygems'
 require 'boxcar_api'
 
-module TiVo2Podcast
+module Tivo2Podcast
   class BoxcarNotifier < Notifier
     # This is set for the generic provider from boxcar.  This won't
     # allow us to broadcast, which is fine, since we only care about

@@ -59,7 +59,7 @@ module Tivo2Podcast
 
       def do_work
         # I need config, s/show, basename, download, transcode
-        notifier = TiVo2Podcast::NotifierEngine.instance
+        notifier = Tivo2Podcast::NotifierEngine.instance
         notifier.notify("Starting transcode of #{@basename}")
 
         transcoder = Tivo2Podcast::Transcoder.new(@config, @show)
@@ -103,7 +103,7 @@ module Tivo2Podcast
         # something more sane.
         Tivo2Podcast::RssGenerator.generate_from_config(@config)
         # Put notification here
-        TiVo2Podcast::NotifierEngine.instance.notify(
+        Tivo2Podcast::NotifierEngine.instance.notify(
           "Finished processing #{@config.config_name}")
       end
     end
@@ -176,7 +176,7 @@ module Tivo2Podcast
           download = basename + ".mpg"
           transcode = basename + ".m4v"
 
-          notifier = TiVo2Podcast::NotifierEngine.instance
+          notifier = Tivo2Podcast::NotifierEngine.instance
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
           unless (Tivo2Podcast::Db::Show.where(:configid => config, :s_ep_programid => s.program_id).exists? || File.exist?(transcode))
