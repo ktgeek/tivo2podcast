@@ -14,6 +14,7 @@
 #       with the distribution.
 #
 require 'forwardable'
+require 'singleton'
 require 'yaml'
 require 'TiVo'
 
@@ -21,6 +22,7 @@ module Tivo2Podcast
   # This class makes up the configuation for the TiVo2Podcast engine
   # and includes factory and convenience methods
   class Config
+    include Singleton
     extend Forwardable
 
     # The default configuration filename
@@ -30,7 +32,7 @@ module Tivo2Podcast
 
     # Inialize the configuration with an optional file to pull the
     # base config from.
-    def initialize(file = nil)
+    def initialize
       @config = {
         "tivo_addr" => nil,
         "tivo_name" => nil,
@@ -49,8 +51,10 @@ module Tivo2Podcast
         "regenerate_rss" => false
       }
 
-      config_file = file.nil? ? CONFIG_FILENAME : file
+      load_from_file(CONFIG_FILENAME)
+    end
 
+    def load_from_file(config_file)
       if File.exists?(config_file)
         @config.merge!(YAML.load_file(config_file))
       end

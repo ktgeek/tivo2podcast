@@ -29,7 +29,7 @@ require 'optparse'
 require 'tivopodcast/config'
 require 'tivopodcast'
 
-t2pconfig = Tivo2Podcast::Config.new
+t2pconfig = Tivo2Podcast::Config.instance
 
 opts = OptionParser.new
 opts.on('-c CONFIG', '--config CONFIG',
@@ -59,7 +59,7 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
-engine = Tivo2Podcast::MainEngine.new(t2pconfig)
+engine = Tivo2Podcast::MainEngine.new
 
 case
 when t2pconfig.cleanup then engine.file_cleanup
