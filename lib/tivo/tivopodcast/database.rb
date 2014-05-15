@@ -97,7 +97,7 @@ module Tivo2Podcast
       has_many :rss_files, :through => :config
       validates_presence_of :config
 
-      def Show.new_from_transcode_work_order(work_order)
+      def Show.new_from_config_show_filename(config, show, filename)
         show = Show.new
         show.config = work_order.config
 

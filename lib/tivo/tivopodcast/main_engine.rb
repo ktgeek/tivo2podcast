@@ -56,12 +56,55 @@ module Tivo2Podcast
         @download, @transcode = download, transcode
         @type = :TRANSCODE
       end
+
+      def do_work
+        # I need config, s/show, basename, download, transcode
+        notifier = TiVo2Podcast::NotifierEngine.instance
+        notifier.notify("Starting transcode of #{@basename}")
+
+        transcoder = Tivo2Podcast::Transcoder.new(@config, @show)
+        transcoder.transcode_show(@download, @transcode)
+
+        transcoder.skip_commercials(@basename, @download, @transcode)
+
+        File.delete(@download) if File.exists?(@download)
+
+        show =
+          Tivo2Podcast::Db::Show.new_from_config_show_filename(@config, @show,
+                                                               @transcode)
+        show.save!
+        notifier.notify("Finished transcode of #{@basename}")
+      end
     end
 
     class CleanupWorkOrder < WorkOrder
       def initialize(config)
         super(config)
         @type = :CLEANUP
+      end
+
+      def do_work
+        newest_shows = Tivo2Podcast::Db::Show.where(:configid => tc.config,
+          :on_disk => true).order('shows.s_ep_timecap desc').limit(
+          @config.ep_to_keep)
+        unless newest_shows.nil? || newest_shows.empty?
+          Tivo2Podcast::Db::Show.where(
+              :configid => @config, :on_disk => true).where(
+              ['id not in (?)', newest_shows]).each do |show|
+            # If the file doesn't exist, don't try to delete, but
+            # still setting the on_disk to false is appropriate.
+            File.delete(show.filename) if File.exists?(show.filename)
+            show.on_disk = false
+            show.save!
+          end
+        end
+
+        # We might want these to move...or to rename this object to
+        # something more sane.
+        Tivo2Podcast::RssGenerator.generate_from_config(@config)
+        # Put notification here
+        TiVo2Podcast::NotifierEngine.instance.notify(
+          "Finished processing #{@config.config_name}")
       end
     end
 
@@ -70,60 +113,15 @@ module Tivo2Podcast
       raise ArgumentError if queue.nil?
       Thread.new do
         loop do
-          tc = queue.deq
+          work_order = queue.deq
 
-          case tc.type
-          when :NO_MORE_WORK
-            break;
-
-          when :TRANSCODE
-            transcode_shows(tc)
-
-          when :CLEANUP
-            show_cleanup(tc)
+          if work_order.type == :NO_MORE_WORK
+            break
+          else
+            work_order.do_work
           end
         end
       end
-    end
-
-    def transcode_shows(tc)
-      # I need config, s/show, basename, download, transcode
-
-      notifier = TiVo2Podcast::NotifierEngine.instance
-      notifier.notify("Starting transcode of #{tc.basename}")
-      
-      transcoder = Tivo2Podcast::Transcoder.new(tc.config, tc.show)
-      transcoder.transcode_show(tc.download, tc.transcode)
-
-      transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
-      
-      File.delete(tc.download) if File.exists?(tc.download)
-
-      show = Tivo2Podcast::Db::Show.new_from_transcode_work_order(tc)
-      show.save!
-      notifier.notify("Finished transcode of #{tc.basename}")
-    end
-
-    def show_cleanup(tc)
-      newest_shows = Tivo2Podcast::Db::Show.where(:configid => tc.config,
-        :on_disk => true).order('shows.s_ep_timecap desc').limit(
-        tc.config.ep_to_keep)
-      unless newest_shows.nil? || newest_shows.empty?
-        Tivo2Podcast::Db::Show.where(
-            :configid => tc.config, :on_disk => true).where(
-            ['id not in (?)', newest_shows]).each do |show|
-          # If the file doesn't exist, don't try to delete, but
-          # still setting the on_disk to false is appropriate.
-          File.delete(show.filename) if File.exists?(show.filename)
-          show.on_disk = false
-          show.save!
-        end
-      end
-
-      Tivo2Podcast::RssGenerator.generate_from_config(tc.config)
-      # Put notification here
-      TiVo2Podcast::NotifierEngine.instance.notify(
-        "Finished processing #{tc.config.config_name}")
     end
 
     def download_show(show, name)
