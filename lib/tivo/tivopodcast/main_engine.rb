@@ -80,43 +80,51 @@ module Tivo2Podcast
             break;
 
           when :TRANSCODE
-            # I need config, s/show, basename, download, transcode
-
-            @notifier.notify("Starting transcode of #{tc.basename}")
-          
-            transcoder = Tivo2Podcast::Transcoder.new(@config, tc.config, tc.show)
-            transcoder.transcode_show(tc.download, tc.transcode)
-
-            transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
-            
-            File.delete(tc.download) if File.exists?(tc.download)
-
-            show = Tivo2Podcast::Db::Show.new_from_transcode_work_order(tc)
-            show.save!
-            @notifier.notify("Finished transcode of #{tc.basename}")
+            transcode_shows(tc)
 
           when :CLEANUP
-            newest_shows = Tivo2Podcast::Db::Show.where(
-              :configid => tc.config, :on_disk => true).order(
-              'shows.s_ep_timecap desc').limit(tc.config.ep_to_keep)
-            unless newest_shows.nil? || newest_shows.empty?
-              Tivo2Podcast::Db::Show.where(
-                  :configid => tc.config, :on_disk => true).where(
-                  ['id not in (?)', newest_shows]).each do |show|
-                # If the file doesn't exist, don't try to delete, but
-                # still setting the on_disk to false is appropriate.
-                File.delete(show.filename) if File.exists?(show.filename)
-                show.on_disk = false
-                show.save!
-              end
-            end
-
-            Tivo2Podcast::RssGenerator.generate_from_config(tc.config)
-            # Put notification here
-            @notifier.notify("Finished processing #{tc.config.config_name}")
+            show_cleanup(tc)
           end
         end
       end
+    end
+
+    def transcode_shows(tc)
+      # I need config, s/show, basename, download, transcode
+
+      @notifier.notify("Starting transcode of #{tc.basename}")
+      
+      transcoder = Tivo2Podcast::Transcoder.new(@config, tc.config, tc.show)
+      transcoder.transcode_show(tc.download, tc.transcode)
+
+      transcoder.skip_commercials(tc.basename, tc.download, tc.transcode)
+      
+      File.delete(tc.download) if File.exists?(tc.download)
+
+      show = Tivo2Podcast::Db::Show.new_from_transcode_work_order(tc)
+      show.save!
+      @notifier.notify("Finished transcode of #{tc.basename}")
+    end
+
+    def show_cleanup(tc)
+      newest_shows = Tivo2Podcast::Db::Show.where(:configid => tc.config,
+        :on_disk => true).order('shows.s_ep_timecap desc').limit(
+        tc.config.ep_to_keep)
+      unless newest_shows.nil? || newest_shows.empty?
+        Tivo2Podcast::Db::Show.where(
+            :configid => tc.config, :on_disk => true).where(
+            ['id not in (?)', newest_shows]).each do |show|
+          # If the file doesn't exist, don't try to delete, but
+          # still setting the on_disk to false is appropriate.
+          File.delete(show.filename) if File.exists?(show.filename)
+          show.on_disk = false
+          show.save!
+        end
+      end
+
+      Tivo2Podcast::RssGenerator.generate_from_config(tc.config)
+      # Put notification here
+      @notifier.notify("Finished processing #{tc.config.config_name}")
     end
 
     def download_show(show, name)
