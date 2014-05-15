@@ -23,7 +23,7 @@ module TiVo2Podcast
     end
 
     def init_notifiers
-      TiVo2Config::Config.instance["notifiers"].each do |n|
+      TiVo2Podcast::Config.instance["notifiers"].each do |n|
         # This require makes the assumption that if __FILE__ is in the
         # path, We can naturally look down one level.
         begin
