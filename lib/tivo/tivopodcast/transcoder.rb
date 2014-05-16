@@ -154,7 +154,7 @@ module Tivo2Podcast
     end
 
     def skip_commercials(basename, download, transcode)
-      t2pconfig = TiVo2Podcast::Config.instance
+      t2pconfig = Tivo2Podcast::Config.instance
       # I need to wrap this in a "if you want to do this..."
       command = "#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q"
       command += " \"#{download}\""
