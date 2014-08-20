@@ -97,20 +97,20 @@ module Tivo2Podcast
       has_many :rss_files, :through => :config
       validates_presence_of :config
 
-      def Show.new_from_config_show_filename(config, show, filename)
+      def Show.new_from_config_show_filename(config, showinfo, filename)
         show = Show.new
-        show.config = work_order.config
+        show.config = config
 
-        show.s_name = work_order.show.title
-        show.s_ep_title = work_order.show.episode_title(true)
-        show.s_ep_number = work_order.show.episode_number
-        show.s_ep_description = work_order.show.description
-        show.s_ep_length = work_order.show.duration
-        show.s_ep_timecap = work_order.show.time_captured.to_i
-        show.s_ep_programid = work_order.show.program_id
+        show.s_name = showinfo.title
+        show.s_ep_title = showinfo.episode_title(true)
+        show.s_ep_number = showinfo.episode_number
+        show.s_ep_description = showinfo.description
+        show.s_ep_length = showinfo.duration
+        show.s_ep_timecap = showinfo.time_captured.to_i
+        show.s_ep_programid = showinfo.program_id
         show.on_disk = true
         
-        show.filename = work_order.transcode
+        show.filename = filename
           
         return show
       end
