@@ -46,6 +46,12 @@ module TiVo
   # work for DNSSD, it also assumes your TiVos are assigned different
   # names.
   def TiVo.locate_via_dnssd(name = nil, sleep_time = 5)
+    tivos = TiVo.tivos_via_dnssd(sleep_time)
+    tivos.nil? ? nil : tivos[name]
+  end
+
+  # Returns a Hash that maps tivo name to tivo ip
+  def TiVo.tivos_via_dnssd(sleep_time = 5)
     # We'll only load these classes if we're actually called.
     require 'socket'
     require 'dnssd'
@@ -60,16 +66,7 @@ module TiVo
 
     return nil if replies.size < 1
 
-    result = nil
-    if name.nil?
-      result = IPSocket.getaddress(replies.first.target)
-    else
-      # For a tivo, DNSSD returns the assigned named such as "Family
-      # Room" as r.name below.
-      i = replies.index { |r| r.name == name }
-      result = IPSocket.getaddress(replies[i].target) unless i.nil?
-    end
-    return result
+    Hash.new(replies.collect { |x| [x.name, x.target] })
   end
 
   class TiVoItemFactory
