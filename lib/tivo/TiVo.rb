@@ -46,7 +46,7 @@ module TiVo
   # work for DNSSD, it also assumes your TiVos are assigned different
   # names.
   def TiVo.locate_via_dnssd(name = nil, sleep_time = 5)
-    tivos = TiVo.tivos_via_dnssd(sleep_time)
+    tivos = tivos_via_dnssd(sleep_time)
     tivos.nil? ? nil : tivos[name]
   end
 
@@ -66,7 +66,7 @@ module TiVo
 
     return nil if replies.size < 1
 
-    Hash.new(replies.collect { |x| [x.name, x.target] })
+    Hash[replies.collect { |x| [x.name, IPSocket.getaddress(x.target)] }]
   end
 
   class TiVoItemFactory
