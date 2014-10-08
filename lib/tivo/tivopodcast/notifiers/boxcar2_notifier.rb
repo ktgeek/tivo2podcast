@@ -18,7 +18,6 @@ module Tivo2Podcast
   # This is based on documentation at
   # http://help.boxcar.io/knowledgebase/articles/306788-how-to-send-a-notification-to-boxcar-users
   class Boxcar2Notifier < Notifier
-
     BOXCAR2_API_URL = 'https://new.boxcar.io/api/notifications'
 
     def initialize
@@ -34,12 +33,10 @@ module Tivo2Podcast
       unless @token.nil?
         Thread.new do
           begin
-            @boxcar2.post {
-              'user_credentials' => @token,
-              'notification[title]' => "Tivo2Podcast: #{message}",
-              'notification[long_message]' => message,
-              'notification[source_name]' => 'Tivo2Podcast'
-            }
+            @boxcar2.post 'user_credentials' => @token,
+                          'notification[title]' => "Tivo2Podcast: #{message}",
+                          'notification[long_message]' => message,
+                          'notification[source_name]' => 'Tivo2Podcast'
           rescue Exception => e
             # TODO: replace this with some form of logging. For now, stderr
             $stderr.puts "Error sending message to boxcar api"
