@@ -73,10 +73,9 @@
 # default: nil
 #
 # notifiers:
-# - boxcar
+# - boxcar2
 # - console
 
 # Notifier specific setup options.
 #
-# boxcar.user:
-# boxcar.password: 
+# boxcar2.token:
