@@ -31,7 +31,7 @@ module Tivo2Podcast
           @notifiers << Kernel.const_get("Tivo2Podcast").const_get(n.capitalize + "Notifier").new
         rescue LoadError
           # Should this toss an exception instead of an error message?
-          puts "Could not find #{n} notifier... Ignoring."
+          puts "Could not find #{n.capitalize + "Notifier"} notifier... Ignoring."
         end
       end
     end
