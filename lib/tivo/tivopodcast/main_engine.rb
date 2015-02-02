@@ -193,6 +193,9 @@ module Tivo2Podcast
               #   Create arugments for thread
               work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
                                                     download, transcode))
+
+              # Adding a 30 second delay before the next download to see if it helps with our download issues
+              sleep 30
             rescue IOError => e
               # If there was an IOError, we'll assume a file turd of
               # some sort was left behind and clean it up
