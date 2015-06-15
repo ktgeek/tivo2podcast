@@ -83,18 +83,16 @@ module Tivo2Podcast
           exit(1)
         else
           puts "TiVo found at #{tmp}" if @config['verbose']
-          @tivo_addr = tmp
+          @config['tivo_addr'] = tmp
         end
-      else
-        @tivo_addr = @config['tivo_addr']
       end
 
-      result = @tivo_addr
+      result = @config['tivo_addr']
       # If the tivo_addr is NOT a dotted quad, do a DNS lookup for the
       # IP. The TiVo wants us to pass the IP address for whatever reason.
       # I should use bounjour/ZeroConf to find the local tivo
       if /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match(result).nil?
-        result = IPSocket.getaddress(@tivo_addr)
+        result = IPSocket.getaddress(result)
       end
       
       return result

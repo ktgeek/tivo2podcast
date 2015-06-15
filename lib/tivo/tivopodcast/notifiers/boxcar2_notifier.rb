@@ -26,7 +26,7 @@ module Tivo2Podcast
       @token = Tivo2Podcast::Config.instance['boxcar2.token']
       raise ArgumentError, 'boxcar2.token must be defined for the Boxcar notifier' if @token.nil?
 
-      @boxcar2 = RestClient::Resource.new BOXCAR2_API_URL
+      @boxcar2 = RestClient::Resource.new BOXCAR2_API_URL, :ssl_version => 'SSLv23'
     end
 
     def notify(message)

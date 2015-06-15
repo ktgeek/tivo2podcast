@@ -1,0 +1,11 @@
+States of a show:
+  Identified
+  Downloaded
+  Transcoded
+  Metadataed
+  Commercials Found
+
+
+Change transcode to use Handbrake presets?
+
+

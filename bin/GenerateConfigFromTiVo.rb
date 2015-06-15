@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright 2011 Keith T. Garner. All rights reserved.
+# Copyright 2011-2014 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -35,7 +35,7 @@ require 'pp'
 
 URL_REGEXP = /http:\/\/([\w+?\.\w+])+([a-zA-Z0-9\~\!\@\#\$\%\^\&amp;\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?/i
 
-t2pconfig = Tivo2Podcast::Config.new
+t2pconfig = Tivo2Podcast::Config.instance
 
 opts = OptionParser.new
 opts.on('-m MAK', '--mak MAK',
@@ -43,6 +43,10 @@ opts.on('-m MAK', '--mak MAK',
 opts.on('-t ADDR', '--tivo_addr ADDR',
         'The hostname or IP address of the tivo to get the data from') do |t|
   t2pconfig.tivo_addr = t
+end
+opts.on('-n NAME', '--tivo_name NAME',
+        'The name assigned to the tivo via the my.tivo service') do |n|
+  t2pconfig.tivo_name = n
 end
 opts.on('-v', '--verbose') { t2pconfig.verbose = true }
 opts.on_tail('-h', '--help', 'Show this message') do
