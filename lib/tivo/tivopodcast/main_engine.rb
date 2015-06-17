@@ -90,7 +90,7 @@ module Tivo2Podcast
         unless newest_shows.nil? || newest_shows.empty?
           Tivo2Podcast::Db::Show.where(
               :configid => @config, :on_disk => true).where(
-              ['id not in (?)', newest_shows]).each do |show|
+              ['id not in (?)', newest_shows.map { |s| s.id } ]).each do |show|
             # If the file doesn't exist, don't try to delete, but
             # still setting the on_disk to false is appropriate.
             File.delete(show.filename) if File.exists?(show.filename)
