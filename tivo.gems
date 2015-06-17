@@ -4,6 +4,7 @@ activemodel -v3.2.13
 activerecord -v3.2.13
 activesupport -v3.2.13
 ansi -v1.4.3
+arel -v3.0.3
 arel -v3.0.2
 boxcar_api -v1.2.0
 builder -v3.0.4
@@ -11,10 +12,17 @@ dnssd -v2.0
 facets -v2.9.3
 ffi -v1.5.0
 highline -v1.6.18
+httparty -v0.13.5
 httparty -v0.11.0
 httpclient -v2.3.3
 i18n -v0.6.1
+json -v1.8.3
+multi_json -v1.11.1
 multi_json -v1.7.2
+multi_xml -v0.5.5
 multi_xml -v0.5.3
+netrc -v0.7.9
+rest_client -v1.8.3
 sqlite3 -v1.3.7
+tzinfo -v0.3.44
 tzinfo -v0.3.37
