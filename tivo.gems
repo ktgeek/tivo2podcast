@@ -7,6 +7,7 @@ ansi -v1.5.0
 arel -v6.0.0
 bigdecimal -v1.2.7
 builder -v3.2.2
+coderay -v1.1.0
 dnssd -v3.0.1
 facets -v3.0.0
 ffi -v1.9.8
@@ -16,15 +17,18 @@ httpclient -v2.6.0.1
 i18n -v0.7.0
 io-console -v0.4.3
 json -v1.8.3
+method_source -v0.8.2
 minitest -v5.7.0
 multi_json -v1.11.1
 multi_xml -v0.5.5
 netrc -v0.10.3
 power_assert -v0.2.3
+pry -v0.10.1
 psych -v2.0.13
 rake -v10.4.2
 rdoc -v4.2.0
 rest_client -v1.8.3
+slop -v3.6.0
 sqlite3 -v1.3.10
 test-unit -v3.1.2
 thread_safe -v0.3.5
