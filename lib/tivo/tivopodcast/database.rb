@@ -63,16 +63,16 @@ module Tivo2Podcast
       def up
         create_table :shows do |t|
           # TODO: Need to add configid and specify a forgein key to it
-          t.integer :configid
+          t.integer :configid, null: false
           t.string :s_name
           t.string :s_ep_title
           t.string :s_ep_number
           t.string :s_ep_description
           t.integer :s_ep_length
           t.integer :s_ep_timecape
-          t.string :s_ep_programid, null: false
+          t.string :s_ep_programid
           t.string :filename
-          t.boolean :on_disk, default: true
+          t.boolean :on_disk, null: false
           #add execute for foreign key enforcement by db?
           #FOREIGN KEY(configid) REFERENCES configs(id)
         end
