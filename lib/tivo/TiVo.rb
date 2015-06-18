@@ -228,19 +228,6 @@ module TiVo
       @client = HTTPClient.new
       @client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
       @client.set_auth(@base_url, USER, @mak)
-
-      # Temporary fix to work around broken ass TiVo software make
-      # check_expired_cookies a no-op so we ship back expired cookies
-      # as well.
-      cm = @client.cookie_manager
-      def cm.parse(str, url)
-        cookie = WebAgent::Cookie.new()
-        cookie.parse(str, url)
-        if cookie.name == 'sid'
-          cookie.expires = Time.now + 86400
-        end
-        add(cookie)
-      end
     end
 
     # Constant for the internal batch size around get_listings
