@@ -37,19 +37,8 @@ module Tivo2Podcast
         create_table :configs do |t|
           t.string :config_name, null: false
           t.string :show_name, null: false
-          t.string :rss_filename, null: false
-          t.string :rss_link, null: false
-          t.string :rss_baseurl, null: false
-          t.string :rss_ownername, null: false
-          t.string :rss_owneremail, null: false
           t.integer :ep_to_keep, null: false, default: 5
-          t.string :encode_crop
-          t.integer :encode_audio_bitrate
-          t.integer :encode_video_bitrate
-          t.integer :video_decomb
-          t.integer :max_width
-          t.integer :max_height
-          t.boolean :aggregate
+          t.string :handbreak_preset
         end
         add_index :configs, :config_name, unique: true
       end
@@ -84,7 +73,37 @@ module Tivo2Podcast
       def down
         raise ActiveRecord::IrreversibleMigration
       end
-    end 
+    end
+
+    class AddRssFiles < ActiveRecord::Migration
+      def up
+        create_table :rss_files do |t|
+          t.string :filename, null: false
+          t.string :owner_name
+          t.string :owner_email
+          t.string :base_url
+          t.string :link
+          t.string :feed_title
+          t.string :feed_description
+        end
+        add_index :rss_files, :filename, unique: true
+
+        # TODO: Revisit this to find a way to have it not create a unique id
+        create_table :configs_rss_files do |t|
+          t.integer :config_id, null: false
+          t.integer :rss_file_id, null: false
+          # TODO: need to add this restriction that exists in SQLITE.
+          #foreign key(config_id) references configs(id) ON DELETE RESTRICT,
+          #foreign key(rss_file_id) references rss_files(id) ON DELETE RESTRICT
+        end
+        add_index :configs_rss_files, :config_id
+        add_index :configs_rss_files, :rss_file_id
+      end
+
+      def down
+        raise ActiveRecord::IrreversibleMigration
+      end
+    end
         
     class Config < ActiveRecord::Base
       # The has_and_belogs_to_many expects a configs_rss_files table.
