@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2013 Keith T. Garner. All rights reserved.
+# Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -169,8 +169,8 @@ module Tivo2Podcast
         shows.each do |s|
           # Beef this up to capture the show title as well
           basename = s.title + '-' + s.time_captured.strftime("%Y%m%d%H%M")
-          basename = basename + '-' + s.episode_title unless s.episode_title.nil?
-          basename = basename + '-' + s.episode_number unless s.episode_number.nil?
+          basename += '-' + s.episode_title unless s.episode_title.nil?
+          basename += '-' + s.episode_number unless s.episode_number.nil?
           basename.gsub!(/[:\?;]/, '_')
 
           download = basename + ".mpg"
@@ -194,7 +194,8 @@ module Tivo2Podcast
               work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
                                                     download, transcode))
 
-              # Adding a 30 second delay before the next download to see if it helps with our download issues
+              # Added a 30 second delay because the tivo was not
+              # allowing us to not rest between downloads.
               sleep 30
             rescue IOError => e
               # If there was an IOError, we'll assume a file turd of
