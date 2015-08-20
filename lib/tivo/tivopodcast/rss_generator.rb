@@ -73,8 +73,8 @@ module Tivo2Podcast
             end
           end
             
-          Tivo2Podcast::Db::Show.where(:configid => rss_file.configs,
-                                       :on_disk => true).
+          Tivo2Podcast::Db::Show.where(configid: rss_file.configs,
+                                       on_disk: true).
             order(:s_ep_timecap).each &buildp
         end
 

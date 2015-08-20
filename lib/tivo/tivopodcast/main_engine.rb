@@ -84,13 +84,12 @@ module Tivo2Podcast
       end
 
       def do_work
-        newest_shows = Tivo2Podcast::Db::Show.where(:configid => @config,
-          :on_disk => true).order('shows.s_ep_timecap desc').limit(
+        newest_shows = Tivo2Podcast::Db::Show.where(configid: @config,
+          on_disk: true).order(s_ep_timecap: :desc).limit(
           @config.ep_to_keep)
         unless newest_shows.nil? || newest_shows.empty?
-          Tivo2Podcast::Db::Show.where(
-              :configid => @config, :on_disk => true).where(
-              ['id not in (?)', newest_shows.map { |s| s.id } ]).each do |show|
+          Tivo2Podcast::Db::Show.where(configid: @config,
+            on_disk: true).where.not(id: newest_shows).each do |show|
             # If the file doesn't exist, don't try to delete, but
             # still setting the on_disk to false is appropriate.
             File.delete(show.filename) if File.exists?(show.filename)
@@ -147,7 +146,7 @@ module Tivo2Podcast
         configs = Tivo2Podcast::Db::Config.all
       else
         configs = Tivo2Podcast::Db::Config.where(
-                    :config_name => t2pconfig.opt_config_names)
+                    config_name: t2pconfig.opt_config_names)
       end
 
       tivo = t2pconfig.tivo_factory
@@ -179,7 +178,9 @@ module Tivo2Podcast
           notifier = Tivo2Podcast::NotifierEngine.instance
           # We'll need the later condition until everything has a program_id
           # (this is only for my own migration.)
-          unless (Tivo2Podcast::Db::Show.where(:configid => config, :s_ep_programid => s.program_id).exists? || File.exist?(transcode))
+          unless (Tivo2Podcast::Db::Show.where(
+                    configid: config, s_ep_programid: s.program_id).exists? ||
+                  File.exist?(transcode))
             begin
               notifier.notify("Starting download of #{basename}")
               
@@ -225,7 +226,7 @@ module Tivo2Podcast
       configs = Set.new
       deleteids = Array.new
 
-      Tivo2Podcast::Db::Show.where(:on_disk => true).each do |result|
+      Tivo2Podcast::Db::Show.where(on_disk: true).each do |result|
         unless File.exists?(result.filename)
           puts "#{result.filename} missing, removing from database."
           configs.add(result.config)
