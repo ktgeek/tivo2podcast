@@ -4,3 +4,5 @@
 /sandbox
 /rdoc
 /dev_scripts/tivotidy.xml
+/.bundle
+/vendor
