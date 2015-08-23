@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# This shell script will set up the ruby and bundle environments and
+# then execute the command this was called as.  To install:
+# 1) cp TiVo2PodcastRunner /usr/local/bin
+# 2) ln -s /usr/local/bin/TiVo2PocastRunner /usr/local/bin/TiVo2Podcast
+
+T2PDIR=~/src/tivo2podcast
+RUBY=`cat $T2PDIR/.ruby-version`
+COMMAND=`basename $0`
+
+if [ $COMMAND = "TiVo2PodcastRunner" ]; then
+    echo "Never call this directly, it should be one of the actual commands."
+    exit 1
+fi
+
+chruby-exec $RUBY -- BUNDLE_GEMFILE=$T2PDIR/Gemfile bundle exec $T2PDIR/bin/$COMMAND $*

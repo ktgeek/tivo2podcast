@@ -1,7 +1,0 @@
-#!/bin/sh
-
-T2PDIR=~/src/tivo2podcast
-RUBY=`cat $T2PDIR/.ruby-version`
-
-chruby-exec $RUBY -- BUNDLE_GEMFILE=$T2PDIR/Gemfile bundle exec $T2PDIR/bin/TiVo2Disk $*
-
