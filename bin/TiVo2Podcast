@@ -19,12 +19,6 @@
 $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
                                       'tivo'))
 
-begin
-  require 'rubygems'
-rescue LoadError
-  # Ruby gems wasn't found, maybe someone loaded the prereqs directly
-  # Not an error, but we'll swallow it for now.
-end
 require 'optparse'
 require 'tivopodcast/config'
 require 'tivopodcast'
