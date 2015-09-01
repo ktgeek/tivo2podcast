@@ -14,4 +14,4 @@ if [ $COMMAND = "TiVo2PodcastRunner" ]; then
     exit 1
 fi
 
-exec chruby-exec $RUBY -- BUNDLE_GEMFILE=$T2PDIR/Gemfile bundle exec $T2PDIR/bin/$COMMAND $*
+exec chruby-exec $RUBY -- BUNDLE_GEMFILE=$T2PDIR/Gemfile bundle exec $T2PDIR/bin/$COMMAND "$@"
