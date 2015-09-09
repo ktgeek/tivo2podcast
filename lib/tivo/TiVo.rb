@@ -30,7 +30,7 @@ module TiVo
     def total_size
       @folders.size + @videos.size
     end
-    
+
     # We expect another TiVoListings to be passed in here.
     def concat(tl)
       @folders.concat(tl.folders)
@@ -57,7 +57,7 @@ module TiVo
     require 'dnssd'
 
     replies = []
-    DNSSD.browse '_tivo-videos._tcp' do |b|
+    service = DNSSD.browse '_tivo-videos._tcp' do |b|
       DNSSD.resolve(b) do |r|
         replies << r
       end
@@ -65,6 +65,8 @@ module TiVo
     sleep(sleep_time)
 
     return nil if replies.size < 1
+
+    service.stop
 
     Hash[replies.collect { |x| [x.name, IPSocket.getaddress(x.target)] }]
   end
@@ -83,7 +85,7 @@ module TiVo
           videos << TiVoVideo.new(element)
         end
       end
-      
+
       TiVoListings.new(folders, videos)
     end
   end
@@ -129,7 +131,7 @@ module TiVo
     def printable_title
       result = self.title
       ep = self.episode_title
-      result = result + ": " + ep unless ep.nil?
+      result = "#{result}: #{ep}" unless ep.nil?
       return result
     end
 
@@ -192,7 +194,7 @@ module TiVo
 
       # Calculate the hours by dividing by 3600
       hours = seconds / 3600
-      
+
       # Calculate the minutes by dividing by 60 of the remainder after hours.
       seconds = seconds % 3600
       minutes = seconds / 60
@@ -220,7 +222,7 @@ module TiVo
 
   class TiVo
     USER = 'tivo'
-    
+
     def initialize(ip, mak)
       @ip = ip
       @mak = mak
