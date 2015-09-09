@@ -51,24 +51,29 @@ module TiVo
   end
 
   # Returns a Hash that maps tivo name to tivo ip
-  def TiVo.tivos_via_dnssd(sleep_time = 5)
-    # We'll only load these classes if we're actually called.
-    require 'socket'
-    require 'dnssd'
+  def TiVo.tivos_via_dnssd(sleep_time = 5, reaquire=false)
+    if @@tivos.nil? || reaquire
+      # We'll only load these classes if we're actually called.
+      require 'socket'
+      require 'dnssd'
 
-    replies = []
-    service = DNSSD.browse '_tivo-videos._tcp' do |b|
-      DNSSD.resolve(b) do |r|
-        replies << r
+      replies = []
+      service = DNSSD.browse '_tivo-videos._tcp' do |b|
+        DNSSD.resolve(b) do |r|
+          replies << r
+        end
       end
+      sleep(sleep_time)
+
+      return nil if replies.size < 1
+
+      service.stop
+
+      @@tivos = Hash[replies.collect { |x| [x.name,
+                                            IPSocket.getaddress(x.target)] }]
     end
-    sleep(sleep_time)
 
-    return nil if replies.size < 1
-
-    service.stop
-
-    Hash[replies.collect { |x| [x.name, IPSocket.getaddress(x.target)] }]
+    @@tivos
   end
 
   class TiVoItemFactory
@@ -132,7 +137,7 @@ module TiVo
       result = self.title
       ep = self.episode_title
       result = "#{result}: #{ep}" unless ep.nil?
-      return result
+      result
     end
 
     def episode_title(use_date_if_nil=false)
@@ -140,7 +145,7 @@ module TiVo
       if use_date_if_nil && title.nil?
         title = time_captured.strftime("%m/%d/%Y")
       end
-      return title
+      title
     end
 
     def episode_number
@@ -152,7 +157,7 @@ module TiVo
       unless desc.nil?
         desc.sub!(' Copyright Tribune Media Services, Inc.', '')
       end
-      return desc
+      desc
     end
 
     def channel
@@ -205,7 +210,7 @@ module TiVo
       result = StringIO.new
       result.printf("%d:", hours) if hours > 0
       result.printf("%02d:%02d", minutes, seconds)
-      return result.string
+      result.string
     end
 
     def duration
@@ -216,7 +221,7 @@ module TiVo
       result = false
       cp = get_detail_item('CopyProtected')
       result = cp.downcase == "yes" unless cp.nil?
-      return result
+      result
     end
   end
 
@@ -257,7 +262,7 @@ module TiVo
           offset += BATCH_SIZE
         end
       end
-      return listings
+      listings
     end
 
     def get_listings_from_url(url, recurse=false)
@@ -273,7 +278,7 @@ module TiVo
         end
         listings.folders = nil
       end
-      return listings
+      listings
     end
 
     # Returns the raw XML for listings.  This is really useful for
