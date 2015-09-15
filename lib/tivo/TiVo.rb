@@ -58,25 +58,16 @@ module TiVo
       require 'dnssd'
 
       replies = []
-
-      # Browse for all the responses
-      service = DNSSD::Service.new
-      timeout sleep_time do
-        service.browse '_tivo-videos._tcp' do |b|
+      service = DNSSD.browse '_tivo-videos._tcp' do |b|
+        DNSSD.resolve(b) do |r|
           replies << r
         end
-      rescue Timeout::Error
       end
-
-      # Translate the resposnes into records we can work with
-      replies.map! do |r|
-        service = DNSSD::Service.new
-        service.resolve(b) do |r|
-          r
-        end
-      end
+      sleep(sleep_time)
 
       return nil if replies.size < 1
+
+      service.stop
 
       @@tivos = Hash[replies.collect { |x| [x.name,
                                             IPSocket.getaddress(x.target)] }]
