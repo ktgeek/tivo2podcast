@@ -18,6 +18,7 @@ require 'httpclient'
 module TiVo
   FOLDER = 'x-tivo-container/folder'
   VIDEO = 'video/x-tivo-raw-tts'
+  @@tivos = nil
 
   class TiVoListings
     attr_accessor :folders, :videos
