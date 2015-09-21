@@ -139,18 +139,27 @@ module Tivo2Podcast
       end
     end
 
+    def create_show_base_filename(show)
+      name = #{show.title}-#{s.time_captured.strftime("%Y%m%d%H%M")}"
+      name << "-#{s.episode_title}" unless s.episode_title.nil?
+      name << "-#{s.episode_number}" unless s.episode_number.nil?
+      name.gsub(/[:\?;]/, '_')
+    end
+
+    def get_configs
+      config_names = Tivo2Podcast::Config.instance.opt_config_names
+      if config_names.nil? || config_names.empty?
+        Tivo2Podcast::Db::Config.all
+      else
+        Tivo2Podcast::Db::Config.where(config_name: config_names)
+      end
+    end
+
     # This method is doing WAY WAY WAY too much
     def normal_processing
-      configs = nil
-      t2pconfig = Tivo2Podcast::Config.instance
-      if t2pconfig.opt_config_names.nil? || t2pconfig.opt_config_names.empty?
-        configs = Tivo2Podcast::Db::Config.all
-      else
-        configs = Tivo2Podcast::Db::Config.where(
-                    config_name: t2pconfig.opt_config_names)
-      end
+      configs = get_configs
 
-      tivo = t2pconfig.tivo_factory
+      tivo = Tivo2Podcast::Config.instance.tivo_factory
 
       work_queue = Queue.new
       work_thread = create_work_thread(work_queue)
@@ -168,13 +177,10 @@ module Tivo2Podcast
         # So starts the giant loop that processes the shows...
         shows.each do |s|
           # Beef this up to capture the show title as well
-          basename = s.title + '-' + s.time_captured.strftime("%Y%m%d%H%M")
-          basename = basename + '-' + s.episode_title unless s.episode_title.nil?
-          basename = basename + '-' + s.episode_number unless s.episode_number.nil?
-          basename.gsub!(/[:\?;]/, '_')
+          basename = create_show_base_filename(s)
 
-          download = basename + ".mpg"
-          transcode = basename + ".m4v"
+          download = "#{basename}.mpg"
+          transcode = "#{basename}.m4v"
 
           notifier = Tivo2Podcast::NotifierEngine.instance
           # We'll need the later condition until everything has a program_id
@@ -191,12 +197,11 @@ module Tivo2Podcast
 
               notifier.notify("Finished download of #{basename}")
 
-              # Code was removed here to put into thread
-              #   Create arugments for thread
               work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
                                                     download, transcode))
 
-              # Adding a 30 second delay before the next download to see if it helps with our download issues
+              # Adding a 30 second delay before the next download to
+              # see if it helps with our download issues
               sleep 30
             rescue IOError => e
               # If there was an IOError, we'll assume a file turd of
@@ -212,12 +217,9 @@ module Tivo2Podcast
         work_queue.enq(CleanupWorkOrder.new(config))
       end
 
-      # configs are done being worked on here, thereis no more work.
       work_queue.enq(NoMoreWorkOrder.new)
 
-      # Wait for this thread to complete before finishing
       work_thread.join
-
       Tivo2Podcast::NotifierEngine.instance.shutdown
     end
 
