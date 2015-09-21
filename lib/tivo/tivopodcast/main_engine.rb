@@ -46,7 +46,7 @@ module Tivo2Podcast
         @type = :NO_MORE_WORK
       end
     end
-    
+
     class TranscodeWorkOrder < WorkOrder
       attr_reader :show, :basename, :download, :transcode
 
@@ -139,6 +139,7 @@ module Tivo2Podcast
       end
     end
 
+    # This method is doing WAY WAY WAY too much
     def normal_processing
       configs = nil
       t2pconfig = Tivo2Podcast::Config.instance
@@ -153,7 +154,7 @@ module Tivo2Podcast
 
       work_queue = Queue.new
       work_thread = create_work_thread(work_queue)
-      
+
       configs.each do |config|
         shows = tivo.get_shows_by_name(config.show_name)
 
@@ -183,7 +184,7 @@ module Tivo2Podcast
                   File.exist?(transcode))
             begin
               notifier.notify("Starting download of #{basename}")
-              
+
               # If the file exists, we'll assume the download went okay
               # Shame on us for not checking if it isn't
               download_show(s, download) unless File.exists?(download)
@@ -217,8 +218,7 @@ module Tivo2Podcast
       # Wait for this thread to complete before finishing
       work_thread.join
 
-      # Sleep briefly to let the notifiers finish notifying
-      sleep 5
+      Tivo2Podcast::NotifierEngine.instance.shutdown
     end
 
     def file_cleanup
