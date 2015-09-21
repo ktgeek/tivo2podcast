@@ -140,7 +140,7 @@ module Tivo2Podcast
     end
 
     def create_show_base_filename(show)
-      name = #{show.title}-#{s.time_captured.strftime("%Y%m%d%H%M")}"
+      name = "#{show.title}-#{s.time_captured.strftime("%Y%m%d%H%M")}"
       name << "-#{s.episode_title}" unless s.episode_title.nil?
       name << "-#{s.episode_number}" unless s.episode_number.nil?
       name.gsub(/[:\?;]/, '_')
