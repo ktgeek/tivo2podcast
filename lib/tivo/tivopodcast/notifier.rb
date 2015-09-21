@@ -27,11 +27,11 @@ module Tivo2Podcast
         # This require makes the assumption that if __FILE__ is in the
         # path, We can naturally look down one level.
         begin
-          require "tivopodcast/notifiers/#{n + '_notifier'}"
-          @notifiers << Kernel.const_get("Tivo2Podcast").const_get(n.capitalize + "Notifier").new
+          require "tivopodcast/notifiers/#{n}_notifier}"
+          @notifiers = Notifier.registered_notifiers.map { |n| n.new }
         rescue LoadError
           # Should this toss an exception instead of an error message?
-          puts "Could not find #{n.capitalize + "Notifier"} notifier... Ignoring."
+          puts "Could not find #{n}_notifier notifier... Ignoring."
         end
       end
     end
@@ -39,12 +39,25 @@ module Tivo2Podcast
     def notify(message)
       @notifiers.each { |n| n.notify(message) }
     end
+
+    def shutdown
+      @notifiers.each { |n| n.shutdown }
+    end
   end
 
-  # Base class for doing notifications. Will respond to notify, but
-  # will do nothing.
+  # Base class for doing notifications. Will respond to notify and shutdown, but
+  # will do nothing.  Also handles registration of notifiers
   class Notifier
+    @@registered_notifiers = Array.new
+
+    def self.inherited(subclass)
+      @@registered_notifiers << subclass
+    end
+
     def notify(message)
+    end
+
+    def shutdown
     end
   end
 end
