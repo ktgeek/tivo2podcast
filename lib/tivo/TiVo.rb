@@ -66,9 +66,10 @@ module TiVo
       end
       sleep(sleep_time)
 
-      return nil if replies.size < 1
 
       service.stop
+
+      return nil if replies.size < 1
 
       @@tivos = Hash[replies.collect { |x| [x.name,
                                             IPSocket.getaddress(x.target)] }]
