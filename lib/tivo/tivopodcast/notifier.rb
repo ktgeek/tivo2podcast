@@ -27,11 +27,11 @@ module Tivo2Podcast
         # This require makes the assumption that if __FILE__ is in the
         # path, We can naturally look down one level.
         begin
-          require "tivopodcast/notifiers/#{n}_notifier}"
+          require "tivopodcast/notifiers/#{n}_notifier"
           @notifiers = Notifier.registered_notifiers.map { |n| n.new }
         rescue LoadError
           # Should this toss an exception instead of an error message?
-          puts "Could not find #{n}_notifier notifier... Ignoring."
+          puts "Could not find #{n}_notifier... Ignoring."
         end
       end
     end
@@ -52,6 +52,10 @@ module Tivo2Podcast
 
     def self.inherited(subclass)
       @@registered_notifiers << subclass
+    end
+
+    def self.registered_notifiers
+      @@registered_notifiers
     end
 
     def notify(message)

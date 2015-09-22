@@ -140,9 +140,9 @@ module Tivo2Podcast
     end
 
     def create_show_base_filename(show)
-      name = "#{show.title}-#{s.time_captured.strftime("%Y%m%d%H%M")}"
-      name << "-#{s.episode_title}" unless s.episode_title.nil?
-      name << "-#{s.episode_number}" unless s.episode_number.nil?
+      name = "#{show.title}-#{show.time_captured.strftime("%Y%m%d%H%M")}"
+      name << "-#{show.episode_title}" unless show.episode_title.nil?
+      name << "-#{show.episode_number}" unless show.episode_number.nil?
       name.gsub(/[:\?;]/, '_')
     end
 
@@ -210,7 +210,7 @@ module Tivo2Podcast
               notifier.notify("Error downloading #{basename}: #{e}")
             end
           else
-            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if t2pconfig.verbose
+            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if Tivo2Podcast::Config.instance.verbose
           end
         end
 
