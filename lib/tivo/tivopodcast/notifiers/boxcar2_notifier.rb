@@ -1,4 +1,4 @@
-# Copyright 2014 Keith T. Garner. All rights reserved.
+# Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,6 +26,7 @@ module Tivo2Podcast
 
       @boxcar2 = RestClient::Resource.new BOXCAR2_API_URL, :ssl_version => 'SSLv23'
       @message_queue = Queue.new
+      @working = false
       @transmit_thread = create_transmit_thread
     end
 
@@ -34,7 +35,7 @@ module Tivo2Podcast
     end
 
     def shutdown
-      while !@message_queue.empty?
+      while !@message_queue.empty? && !@working
         sleep 2
       end
 
@@ -46,6 +47,7 @@ module Tivo2Podcast
         Thread.new do
           loop do
             message = @message_queue.deq
+            @working = true
             begin
               @boxcar2.post 'user_credentials' => @token,
               'notification[title]' => "Tivo2Podcast: #{message}",
@@ -55,6 +57,7 @@ module Tivo2Podcast
               # TODO: replace this with some form of logging. For now, stderr
               $stderr.puts "Error sending message to boxcar api"
             end
+            @working = false
           end
         end
       end
