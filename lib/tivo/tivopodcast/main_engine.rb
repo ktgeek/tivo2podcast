@@ -23,13 +23,8 @@ require 'tivopodcast/rss_generator'
 
 module Tivo2Podcast
   class MainEngine
-    def initialize
-      # This will need to find a better home as the transition to
-      # ActiveRecord is complete.  It probably belongs in the startup
-      # script.
-      Tivo2Podcast::connect_database((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
-                                      ENV['TIVO2PODCASTDIR']) +
-                                     File::SEPARATOR + '.tivo2podcast.db')
+    def initialize(t2pconfig = nil)
+      @t2pconfig = t2pconfig ? t2pconfig : Tivo2Podcast::Config.instance
     end
 
     class WorkOrder
@@ -124,12 +119,11 @@ module Tivo2Podcast
     end
 
     def download_show(show, name)
-      t2pconfig = Tivo2Podcast::Config.instance
-      tivo = t2pconfig.tivo_factory
+      tivo = @t2pconfig.tivo_factory
 
       # downlaod the file
-      IO.popen("#{t2pconfig.tivodecode} -n -o \"#{name}\" -", 'wb') do |td|
-        pbar = t2pconfig.verbose ? ANSI::ProgressBar.new(name, show.size) : nil
+      IO.popen("#{@t2pconfig.tivodecode} -n -o \"#{name}\" -", 'wb') do |td|
+        pbar = @t2pconfig.verbose ? ANSI::ProgressBar.new(name, show.size) : nil
         tivo.download_show(show) do |tc|
           td << tc
           pbar.inc(tc.length) unless pbar.nil?
@@ -147,7 +141,7 @@ module Tivo2Podcast
     end
 
     def get_configs
-      config_names = Tivo2Podcast::Config.instance.opt_config_names
+      config_names = @t2pconfig.opt_config_names
       if config_names.nil? || config_names.empty?
         Tivo2Podcast::Db::Config.all
       else
@@ -159,7 +153,7 @@ module Tivo2Podcast
     def normal_processing
       configs = get_configs
 
-      tivo = Tivo2Podcast::Config.instance.tivo_factory
+      tivo = @t2pconfig.tivo_factory
 
       work_queue = Queue.new
       work_thread = create_work_thread(work_queue)
@@ -210,7 +204,7 @@ module Tivo2Podcast
               notifier.notify("Error downloading #{basename}: #{e}")
             end
           else
-            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if Tivo2Podcast::Config.instance.verbose
+            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @t2pconfig.verbose
           end
         end
 

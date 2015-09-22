@@ -10,3 +10,6 @@ gem 'ansi', '~>1.5'
 gem 'rest-client', '~>1.8'
 gem 'facets', '~>3.0'
 
+group :test do
+  gem 'rspec'
+end
