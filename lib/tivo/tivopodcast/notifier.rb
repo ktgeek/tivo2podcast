@@ -1,4 +1,4 @@
-# Copyright 2011 Keith T. Garner. All rights reserved.
+# Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,16 +24,14 @@ module Tivo2Podcast
 
     def init_notifiers
       Tivo2Podcast::Config.instance["notifiers"].each do |n|
-        # This require makes the assumption that if __FILE__ is in the
-        # path, We can naturally look down one level.
         begin
           require "tivopodcast/notifiers/#{n}_notifier"
-          @notifiers = Notifier.registered_notifiers.map { |n| n.new }
         rescue LoadError
           # Should this toss an exception instead of an error message?
           puts "Could not find #{n}_notifier... Ignoring."
         end
       end
+      @notifiers = Notifier.registered_notifiers.map { |n| n.new }
     end
 
     def notify(message)
@@ -45,8 +43,9 @@ module Tivo2Podcast
     end
   end
 
-  # Base class for doing notifications. Will respond to notify and shutdown, but
-  # will do nothing.  Also handles registration of notifiers
+  # Base class for doing notifications. Will respond to notify and
+  # shutdown, but will do nothing.  Also handles registration of
+  # notifiers
   class Notifier
     @@registered_notifiers = Array.new
 
