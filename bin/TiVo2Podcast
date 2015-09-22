@@ -53,6 +53,9 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
+# Connect to the database
+Tivo2Podcast::connect_database(t2pconfig.DATABASE_FILENAME)
+
 engine = Tivo2Podcast::MainEngine.new
 
 case
@@ -61,7 +64,7 @@ when t2pconfig.regenerate_rss then engine.regenerate_rss_files
 else
   engine.normal_processing
 end
-  
+
 # Local Variables:
 # mode: ruby
 # End:

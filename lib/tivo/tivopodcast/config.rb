@@ -25,10 +25,13 @@ module Tivo2Podcast
     include Singleton
     extend Forwardable
 
+    CONFIG_DIRECTORY = (ENV['TIVO2PODCASTDIR'].nil? ?
+                        ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
+      File::SEPARATOR
+
     # The default configuration filename
-    CONFIG_FILENAME = (ENV['TIVO2PODCASTDIR'].nil? ?
-                       ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
-      File::SEPARATOR + '.tivo2podcast.conf'
+    CONFIG_FILENAME = "#{CONFIG_DIRECTORY}.tivo2podcast.conf"
+    DATABASE_FILENAME = "#{CONFIG_DIRECTORY}.tivo2podcast.db"
 
     # Inialize the configuration with an optional file to pull the
     # base config from.
@@ -90,12 +93,10 @@ module Tivo2Podcast
       result = @config['tivo_addr']
       # If the tivo_addr is NOT a dotted quad, do a DNS lookup for the
       # IP. The TiVo wants us to pass the IP address for whatever reason.
-      # I should use bounjour/ZeroConf to find the local tivo
       if /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match(result).nil?
         result = IPSocket.getaddress(result)
       end
-      
-      return result
+      result
     end
 
     def tivo_name=(value)
@@ -111,7 +112,7 @@ module Tivo2Podcast
     def mak
       if @config['mak'].nil?
         # Load the mak if we have a mak file
-        mak_file = ENV['HOME'] + '/.tivodecode_mak'
+        mak_file = "#{ENV['HOME']}#{File::SEPARATOR}.tivodecode_mak"
         @config['mak'] = File.read(mak_file).strip if File.exist?(mak_file)
       end
       return @config['mak']
