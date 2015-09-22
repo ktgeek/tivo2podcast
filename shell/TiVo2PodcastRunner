@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 # This shell script will set up the ruby and bundle environments and
-# then execute the command this was called as.  To install:
+# then execute the command this was called as.  It assumes you're
+# using chruby for ruby To install:
 # 1) cp TiVo2PodcastRunner /usr/local/bin
 # 2) ln -s /usr/local/bin/TiVo2PocastRunner /usr/local/bin/TiVo2Podcast
 
