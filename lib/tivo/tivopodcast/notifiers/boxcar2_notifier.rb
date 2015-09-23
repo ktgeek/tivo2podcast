@@ -11,12 +11,13 @@
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
-
+require 'thread'
 require 'rest_client'
 
 module Tivo2Podcast
   class Boxcar2Notifier < Notifier
     BOXCAR2_API_URL = 'https://new.boxcar.io/api/notifications'
+    SHUTDOWN_MESSAGE = :shutdown_message_sending_now
 
     def initialize
       super
@@ -26,28 +27,28 @@ module Tivo2Podcast
 
       @boxcar2 = RestClient::Resource.new BOXCAR2_API_URL, :ssl_version => 'SSLv23'
       @message_queue = Queue.new
-      @working = false
-      @transmit_thread = create_transmit_thread
+      @transmit_thread = start_transmit_thread
     end
 
     def notify(message)
-      @message_queue.enq message
+      # We won't queue the message if its our shutdown one.  You
+      # should use the shutdown method for that.
+      @message_queue.enq message unless message == SHUTDOWN_MESSAGE
     end
 
     def shutdown
-      while !@message_queue.empty? && !@working
-        sleep 2
-      end
+      @message_queue.enq SHUTDOWN_MESSAGE
 
-      @transmit_thread.exit
+      @tranmit_thread.join
     end
 
-    def create_transmit_thread
+    def start_transmit_thread
       unless @token.nil?
         Thread.new do
           loop do
             message = @message_queue.deq
-            @working = true
+            break if message == SHUTDOWN_MESSAGE
+
             begin
               @boxcar2.post 'user_credentials' => @token,
               'notification[title]' => "Tivo2Podcast: #{message}",
@@ -57,7 +58,6 @@ module Tivo2Podcast
               # TODO: replace this with some form of logging. For now, stderr
               $stderr.puts "Error sending message to boxcar api"
             end
-            @working = false
           end
         end
       end
