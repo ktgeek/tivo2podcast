@@ -18,7 +18,6 @@ module Tivo2Podcast
     include Singleton
 
     def initialize
-      @notifiers = Array.new
       init_notifiers
     end
 
@@ -28,18 +27,17 @@ module Tivo2Podcast
           require "tivopodcast/notifiers/#{n}_notifier"
         rescue LoadError
           # Should this toss an exception instead of an error message?
-          puts "Could not find #{n}_notifier... Ignoring."
+          $stderr.puts "Could not find #{n}_notifier... Ignoring."
         end
       end
-      @notifiers = Notifier.registered_notifiers.map { |n| n.new }
     end
 
     def notify(message)
-      @notifiers.each { |n| n.notify(message) }
+      Notifier.notifiers.each { |n| n.notify(message) }
     end
 
     def shutdown
-      @notifiers.each { |n| n.shutdown }
+      Notifier.notifiers.each { |n| n.shutdown }
     end
   end
 
@@ -47,14 +45,14 @@ module Tivo2Podcast
   # shutdown, but will do nothing.  Also handles registration of
   # notifiers
   class Notifier
-    @@registered_notifiers = Array.new
+    @@notifiers = Array.new
 
     def self.inherited(subclass)
-      @@registered_notifiers << subclass
+      @@notifiers << subclass.new
     end
 
-    def self.registered_notifiers
-      @@registered_notifiers
+    def self.notifiers
+      @@notifiers
     end
 
     def notify(message)
