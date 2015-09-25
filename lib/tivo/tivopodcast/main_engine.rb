@@ -71,28 +71,33 @@ module Tivo2Podcast
       end
     end
 
+    def get_shows_to_process(tivo, config)
+      shows = tivo.get_shows_by_name(config.show_name)
+
+      # Only work on the X latest shows.  That way if there are 10
+      # on the tivo, but we only want to keep 4, we don't encode 6
+      # of them just to throw them out later in the cleanup phase.
+      if shows.size > config.ep_to_keep
+        shows = shows.reverse[0, config.ep_to_keep].reverse
+      end
+
+      shows
+    end
+
     # This method is doing WAY WAY WAY too much
     def normal_processing
       configs = get_configs
 
-      tivo = @t2pconfig.tivo_factory
-
       work_queue = Queue.new
       work_thread = create_work_thread(work_queue)
 
-      configs.each do |config|
-        shows = tivo.get_shows_by_name(config.show_name)
+      tivo = @t2pconfig.tivo_factory
 
-        # Only work on the X latest shows.  That way if there are 10
-        # on the tivo, but we only want to keep 4, we don't encode 6
-        # of them just to throw them out later in the cleanup phase.
-        if shows.size > config.ep_to_keep
-          shows = shows.reverse[0, config.ep_to_keep].reverse
-        end
+      configs.each do |config|
+        shows = get_shows_to_process(tivo, config)
 
         # So starts the giant loop that processes the shows...
         shows.each do |s|
-          # Beef this up to capture the show title as well
           basename = create_show_base_filename(s)
 
           download = "#{basename}.mpg"

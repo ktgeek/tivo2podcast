@@ -1,9 +1,39 @@
 require 'tivo/tivopodcast/main_engine'
 
 describe Tivo2Podcast::MainEngine do
+  let(:t2pconfig) { instance_double("Tivo2Podcast::Config") }
+  let(:main_engine) { Tivo2Podcast::MainEngine.new(t2pconfig) }
+
+  describe "#get_shows_to_process" do
+    let (:show_config) do
+      show_config = double("Tivo2Podcast::Db::Config")
+      allow(show_config).to receive(:show_name) { "Show" }
+      show_config
+    end
+    let(:tivo) do
+      tivo = instance_double("TiVo::TiVo")
+      allow(tivo).to receive(:get_shows_by_name) do
+        ['Show 1', 'Show 2', 'Show 3', 'Show 4', 'Show 5']
+      end
+      tivo
+    end
+
+    it "returns the last X shows for a given number" do
+      allow(show_config).to receive(:ep_to_keep) { 3 }
+      shows = main_engine.get_shows_to_process(tivo, show_config)
+
+      expect(shows).to eql ['Show 3', 'Show 4', 'Show 5']
+    end
+
+    it "returns the all the shows when X > totals shows" do
+      allow(show_config).to receive(:ep_to_keep) { 7 }
+      shows = main_engine.get_shows_to_process(tivo, show_config)
+
+      expect(shows).to eql ['Show 1', 'Show 2', 'Show 3', 'Show 4', 'Show 5']
+    end
+  end
+
   describe "#create_show_base_filename" do
-    let(:config) { instance_double("Tivo2Podcast::Config") }
-    let(:main_engine) { Tivo2Podcast::MainEngine.new(config) }
     let(:show) do
       show = instance_double("TiVo::TiVoVideo")
       allow(show).to receive(:title) { "Show" }
