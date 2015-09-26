@@ -13,7 +13,6 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'set'
 require 'thread'
 require 'ansi/progressbar'
 require 'tivopodcast/notifier'
@@ -131,25 +130,6 @@ module Tivo2Podcast
       work_queue.enq(NoMoreWorkOrder.new)
       work_thread.join
       Tivo2Podcast::NotifierEngine.instance.shutdown
-    end
-
-    def file_cleanup
-      # Get shows by id,configid,filename
-      configs = Set.new
-      deleteids = Array.new
-
-      Tivo2Podcast::Db::Show.where(on_disk: true).each do |result|
-        unless File.exists?(result.filename)
-          puts "#{result.filename} missing, removing from database."
-          configs.add(result.config)
-          result.on_disk = false
-          result.save!
-        end
-      end
-
-      unless configs.empty?
-        Tivo2Podcast::RssGenerator.generate_from_configs(configs)
-      end
     end
   end
 end
