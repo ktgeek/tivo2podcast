@@ -151,11 +151,6 @@ module Tivo2Podcast
         Tivo2Podcast::RssGenerator.generate_from_configs(configs)
       end
     end
-
-    def regenerate_rss_files
-      rss_files = Tivo2Podcast::Db::RssFile.all
-      Tivo2Podcast::RssGenerator.generate_from_rssfiles(rss_files)
-    end
   end
 end
 
