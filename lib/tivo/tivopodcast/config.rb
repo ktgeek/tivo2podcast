@@ -26,12 +26,11 @@ module Tivo2Podcast
     extend Forwardable
 
     CONFIG_DIRECTORY = (ENV['TIVO2PODCASTDIR'].nil? ?
-                        ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
-      File::SEPARATOR
+                        ENV['HOME'] : ENV['TIVO2PODCASTDIR'])
 
     # The default configuration filename
-    CONFIG_FILENAME = "#{CONFIG_DIRECTORY}.tivo2podcast.conf"
-    DATABASE_FILENAME = "#{CONFIG_DIRECTORY}.tivo2podcast.db"
+    CONFIG_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.conf")
+    DATABASE_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.db")
 
     # Inialize the configuration with an optional file to pull the
     # base config from.
