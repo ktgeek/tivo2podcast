@@ -19,7 +19,8 @@ require 'tivopodcast/notifier'
 require 'tivopodcast/transcoder'
 require 'tivopodcast/database'
 require 'tivopodcast/rss_generator'
-require 'tivopodcast/main_engine_work_orders.rb'
+require 'tivopodcast/main_engine_work_orders'
+require 'tivopodcast/file_downloader'
 
 module Tivo2Podcast
   class MainEngine
@@ -35,21 +36,6 @@ module Tivo2Podcast
           break if work_order.type == :NO_MORE_WORK
           work_order.do_work
         end
-      end
-    end
-
-    def download_show(show, name)
-      tivo = @t2pconfig.tivo_factory
-
-      # downlaod the file
-      IO.popen("#{@t2pconfig.tivodecode} -n -o \"#{name}\" -", 'wb') do |td|
-        pbar = @t2pconfig.verbose ? ANSI::ProgressBar.new(name, show.size) : nil
-        tivo.download_show(show) do |tc|
-          td << tc
-          pbar.inc(tc.length) unless pbar.nil?
-        end
-        pbar.finish unless pbar.nil?
-        puts
       end
     end
 
@@ -104,7 +90,11 @@ module Tivo2Podcast
               notifier.notify("Starting download of #{basename}")
               # If the file exists, we'll assume the download went okay
               # Shame on us for not checking if it isn't
-              download_show(s, download) unless File.exists?(download)
+              unless File.exists?(download)
+                downloader = ShowDownloader.new(@t2pconfig)
+                downloader.download_show(s, download)
+              end
+
               notifier.notify("Finished download of #{basename}")
 
               work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
