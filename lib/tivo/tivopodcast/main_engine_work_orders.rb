@@ -35,8 +35,10 @@ module Tivo2Podcast
 
       def initialize(config, show, basename, download, transcode)
         super(config)
-        @show, @basename = show, basename
-        @download, @transcode = download, transcode
+        @show = show
+        @basename = basename
+        @download = download
+        @transcode = transcode
         @type = :TRANSCODE
       end
 
@@ -50,10 +52,11 @@ module Tivo2Podcast
 
         transcoder.skip_commercials(@basename, @download, @transcode)
 
-        File.delete(@download) if File.exists?(@download)
+        File.delete(@download) if File.exist?(@download)
 
         show =
-          Tivo2Podcast::Db::Show.new_from_config_show_filename(@config, @show,
+          Tivo2Podcast::Db::Show.new_from_config_show_filename(@config,
+                                                               @show,
                                                                @transcode)
         show.save!
         notifier.notify("Finished transcode of #{@basename}")
@@ -68,14 +71,14 @@ module Tivo2Podcast
 
       def do_work
         newest_shows = Tivo2Podcast::Db::Show.where(configid: @config,
-          on_disk: true).order(s_ep_timecap: :desc).limit(
-          @config.ep_to_keep)
+                                                    on_disk: true)
+          .order(s_ep_timecap: :desc).limit(@config.ep_to_keep)
         unless newest_shows.nil? || newest_shows.empty?
           Tivo2Podcast::Db::Show.where(configid: @config,
             on_disk: true).where.not(id: newest_shows).each do |show|
             # If the file doesn't exist, don't try to delete, but
             # still setting the on_disk to false is appropriate.
-            File.delete(show.filename) if File.exists?(show.filename)
+            File.delete(show.filename) if File.exist?(show.filename)
             show.on_disk = false
             show.save!
           end

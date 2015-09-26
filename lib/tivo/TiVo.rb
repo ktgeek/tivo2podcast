@@ -24,8 +24,8 @@ module TiVo
     attr_accessor :folders, :videos
 
     def initialize(folders = nil, videos = nil)
-      @folders = folders.nil? ? Array.new : folders
-      @videos = videos.nil? ? Array.new : videos
+      @folders = folders.nil? ? [] : folders
+      @videos = videos.nil? ? [] : videos
     end
 
     def total_size
@@ -46,45 +46,39 @@ module TiVo
   # This assumes the host system has everything configure properly to
   # work for DNSSD, it also assumes your TiVos are assigned different
   # names.
-  def TiVo.locate_via_dnssd(name = nil, sleep_time = 5)
+  def self.locate_via_dnssd(name = nil, sleep_time = 5)
     tivos = tivos_via_dnssd(sleep_time)
     tivos.nil? ? nil : tivos[name]
   end
 
   # Returns a Hash that maps tivo name to tivo ip
-  def TiVo.tivos_via_dnssd(sleep_time = 5, reaquire=false)
+  def self.tivos_via_dnssd(sleep_time = 5, reaquire = false)
     if @@tivos.nil? || reaquire
       # We'll only load these classes if we're actually called.
       require 'socket'
       require 'dnssd'
 
-      replies = []
+      tivos = []
       service = DNSSD.browse '_tivo-videos._tcp' do |b|
-        DNSSD.resolve(b) do |r|
-          replies << r
-        end
+        DNSSD.resolve(b) { |r| tivos << r }
       end
       sleep(sleep_time)
-
-
       service.stop
 
-      return nil if replies.size < 1
+      return nil if tivos.size < 1
 
-      @@tivos = Hash[replies.collect { |x| [x.name,
-                                            IPSocket.getaddress(x.target)] }]
+      tivos = tivos.collect { |x| [x.name, IPSocket.getaddress(x.target)] }
+      @@tivos = Hash[tivos]
     end
-
     @@tivos
   end
 
   class TiVoItemFactory
-    def TiVoItemFactory.from_xml(xml)
+    def self.from_xml(xml)
+      videos = []
+      folders = []
+
       document = REXML::Document.new(xml)
-
-      videos = Array.new
-      folders = Array.new
-
       document.root.elements.each('Item') do |element|
         if element.elements['Details'].elements['ContentType'].text == FOLDER
           folders << TiVoFolder.new(element)
@@ -109,7 +103,7 @@ module TiVo
     end
 
     def printable_title
-      self.title
+      title
     end
 
     def url
@@ -136,13 +130,13 @@ module TiVo
 
   class TiVoVideo < TiVoItem
     def printable_title
-      result = self.title
-      ep = self.episode_title
+      result = title
+      ep = episode_title
       result = "#{result}: #{ep}" unless ep.nil?
       result
     end
 
-    def episode_title(use_date_if_nil=false)
+    def episode_title(use_date_if_nil = false)
       title = get_detail_item('EpisodeTitle')
       if use_date_if_nil && title.nil?
         title = time_captured.strftime("%m/%d/%Y")
@@ -156,9 +150,7 @@ module TiVo
 
     def description
       desc = get_detail_item('Description')
-      unless desc.nil?
-        desc.sub!(' Copyright Tribune Media Services, Inc.', '')
-      end
+      desc.sub!(' Copyright Tribune Media Services, Inc.', '') if desc
       desc
     end
 
@@ -194,7 +186,7 @@ module TiVo
     # Giving a duration in milliseconds, return the duration of a
     # program as a string in HH:MM:SS or MM:SS formats, which
     # coincidently, will also make RSS Maker's itunes duration happy.
-    def TiVoVideo.human_duration(dur)
+    def self.human_duration(dur)
       # Duration is in milliseconds, and we don't need that percision,
       # so lets just lop it off.  This leaves us with seconds.
       seconds = dur / 1000
@@ -233,7 +225,7 @@ module TiVo
     def initialize(ip, mak)
       @ip = ip
       @mak = mak
-      @base_url = 'https://' + ip + '/TiVoConnect'
+      @base_url = "https://#{ip}/TiVoConnect"
       @client = HTTPClient.new
       @client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
       @client.set_auth(@base_url, USER, @mak)
@@ -241,12 +233,10 @@ module TiVo
 
     # Constant for the internal batch size around get_listings
     BATCH_SIZE = 50
-    def get_listings(recurse=true, get_xml=false)
-      query_url = @base_url +
-        "?Command=QueryContainer&Container=/NowPlaying&ItemCount=#{BATCH_SIZE}"
-      if recurse
-        query_url += '&Recurse=Yes'
-      end
+
+    def get_listings(recurse = true, get_xml = false)
+      query_url = "#{@base_url}?Command=QueryContainer&Container=/NowPlaying&ItemCount=#{BATCH_SIZE}"
+      query_url << '&Recurse=Yes' if recurse
 
       listings = nil
 
@@ -257,7 +247,7 @@ module TiVo
         offset = 0
 
         loop do
-          url = query_url + "&AnchorOffset=#{offset}"
+          url = "#{query_url}&AnchorOffset=#{offset}"
           new_listings = get_listings_from_url(url)
           listings.concat(new_listings)
           break if new_listings.total_size < BATCH_SIZE
@@ -267,7 +257,7 @@ module TiVo
       listings
     end
 
-    def get_listings_from_url(url, recurse=false)
+    def get_listings_from_url(url, recurse = false)
       # This needs to be expanded to loop around if all the videos
       # weren't snagged in the first grab.  We'll need to make some
       # URL assumptions we hadn't before.
@@ -293,13 +283,15 @@ module TiVo
     # Returns all show matching the given name/regex that are not copy
     # protected and is sorted by the time captured.
     def get_shows_by_name(showname)
-      get_listings.videos.select { |s| s.title =~ /#{showname}/ &&
-        !s.copy_protected? }.sort_by { |s| s.time_captured }
+      videos = get_listings.videos.select do |s|
+        !s.copy_protected? && s.title =~ /#{showname}/
+      end
+      videos.sort_by(&:time_captured)
     end
 
     # Downloads the show given the item passed in.  If a block is given,
     # it uses the block instead of the filename
-    def download_show(tivo_item, filename=nil, &block)
+    def download_show(tivo_item, filename = nil, &block)
       if block.nil? && filename.nil?
         raise ArgumentError, 'Must have either a filename or a block', caller
       end
@@ -307,14 +299,14 @@ module TiVo
       begin
         url = tivo_item.url
         @client.set_auth(url, USER, @mak)
-        @client.get_content(url, nil, {'Connection' => 'close'}) do |c|
+        @client.get_content(url, nil, 'Connection' => 'close') do |c|
           if block
             block.call(c)
           else
             file << c
           end
         end
-      rescue HTTPClient::BadResponseError => e
+      rescue HTTPClient::BadResponseError
         raise TiVoDownloadError, "Error downloading from TiVo", caller
       ensure
         file.close unless file.nil?

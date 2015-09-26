@@ -19,17 +19,17 @@ require 'tivopodcast/rss_generator'
 
 module Tivo2Podcast
   class FileCleaner
-    def FileCleaner.file_cleanup
-      configs = Set.new
-      deleteids = Array.new
+    def self.file_cleanup
+      files = Tivo2Podcast::Db::Show.where(on_disk: true).select do |r|
+        !File.exist?(r.filename)
+      end
 
-      Tivo2Podcast::Db::Show.where(on_disk: true).each do |result|
-        unless File.exists?(result.filename)
-          puts "#{result.filename} missing, removing from database."
-          configs.add(result.config)
-          result.on_disk = false
-          result.save!
-        end
+      configs = Set.new
+      files.each do |result|
+        puts "#{result.filename} missing, removing from database."
+        configs.add(result.config)
+        result.on_disk = false
+        result.save!
       end
 
       unless configs.empty?

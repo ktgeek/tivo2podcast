@@ -17,15 +17,15 @@
 require 'active_record'
 
 module Tivo2Podcast
-  def Tivo2Podcast.connect_database(filename)
-    database_exists = File.exists?(filename)
-    
-    ActiveRecord::Base.establish_connection(:adapter => 'sqlite3',
-                                            :database  => filename)
+  def self.connect_database(filename)
+    database_exists = File.exist?(filename)
+
+    ActiveRecord::Base.establish_connection(adapter: 'sqlite3',
+                                            database: filename)
 
     unless database_exists
       # $log.debug { "Creating database schema" }
-#      ActiveRecord::Migration.verbose = false
+      # ActiveRecord::Migration.verbose = false
       AddConfig.new.up
       AddShow.new.up
     end
@@ -73,8 +73,8 @@ module Tivo2Podcast
           t.string :s_ep_programid
           t.string :filename
           t.boolean :on_disk, null: false
-          #add execute for foreign key enforcement by db?
-          #FOREIGN KEY(configid) REFERENCES configs(id)
+          # add execute for foreign key enforcement by db?
+          # FOREIGN KEY(configid) REFERENCES configs(id)
         end
         add_index :shows, :configid
         add_index :shows, :s_ep_programid
@@ -84,20 +84,20 @@ module Tivo2Podcast
       def down
         raise ActiveRecord::IrreversibleMigration
       end
-    end 
-        
+    end
+
     class Config < ActiveRecord::Base
       # The has_and_belogs_to_many expects a configs_rss_files table.
       has_and_belongs_to_many :rss_files
-      has_many :shows, :foreign_key => 'configid'
+      has_many :shows, foreign_key: 'configid'
     end
 
     class Show < ActiveRecord::Base
-      belongs_to :config, :foreign_key => 'configid'
-      has_many :rss_files, :through => :config
+      belongs_to :config, foreign_key: 'configid'
+      has_many :rss_files, through: :config
       validates_presence_of :config
 
-      def Show.new_from_config_show_filename(config, showinfo, filename)
+      def self.new_from_config_show_filename(config, showinfo, filename)
         show = Show.new
         show.config = config
 
@@ -109,10 +109,10 @@ module Tivo2Podcast
         show.s_ep_timecap = showinfo.time_captured.to_i
         show.s_ep_programid = showinfo.program_id
         show.on_disk = true
-        
+
         show.filename = filename
-          
-        return show
+
+        show
       end
     end
 

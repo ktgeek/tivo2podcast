@@ -39,7 +39,7 @@ module Tivo2Podcast
     end
 
     def shutdown
-      @notifiers.each { |n| n.shutdown }
+      Notifier.notifiers.each(&:shutdown)
     end
   end
 
@@ -47,7 +47,7 @@ module Tivo2Podcast
   # shutdown, but will do nothing.  Also handles registration of
   # notifiers
   class Notifier
-    @@registered_notifiers = Array.new
+    @@notifiers = []
 
     def self.inherited(subclass)
       @@registered_notifiers << subclass
@@ -57,11 +57,10 @@ module Tivo2Podcast
       @@registered_notifiers
     end
 
-    def notify(message)
+    def notify(_message)
     end
 
     def shutdown
     end
   end
 end
-

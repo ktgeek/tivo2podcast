@@ -5,7 +5,7 @@ describe Tivo2Podcast::MainEngine do
   let(:main_engine) { Tivo2Podcast::MainEngine.new(t2pconfig) }
 
   describe "#get_shows_to_process" do
-    let (:show_config) do
+    let(:show_config) do
       show_config = double("Tivo2Podcast::Db::Config")
       allow(show_config).to receive(:show_name) { "Show" }
       show_config

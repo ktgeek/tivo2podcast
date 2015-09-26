@@ -40,13 +40,13 @@ module Tivo2Podcast
     end
 
     def create_show_base_filename(show)
-      name = "#{show.title}-#{show.time_captured.strftime("%Y%m%d%H%M")}"
+      name = "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
       name << "-#{show.episode_title}" unless show.episode_title.nil?
       name << "-#{show.episode_number}" unless show.episode_number.nil?
       name.gsub(/[:\?;]/, '_')
     end
 
-    def get_configs
+    def configs
       config_names = @t2pconfig.opt_config_names
       if config_names.nil? || config_names.empty?
         Tivo2Podcast::Db::Config.all
@@ -74,7 +74,7 @@ module Tivo2Podcast
 
       tivo = @t2pconfig.tivo_factory
 
-      get_configs.each do |config|
+      configs.each do |config|
         shows = get_shows_to_process(tivo, config)
 
         # So starts the giant loop that processes the shows...
@@ -84,13 +84,13 @@ module Tivo2Podcast
           transcode = "#{basename}.m4v"
 
           notifier = Tivo2Podcast::NotifierEngine.instance
-          unless (Tivo2Podcast::Db::Show.where(
-                  configid: config, s_ep_programid: s.program_id).exists?)
+          if !Tivo2Podcast::Db::Show.where(
+            configid: config, s_ep_programid: s.program_id).exists?
             begin
               notifier.notify("Starting download of #{basename}")
               # If the file exists, we'll assume the download went okay
               # Shame on us for not checking if it isn't
-              unless File.exists?(download)
+              unless File.exist?(download)
                 downloader = ShowDownloader.new(@t2pconfig)
                 downloader.download_show(s, download)
               end
@@ -123,7 +123,6 @@ module Tivo2Podcast
     end
   end
 end
-
 
 # Local Variables:
 # mode: ruby
