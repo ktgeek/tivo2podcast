@@ -62,7 +62,7 @@ hl = HighLine.new
 required_response_proc = Proc.new { |answer| !(answer.nil? || answer.empty?) }
 basis.each do |show|
   puts "Creating a configuration for #{show.title}"
-  sconfig = Tivo2Podcast::Db::Config.new
+  sconfig = Tivo2Podcast::Config.new
   sconfig.config_name = hl.ask('Config name:') do |q|
     q.default = show.title.delete(' ')
   end

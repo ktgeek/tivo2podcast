@@ -49,9 +49,9 @@ module Tivo2Podcast
     def configs
       config_names = @t2pconfig.opt_config_names
       if config_names.nil? || config_names.empty?
-        Tivo2Podcast::Db::Config.all
+        Tivo2Podcast::Config.all
       else
-        Tivo2Podcast::Db::Config.where(config_name: config_names)
+        Tivo2Podcast::Config.where(config_name: config_names)
       end
     end
 
@@ -84,7 +84,7 @@ module Tivo2Podcast
           transcode = "#{basename}.m4v"
 
           notifier = Tivo2Podcast::NotifierEngine.instance
-          if !Tivo2Podcast::Db::Show.where(
+          if !Tivo2Podcast::Show.where(
             configid: config, s_ep_programid: s.program_id).exists?
             begin
               notifier.notify("Starting download of #{basename}")

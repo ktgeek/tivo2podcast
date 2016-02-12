@@ -24,7 +24,7 @@ module Tivo2Podcast
   # Generates the video podcast feed.
   class RssGenerator
     def RssGenerator.regenerate_rss_files
-      rss_files = Tivo2Podcast::Db::RssFile.all
+      rss_files = Tivo2Podcast::RssFile.all
       RssGenerator.generate_from_rssfiles(rss_files)
     end
 
@@ -79,8 +79,7 @@ module Tivo2Podcast
             end
           end
 
-          Tivo2Podcast::Db::Show.where(configid: rss_file.configs,
-                                       on_disk: true).
+          Tivo2Podcast::Show.where(configid: rss_file.configs, on_disk: true).
             order(:s_ep_timecap).each &buildp
         end
 

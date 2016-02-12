@@ -20,7 +20,7 @@ require 'tivopodcast/rss_generator'
 module Tivo2Podcast
   class FileCleaner
     def self.file_cleanup
-      files = Tivo2Podcast::Db::Show.where(on_disk: true).select do |r|
+      files = Tivo2Podcast::Show.where(on_disk: true).select do |r|
         !File.exist?(r.filename)
       end
 
