@@ -25,13 +25,15 @@ module Tivo2Podcast
     include Singleton
     extend Forwardable
 
-    CONFIG_DIRECTORY = (ENV['TIVO2PODCASTDIR'].nil? ?
-                        ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
-      File::SEPARATOR
+    CONFIG_DIRECTORY = if ENV['TIVO2PODCASTDIR'].nil?
+                         ENV['HOME']
+                       else
+                         ENV['TIVO2PODCASTDIR']
+                       end
 
     # The default configuration filename
-    CONFIG_FILENAME = "#{CONFIG_DIRECTORY}.tivo2podcast.conf"
-    DATABASE_FILENAME = "#{CONFIG_DIRECTORY}.tivo2podcast.db"
+    CONFIG_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.conf")
+    DATABASE_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.db")
 
     # Inialize the configuration with an optional file to pull the
     # base config from.
@@ -41,7 +43,7 @@ module Tivo2Podcast
         "tivo_name" => nil,
         "mak" => nil,
         "verbose" => false,
-        "opt_config_names" => Array.new,
+        "opt_config_names" => [],
         "tivodecode" => 'tivodecode',
         "handbrake" => 'HandBrakeCLI',
         "cleanup" => false,
@@ -50,7 +52,7 @@ module Tivo2Podcast
         "comskip_ini" => nil,
         "baseurl" => nil,
         "aggregate_file" => nil,
-        "notifiers" => Array.new,
+        "notifiers" => [],
         "regenerate_rss" => false
       }
 
@@ -58,15 +60,13 @@ module Tivo2Podcast
     end
 
     def load_from_file(config_file)
-      if File.exists?(config_file)
-        @config.merge!(YAML.load_file(config_file))
-      end
+      @config.merge!(YAML.load_file(config_file)) if File.exist?(config_file)
     end
 
     # Creates an instance of a TiVo object based on the configurations
     # tivo_addr and mak
     def tivo_factory
-      return TiVo::TiVo.new(tivo_addr, mak)
+      TiVo::TiVo.new(tivo_addr, mak)
     end
 
     def tivo_addr=(value)
@@ -115,7 +115,7 @@ module Tivo2Podcast
         mak_file = "#{ENV['HOME']}#{File::SEPARATOR}.tivodecode_mak"
         @config['mak'] = File.read(mak_file).strip if File.exist?(mak_file)
       end
-      return @config['mak']
+      @config['mak']
     end
 
     def verbose=(value)
@@ -144,7 +144,6 @@ module Tivo2Podcast
     def_delegator :@config, :[]
   end
 end
-
 
 # Local Variables:
 # mode: ruby

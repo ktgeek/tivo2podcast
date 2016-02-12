@@ -22,6 +22,7 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
 require 'optparse'
 require 'tivopodcast/config'
 require 'tivopodcast'
+require 'tivopodcast/file_cleaner'
 
 t2pconfig = Tivo2Podcast::Config.instance
 
@@ -56,12 +57,13 @@ opts.parse(ARGV)
 # Connect to the database
 Tivo2Podcast::connect_database(t2pconfig.DATABASE_FILENAME)
 
-engine = Tivo2Podcast::MainEngine.new
-
 case
-when t2pconfig.cleanup then engine.file_cleanup
-when t2pconfig.regenerate_rss then engine.regenerate_rss_files
+when t2pconfig.cleanup
+  FileCleaner.file_cleanup
+when t2pconfig.regenerate_rss
+  RssGenerator.regenerate_rss_files
 else
+  engine = Tivo2Podcast::MainEngine.new
   engine.normal_processing
 end
 
