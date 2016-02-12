@@ -29,7 +29,7 @@ require 'pp'
 
 URL_REGEXP = /http:\/\/([\w+?\.\w+])+([a-zA-Z0-9\~\!\@\#\$\%\^\&amp;\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?/i
 
-t2pconfig = Tivo2Podcast::Config.instance
+t2pconfig = Tivo2Podcast::AppConfig.instance
 
 opts = OptionParser.new
 opts.on('-m MAK', '--mak MAK',

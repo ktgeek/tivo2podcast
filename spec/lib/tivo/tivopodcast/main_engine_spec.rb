@@ -1,12 +1,12 @@
 require 'tivo/tivopodcast/main_engine'
 
 describe Tivo2Podcast::MainEngine do
-  let(:t2pconfig) { instance_double("Tivo2Podcast::Config") }
+  let(:t2pconfig) { instance_double("Tivo2Podcast::AppConfig") }
   let(:main_engine) { Tivo2Podcast::MainEngine.new(t2pconfig) }
 
   describe "#get_shows_to_process" do
     let(:show_config) do
-      show_config = double("Tivo2Podcast::Db::Config")
+      show_config = double("Tivo2Podcast::Db::AppConfig")
       allow(show_config).to receive(:show_name) { "Show" }
       show_config
     end

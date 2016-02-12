@@ -104,7 +104,7 @@ module Tivo2Podcast
     # filename of the sourcefile, outfile is the filename to transcode
     # to
     def transcode_show(infile, outfile)
-      t2pconfig = Tivo2Podcast::Config.instance
+      t2pconfig = Tivo2Podcast::AppConfig.instance
       command = "#{t2pconfig.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
       command += ' -5 default' if decomb?
       command += " --crop #{crop}" unless crop.nil?
@@ -114,7 +114,7 @@ module Tivo2Podcast
       command += ' -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0'
       command += " -i \"#{infile}\" -o \"#{outfile}\""
       command += " >/dev/null 2>&1" unless t2pconfig.verbose
-                                  
+
       returncode = system(command)
       if !returncode
         puts "something isn't working right, bailing"
@@ -154,7 +154,7 @@ module Tivo2Podcast
     end
 
     def skip_commercials(basename, download, transcode)
-      t2pconfig = Tivo2Podcast::Config.instance
+      t2pconfig = Tivo2Podcast::AppConfig.instance
       # I need to wrap this in a "if you want to do this..."
       command = "#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q"
       command += " \"#{download}\""

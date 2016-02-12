@@ -24,7 +24,7 @@ require 'tivopodcast/config'
 require 'tivopodcast'
 require 'tivopodcast/file_cleaner'
 
-t2pconfig = Tivo2Podcast::Config.instance
+t2pconfig = Tivo2Podcast::AppConfig.instance
 
 opts = OptionParser.new
 opts.on('-c CONFIG', '--config CONFIG',
@@ -56,7 +56,7 @@ end
 opts.parse(ARGV)
 
 # Connect to the database
-Tivo2Podcast::connect_database(t2pconfig.DATABASE_FILENAME)
+Tivo2Podcast::connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
 
 case
 when t2pconfig.cleanup then FileCleaner.file_cleanup

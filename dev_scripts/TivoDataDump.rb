@@ -28,7 +28,7 @@ end
 require 'tivopodcast/config'
 require 'tivopodcast'
 
-t2pconfig = Tivo2Podcast::Config.new
+t2pconfig = Tivo2Podcast::AppConfig.new
 engine = Tivo2Podcast::MainEngine.new(t2pconfig)
 
 tivo = @config.tivo_factory

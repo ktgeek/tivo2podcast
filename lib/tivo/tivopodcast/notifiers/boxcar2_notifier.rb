@@ -22,7 +22,7 @@ module Tivo2Podcast
     def initialize
       super
 
-      @token = Tivo2Podcast::Config.instance['boxcar2.token']
+      @token = Tivo2Podcast::AppConfig.instance['boxcar2.token']
       raise ArgumentError, 'boxcar2.token must be defined for the Boxcar notifier' if @token.nil?
 
       @boxcar2 = RestClient::Resource.new(BOXCAR2_API_URL,

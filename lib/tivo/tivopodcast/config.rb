@@ -21,7 +21,7 @@ require 'TiVo'
 module Tivo2Podcast
   # This class makes up the configuation for the TiVo2Podcast engine
   # and includes factory and convenience methods
-  class Config
+  class AppConfig
     include Singleton
     extend Forwardable
 

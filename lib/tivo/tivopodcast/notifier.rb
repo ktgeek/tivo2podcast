@@ -23,7 +23,7 @@ module Tivo2Podcast
     end
 
     def init_notifiers
-      Tivo2Podcast::Config.instance["notifiers"].each do |n|
+      Tivo2Podcast::AppConfig.instance["notifiers"].each do |n|
         begin
           require "tivopodcast/notifiers/#{n}_notifier"
         rescue LoadError
