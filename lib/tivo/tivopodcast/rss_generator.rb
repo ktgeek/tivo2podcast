@@ -18,14 +18,20 @@ require 'rss'
 require 'rss/itunes'
 require 'facets/enumerable/accumulate'
 require 'TiVo'
+require 'tivopodcast/database'
 
 module Tivo2Podcast
   # Generates the video podcast feed.
   class RssGenerator
+    def RssGenerator.regenerate_rss_files
+      rss_files = Tivo2Podcast::Db::RssFile.all
+      RssGenerator.generate_from_rssfiles(rss_files)
+    end
+
     def RssGenerator.generate_from_config(config)
       RssGenerator.generate_from_rssfiles(config.rss_files)
     end
-      
+
     def RssGenerator.generate_from_configs(configs)
       RssGenerator.generate_from_rssfiles(configs.accumulate.rss_files)
     end
@@ -41,7 +47,7 @@ module Tivo2Podcast
           maker.channel.itunes_author = maker.channel.title
           maker.channel.itunes_owner.itunes_name = rss_file.owner_name
           maker.channel.itunes_owner.itunes_email = rss_file.owner_email
-          
+
           maker.items.do_sort = true
 
           buildp = lambda do |show|
@@ -72,7 +78,7 @@ module Tivo2Podcast
               end
             end
           end
-            
+
           Tivo2Podcast::Db::Show.where(configid: rss_file.configs,
                                        on_disk: true).
             order(:s_ep_timecap).each &buildp

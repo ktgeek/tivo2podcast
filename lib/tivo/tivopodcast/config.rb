@@ -25,10 +25,15 @@ module Tivo2Podcast
     include Singleton
     extend Forwardable
 
+    CONFIG_DIRECTORY = if ENV['TIVO2PODCASTDIR'].nil?
+                         ENV['HOME']
+                       else
+                         ENV['TIVO2PODCASTDIR']
+                       end
+
     # The default configuration filename
-    CONFIG_FILENAME = (ENV['TIVO2PODCASTDIR'].nil? ?
-                       ENV['HOME'] : ENV['TIVO2PODCASTDIR']) +
-      File::SEPARATOR + '.tivo2podcast.conf'
+    CONFIG_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.conf")
+    DATABASE_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.db")
 
     # Inialize the configuration with an optional file to pull the
     # base config from.
@@ -56,15 +61,13 @@ module Tivo2Podcast
     end
 
     def load_from_file(config_file)
-      if File.exists?(config_file)
-        @config.merge!(YAML.load_file(config_file))
-      end
+      @config.merge!(YAML.load_file(config_file)) if File.exist?(config_file)
     end
 
     # Creates an instance of a TiVo object based on the configurations
     # tivo_addr and mak
     def tivo_factory
-      return TiVo::TiVo.new(tivo_addr, mak)
+      TiVo::TiVo.new(tivo_addr, mak)
     end
 
     def tivo_addr=(value)
@@ -91,7 +94,6 @@ module Tivo2Podcast
       result = @config[:tivo_addr]
       # If the tivo_addr is NOT a dotted quad, do a DNS lookup for the
       # IP. The TiVo wants us to pass the IP address for whatever reason.
-      # I should use bounjour/ZeroConf to find the local tivo
       if /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match(result).nil?
         result = IPSocket.getaddress(result)
       end
@@ -111,7 +113,7 @@ module Tivo2Podcast
     def mak
       if @config[:mak].nil?
         # Load the mak if we have a mak file
-        mak_file = ENV['HOME'] + '/.tivodecode_mak'
+        mak_file = "#{ENV['HOME']}#{File::SEPARATOR}.tivodecode_mak"
         @config[:mak] = File.read(mak_file).strip if File.exist?(mak_file)
       end
       @config[:mak]
@@ -147,7 +149,6 @@ module Tivo2Podcast
     def_delegator :@config, :[]
   end
 end
-
 
 # Local Variables:
 # mode: ruby
