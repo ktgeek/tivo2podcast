@@ -46,6 +46,7 @@ opts.on('-n NAME', '--tivo_name NAME',
         'The name assigned to the tivo via the my.tivo service') do |n|
   t2pconfig.tivo_name = n
 end
+opts.on('--console', 'Go into a console mode') { t2pconfig.console = true }
 opts.on('-v', '--verbose') { t2pconfig.verbose = true }
 opts.on_tail('-h', '--help', 'Show this message') do
   puts opts
@@ -53,15 +54,16 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
-engine = Tivo2Podcast::MainEngine.new
-
 case
-when t2pconfig.cleanup then engine.file_cleanup
-when t2pconfig.regenerate_rss then engine.regenerate_rss_files
+when t2pconfig.cleanup then Tivo2Podcast::MainEngine.new.file_cleanup
+when t2pconfig.regenerate_rss then Tivo2Podcast::MainEngine.new.regenerate_rss_files
+when t2pconfig.console
+  require 'tivopodcast/console'
+  IRB.start_session(binding)
 else
-  engine.normal_processing
+  Tivo2Podcast::MainEngine.new.normal_processing
 end
-  
+
 # Local Variables:
 # mode: ruby
 # End:
