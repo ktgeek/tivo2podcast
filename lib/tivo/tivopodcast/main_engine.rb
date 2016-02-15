@@ -25,7 +25,7 @@ require 'tivopodcast/file_downloader'
 module Tivo2Podcast
   class MainEngine
     def initialize(t2pconfig = nil)
-      @t2pconfig = t2pconfig ? t2pconfig : Tivo2Podcast::Config.instance
+      @t2pconfig = t2pconfig ? t2pconfig : Tivo2Podcast::AppConfig.instance
     end
 
     def create_work_thread(queue)

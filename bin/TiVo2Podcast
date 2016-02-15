@@ -23,6 +23,7 @@ require 'optparse'
 require 'tivopodcast/config'
 require 'tivopodcast'
 require 'tivopodcast/file_cleaner'
+require 'tivopodcast/rss_generator'
 
 t2pconfig = Tivo2Podcast::AppConfig.instance
 
@@ -59,8 +60,8 @@ opts.parse(ARGV)
 Tivo2Podcast::connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
 
 case
-when t2pconfig.cleanup then FileCleaner.file_cleanup
-when t2pconfig.regenerate_rss then RssGenerator.regenerate_rss_files
+when t2pconfig.cleanup then Tivo2Podcast::FileCleaner.file_cleanup
+when t2pconfig.regenerate_rss then Tivo2Podcast::RssGenerator.regenerate_rss_files
 when t2pconfig.console
   require 'tivopodcast/console'
   IRB.start_session(binding)
