@@ -40,7 +40,7 @@ module Tivo2Podcast
     def shutdown
       @message_queue.enq SHUTDOWN_MESSAGE
 
-      @tranmit_thread.join if @tranmit_thread
+      @transmit_thread.join if @transmit_thread
     end
 
     def start_transmit_thread
