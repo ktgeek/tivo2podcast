@@ -54,8 +54,7 @@ module Tivo2Podcast
 
         File.delete(@download) if File.exist?(@download)
 
-        show =
-          Tivo2Podcast::Show.new_from_config_show_filename(@config, @show, @transcode)
+        show = Tivo2Podcast::Show.new_from_config_show_filename(@config, @show, @transcode)
         show.save!
         notifier.notify("Finished transcode of #{@basename}")
       end
@@ -68,19 +67,15 @@ module Tivo2Podcast
       end
 
       def do_work
-        # TODO: Recraft this from two queries into one.  Probably
-        # change from newest_shows to shows_to_nuke using .offset(@config.ep_to_keep)
-        newest_shows = Tivo2Podcast::Show.where(configid: @config, on_disk: true)
-          .order(s_ep_timecap: :desc).limit(@config.ep_to_keep)
-        unless newest_shows.nil? || newest_shows.empty?
-          Tivo2Podcast::Show.where(configid: @config, on_disk: true)
-            .where.not(id: newest_shows).each do |show|
-            # If the file doesn't exist, don't try to delete, but
-            # still setting the on_disk to false is appropriate.
-            File.delete(show.filename) if File.exist?(show.filename)
-            show.on_disk = false
-            show.save!
-          end
+        shows_to_clean = Tivo2Podcast::Show.where(configid: @config, on_disk: true)
+          .order(s_ep_timecap: :desc).offset(@config.ep_to_keep)
+
+        shows_to_clean.each do |show|
+          # If the file doesn't exist, don't try to delete, but
+          # still setting the on_disk to false is appropriate.
+          File.delete(show.filename) if File.exist?(show.filename)
+          show.on_disk = false
+          show.save!
         end
 
         # We might want these to move...or to rename this object to
