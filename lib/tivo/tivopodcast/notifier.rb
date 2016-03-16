@@ -31,7 +31,7 @@ module Tivo2Podcast
           puts "Could not find #{n}_notifier... Ignoring."
         end
       end
-      @notifiers = Notifier.registered_notifiers.map { |n| n.new }
+      @notifiers = Notifier.registered_notifiers.map(&:new)
     end
 
     def notify(message)

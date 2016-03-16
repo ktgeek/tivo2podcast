@@ -25,7 +25,7 @@ require 'tivopodcast/file_downloader'
 module Tivo2Podcast
   class MainEngine
     def initialize(t2pconfig = nil)
-      @t2pconfig = t2pconfig ? t2pconfig : Tivo2Podcast::AppConfig.instance
+      @t2pconfig = t2pconfig || Tivo2Podcast::AppConfig.instance
     end
 
     def create_work_thread(queue)
@@ -60,9 +60,7 @@ module Tivo2Podcast
       # Only work on the X latest shows.  That way if there are 10
       # on the tivo, but we only want to keep 4, we don't encode 6
       # of them just to throw them out later in the cleanup phase.
-      if shows.size > config.ep_to_keep
-        shows = shows.reverse[0, config.ep_to_keep].reverse
-      end
+      shows = shows.reverse[0, config.ep_to_keep].reverse if shows.size > config.ep_to_keep
 
       shows
     end
@@ -97,8 +95,7 @@ module Tivo2Podcast
 
               notifier.notify("Finished download of #{basename}")
 
-              work_queue.enq(TranscodeWorkOrder.new(config, s, basename,
-                                                    download, transcode))
+              work_queue.enq(TranscodeWorkOrder.new(config, s, basename, download, transcode))
 
               # Adding a 30 second delay before the next download to
               # see if it helps with our download issues

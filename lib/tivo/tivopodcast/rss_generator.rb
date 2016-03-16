@@ -50,7 +50,10 @@ module Tivo2Podcast
 
           maker.items.do_sort = true
 
-          buildp = lambda do |show|
+          shows = Tivo2Podcast::Show.where(configid: rss_file.configs, on_disk: true)
+            .order(:s_ep_timecap)
+
+          shows.each do |show|
             # If the file got removed and no one ran a database clean
             # let's not add it to the RSS feed.
             if File.exists?(show.filename)
@@ -78,9 +81,6 @@ module Tivo2Podcast
               end
             end
           end
-
-          Tivo2Podcast::Show.where(configid: rss_file.configs, on_disk: true).
-            order(:s_ep_timecap).each &buildp
         end
 
         # this code needs to change to writing the file out.

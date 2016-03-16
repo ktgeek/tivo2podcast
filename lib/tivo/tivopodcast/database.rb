@@ -49,7 +49,7 @@ module Tivo2Podcast
       show.config = config
 
       show.s_name = showinfo.title
-      show.s_ep_title = showinfo.episode_title(true)
+      show.s_ep_title = showinfo.episode_title(use_date_if_nil: true)
       show.s_ep_number = showinfo.episode_number
       show.s_ep_description = showinfo.description
       show.s_ep_length = showinfo.duration

@@ -113,7 +113,7 @@ module Tivo2Podcast
     def mak
       if @config[:mak].nil?
         # Load the mak if we have a mak file
-        mak_file = "#{ENV['HOME']}#{File::SEPARATOR}.tivodecode_mak"
+        mak_file = File.join(ENV['HOME'], '.tivodecode_mak')
         @config[:mak] = File.read(mak_file).strip if File.exist?(mak_file)
       end
       @config[:mak]

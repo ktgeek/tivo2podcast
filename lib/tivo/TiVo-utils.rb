@@ -6,7 +6,7 @@ module TiVo
       display_items = nil
       filter_copyprotected = true
       queue = Array.new
-      
+
       while (true)
         display_items = tivo_items.videos[offset, menu_size]
         puts

@@ -24,8 +24,8 @@ module TiVo
     attr_accessor :folders, :videos
 
     def initialize(folders = nil, videos = nil)
-      @folders = folders.nil? ? [] : folders
-      @videos = videos.nil? ? [] : videos
+      @folders = folders || []
+      @videos = videos || []
     end
 
     def total_size
@@ -67,7 +67,7 @@ module TiVo
 
       return nil if tivos.size < 1
 
-      tivos = tivos.collect { |x| [x.name, IPSocket.getaddress(x.target)] }
+      tivos = tivos.map { |x| [x.name, IPSocket.getaddress(x.target)] }
       @@tivos = Hash[tivos]
     end
     @@tivos
@@ -136,7 +136,7 @@ module TiVo
       result
     end
 
-    def episode_title(use_date_if_nil = false)
+    def episode_title(use_date_if_nil: false)
       title = get_detail_item('EpisodeTitle')
       if use_date_if_nil && title.nil?
         title = time_captured.strftime("%m/%d/%Y")

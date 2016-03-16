@@ -106,14 +106,14 @@ module Tivo2Podcast
     def transcode_show(infile, outfile)
       t2pconfig = Tivo2Podcast::AppConfig.instance
       command = "#{t2pconfig.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
-      command += ' -5 default' if decomb?
-      command += " --crop #{crop}" unless crop.nil?
-      command += " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48"
-      command += " -D 0.0 -f mp4 -X #{max_width}"
-      command += " -Y #{max_height}" unless max_height.nil?
-      command += ' -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0'
-      command += " -i \"#{infile}\" -o \"#{outfile}\""
-      command += " >/dev/null 2>&1" unless t2pconfig.verbose
+      command << ' -5 default' if decomb?
+      command << " --crop #{crop}" unless crop.nil?
+      command << " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48"
+      command << " -D 0.0 -f mp4 -X #{max_width}"
+      command << " -Y #{max_height}" unless max_height.nil?
+      command << ' -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0'
+      command << " -i \"#{infile}\" -o \"#{outfile}\""
+      command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
       if !returncode
@@ -130,20 +130,19 @@ module Tivo2Podcast
       #   --TVSeasonNum (num)    Sets the TV Season number on the "tvsn" atom
       #   --TVEpisodeNum (num)    Sets the TV Episode number on the "tves" atom
       #   --description (str)    Sets the description on the "desc" atom
-      showtitle = @show.title + ': ' + @show.episode_title(true)
-      showtitle = showtitle + ' (' + @show.episode_number +
-        ')' unless @show.episode_number.nil?
+      showtitle = "#{@show.title}: #{@show.episode_title(use_date_if_nil: true)}"
+      showtitle << " (#{@show.episode_number})" unless @show.episode_number.nil?
 
-      command = "#{t2pconfig.atomicparsley} \"#{outfile}\" -W " +
-        "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " +
+      command = "#{t2pconfig.atomicparsley} \"#{outfile}\" -W " <<
+        "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " <<
         "--TVEpisode \"#{@show.episode_title(true)}\" --artist \"#{@show.title}\""
-      command += " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
-      command += " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
+      command << " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
+      command << " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
       unless @show.description.nil?
         desc = @show.description.gsub(/"/, '\"')
-        command += " --description \"#{@desc}\""
+        command << " --description \"#{@desc}\""
       end
-      command += ' >/dev/null 2>&1' unless t2pconfig.verbose
+      command << ' >/dev/null 2>&1' unless t2pconfig.verbose
       returncode = system(command)
       if !returncode
         puts "something isn't working right, bailing"
@@ -156,13 +155,12 @@ module Tivo2Podcast
     def skip_commercials(basename, download, transcode)
       t2pconfig = Tivo2Podcast::AppConfig.instance
       # I need to wrap this in a "if you want to do this..."
-      command = "#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q"
-      command += " \"#{download}\""
-      command += " >/dev/null 2>&1" unless t2pconfig.verbose
+      command = "#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q \"#{download}\""
+      command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
-	  # Comskip doesn't seem to do the 0 return code (or is that wine?)
-	  # For now we'll just check to see if there is a > 0 length .chp file
+      # Comskip doesn't seem to do the 0 return code (or is that wine?)
+      # For now we'll just check to see if there is a > 0 length .chp file
 #      if !returncode
 #        puts "something isn't working right, bailing"
 #        puts "Command that failed: " + command
