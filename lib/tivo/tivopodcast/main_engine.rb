@@ -78,7 +78,7 @@ module Tivo2Podcast
         # So starts the giant loop that processes the shows...
         shows.each do |s|
           basename = create_show_base_filename(s)
-          download = "#{basename}.mp4"
+          download = "#{basename}.ts"
           transcode = "#{basename}.m4v"
 
           notifier = Tivo2Podcast::NotifierEngine.instance
