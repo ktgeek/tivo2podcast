@@ -35,14 +35,14 @@ def make_filename(tivo_item)
   end
   name.sub!(/:/, '_')
   name.sub!(/\//, '_')
-  name = name + ".mpg"
-  return name
+  "#{name}.ts"
 end
 
-# Load the mak if we have a mak file
-mak_file = ENV['HOME'] + '/.tivodecode_mak'
-mak = nil
+# Load the mak if we have a mak file, using the tivodecode filename for legacy rasons
+mak_file = "#{ENV['HOME']}/.tivodecode_mak"
 mak = File.read(mak_file).strip if File.exist?(mak_file)
+
+tivo_libre_jar = nil
 
 # Parse the options to get the rest (or override the above)
 tivo_name,tivo_addr = nil, nil
@@ -53,6 +53,7 @@ opts.on('-t IP', '--tivo IP', 'The IP address of your TiVo') do |ip|
   tivo_addr = ip
 end
 opts.on('-d', '--no-decode', 'Will not use tivodecode.') { |d| decode = false }
+opts.on('-j JAR', '--jar JAR', 'Location of the TiVoLibre jar') { |j| tivo_libre_jar = j }
 opts.on('-n NAME', '--tivo_name NAME',
         'The name assigned to the tivo via the my.tivo service') do |n|
   tivo_name = n
@@ -73,6 +74,11 @@ if (tivo_addr.nil? && tivo_name.nil?) || mak.nil?
   exit(1)
 end
 
+if decode && tivo_libre_jar.nil?
+  puts "Must have tivo libre jar to decode"
+  exit (1)
+end
+
 tivo = TiVo::TiVo.new(tivo_addr, mak)
 
 downloads = TiVo::Utils::do_menu(tivo.get_listings)
@@ -83,7 +89,7 @@ downloads.each do |dl|
 
   puts "Attemping to download " + dl.printable_title()
   if decode
-    IO.popen("tivodecode -n -o \"#{dl_name}\" -", 'wb') do |td|
+    IO.popen("java -jar #{tivo_libre_jar} -m #{mak} -o \"#{dl_name}\"", 'wb') do |td|
       pbar = ANSI::ProgressBar.new(dl_name, dl.size)
       tivo.download_show(dl) do |tc|
         td << tc
@@ -103,7 +109,7 @@ downloads.each do |dl|
       puts
     end
   end
-  sleep 60
+  sleep 60 if downloads.size > 1
 end
 
 # Local Variables:
