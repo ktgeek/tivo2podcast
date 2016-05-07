@@ -111,7 +111,7 @@ module Tivo2Podcast
       command << " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48"
       command << " -D 0.0 -f mp4 -X #{max_width}"
       command << " -Y #{max_height}" unless max_height.nil?
-      command << ' -x cabac=0:ref=2:me=umh:bframes=0:subme=6:8x8dct=0:trellis=0'
+      command << ' -x cabac=0:ref=2:me=umh:bframes=8:subme=6:8x8dct=0:trellis=2:keyint=24:vbv-bufsize=31250:ref=5:b-adapt=2:rc-lookahead=50'
       command << " -i \"#{infile}\" -o \"#{outfile}\""
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
