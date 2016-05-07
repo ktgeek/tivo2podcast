@@ -291,13 +291,17 @@ module TiVo
 
     # Downloads the show given the item passed in.  If a block is given,
     # it uses the block instead of the filename
-    def download_show(tivo_item, filename = nil, &block)
+    def download_show(tivo_item, filename: nil, get_ts: true, &block)
       if block.nil? && filename.nil?
         raise ArgumentError, 'Must have either a filename or a block', caller
       end
       file = File.open(filename, 'wb') unless filename.nil?
       begin
-        url = tivo_item.url
+        url = if get_ts
+                "#{tivo_item.url}&Format=video/x-tivo-mpeg-ts"
+              else
+                tivo_item.url
+              end
         @client.set_auth(url, USER, @mak)
         @client.get_content(url, nil, 'Connection' => 'close') do |c|
           if block

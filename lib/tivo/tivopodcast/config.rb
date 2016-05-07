@@ -44,7 +44,6 @@ module Tivo2Podcast
         mak: nil,
         verbose: false,
         opt_config_names: Array.new,
-        tivodecode: 'tivodecode',
         handbrake: 'HandBrakeCLI',
         cleanup: false,
         atomicparsley: 'AtomicParsley',
@@ -54,7 +53,8 @@ module Tivo2Podcast
         aggregate_file: nil,
         notifiers: Array.new,
         regenerate_rss: false,
-        console: false
+        console: false,
+        tivolibre: nil
       }
 
       load_from_file(CONFIG_FILENAME)

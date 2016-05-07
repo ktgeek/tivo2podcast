@@ -3,18 +3,9 @@ This is my package of two scripts I wrote up to work with my TiVo to my linux bo
 TiVo2Disk
 ---------
 TiVo2Disk is a simple downloading application.  It downloads the shows
-requested, and pipes them through tivodecode so you end with a useful
+requested, and pipes them through tivolibre so you end with a useful
 mpg file.  By default it will not give you the choice to download copy
 protected content.
-
-TiVo2Disk requires:
- o rubygems
- o httpclient gem
- o facets gem
- o tivodecode from http://tivodecode.sourceforge.net/
-
-It is expected that you have your ~/.tivodecode_mak setup as both the
-script and tivodecode will will use it.
 
 This was tested on both OS X and Linux.
 
@@ -26,13 +17,7 @@ them to be iPhone friendly, and then put them into an podcast friendly
 RSS feed for easy loading and unloading into iTunes/iPhone/etc.
 
 TiVo2Podcast requires:
- o rubygems
- o httpclient gem
- o facets gem
- o dnnsd gem
- o ffi gem
- o sqlite3 and its ruby interface
- o tivodecode - http://tivodecode.sourceforge.net/
+ o tivolibre - http://tivodecode.sourceforge.net/
  o AtomicParsley from http://atomicparsley.sourceforge.net/
  o HandBrakeCLI from http://handbrake.fr/
 
@@ -40,9 +25,6 @@ TiVo2Podcast requires:
    o libmp4v2 which we use ffi to call out to
    o Wine to run comskip.exe
    o comskip - http://www.kaashoek.com/comskip/
-
-It is expected that you have your ~/.tivodecode_mak setup as both the
-script and tivodecode will will use it.
 
 You'll want to copy doc/tivo2podcast.conf.sample to
 ~/.tivo2podcast.conf to make sure that TiVo2Podcast can find all the
@@ -66,37 +48,6 @@ $TIVO2PODCASTDIR/.tivo2podcast.db
 
 After the database is created, you can use the sqlite command line
 tool to open the database and edit the 'configs' table to set up a
-show.  *THIS SECTION NEEDS TO BE UPDATED TO RELFECT THE NEW RSS
-LAYOUT*
+show or use the rails-like console to create and save Config objects.
 
-The config table has the following fields:
-config_name TEXT NOT NULL UNIQUE - Config name for use with the -c flag
-show_name TEXT NOT NULL - Show name/regex to match in the Tivo
-rss_filename TEXT NOT NULL - The name of the resultant xml file
-rss_link TEXT NOT NULL - The URL of the "source material" whatever you want
-rss_baseurl TEXT NOT NULL - The base URL where the rss file and podcasts
-                            files live
-rss_ownername TEXT NOT NULL - Owner of the RSS feed
-rss_owneremail TEXT NOT NULL - E-mail of the owner of the rss feed
-ep_to_keep INTEGER NOT NULL DEFAULT 5 - The number of shows to keep in the feed
-encode_crop TEXT - How to crop the content (if needed) in HandBrake CLI format
-encode_audio_bitrate INTEGER - The bitrate in kbps to use, defaults to 48
-encode_video_bitrate INTEGER - The bitrate in kbps to use, defaults to 768
-encode_decomb INTEGER - Whether to decomb (deinterlace) the source
-                        material, 1 or 0 for true or false
-
-An example of putting The Daily Show into the script would look like this:
-
-insert into configs (config_name, show_name, rss_filename, rss_link,
-                     rss_baseurl, rss_ownername, rss_owneremail, ep_to_keep,
-                     encode_decomb)
-            values ('tds', 'The Daily Show', 'tds.xml',
-                    'http://www.thedailyshow.com/',
-                    'http://example.com/podcasts/', 'Keith T. Garner',
-                    'kgarner@example.com', 4, 1);
-
-You can then put the script into cron.  Without a -c flag it will run
-for all configs found, if a -c is passed it will only run for that
-config.  You may pass -c multiple times.
-
-This has been tested (and used daily) on Linux
+* This needs to be updated greatly. *

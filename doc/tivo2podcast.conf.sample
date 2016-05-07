@@ -15,9 +15,7 @@
 
 # The TiVo's MAK.  Needed by TiVo2Podcast to connect to the TiVo2Go
 # service and communicate.  If not filled in, TiVo2Podcast will look
-# for the mak in ~/.tivodecode_mak.  tivodecode needs the mac in that
-# file anyway, so there's not a lot of reason to fill this in under
-# normal circumstances.
+# for the mak in ~/.tivodecode_mak for legacy reasons.
 #
 # default: nil
 #
@@ -30,12 +28,6 @@
 # default: false
 #
 # verbose: false
-
-# The path and/or name of the tivodecode executable.
-#
-# default: tivodecode
-#
-# tivodecode: tivodecode
 
 # The path and/or name of the HandBrake command line tool.
 #
