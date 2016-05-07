@@ -38,7 +38,7 @@ module Tivo2Podcast
 
     def self.generate_from_rssfiles(rssfiles)
       rssfiles.each do |rss_file|
-        rss = self_and_parents.new(rss_file).make_rss
+        rss = self.new(rss_file).make_rss
 
         File.open(rss_file.filename, 'w') { |f| f << rss.to_s }
       end
@@ -50,10 +50,10 @@ module Tivo2Podcast
 
     def make_rss
       RSS::Maker.make("2.0") do |maker|
-        configure_channel(maker.channel, @rss_file)
+        configure_channel(maker.channel)
         maker.items.do_sort = true
-        shows = Tivo2Podcast::Db::Show.where(configid: @rss_file.configs,
-                                             on_disk: true).order(:s_ep_timecap)
+        shows = Tivo2Podcast::Show.where(configid: @rss_file.configs,
+                                         on_disk: true).order(:s_ep_timecap)
         shows.each { |s| add_item(maker.items, s) }
       end
     end
