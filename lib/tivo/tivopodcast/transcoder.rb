@@ -135,7 +135,7 @@ module Tivo2Podcast
 
       command = "#{t2pconfig.atomicparsley} \"#{outfile}\" -W " <<
         "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " <<
-        "--TVEpisode \"#{@show.episode_title(true)}\" --artist \"#{@show.title}\""
+        "--TVEpisode \"#{@show.episode_title(use_date_if_nil: true)}\" --artist \"#{@show.title}\""
       command << " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
       command << " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
       unless @show.description.nil?

@@ -20,44 +20,22 @@ module Tivo2Podcast
       @config = config
     end
 
+    def tivo
+      @config.tivo_factory
+    end
+
     def download_show(show, name)
-      tivo = @config.tivo_factory
-
-      download_tivolibre(tivo, show, name)
-    end
-
-    # TivoLibre has a bug that won't let us downcode as we stream it
-    # down in the 0.7.3 release.  Once they upgrade it we can stream
-    # it on the way down.
-    def download_tivolibre(tivo, show, name)
-      temp_name = "#{name}.ts"
-      if @config.verbose
-        pbar = ANSI::ProgressBar.new(name, show.size)
-        File.open(temp_name, 'wb') do |file|
-          tivo.download_show(show) do |tc|
-            file << tc
-            pbar.inc(tc.length) unless pbar.nil?
-          end
+      IO.popen("java -jar #{@config.tivolibre} -m #{@config.mak} -o \"#{name}\"", 'wb') do |td|
+        pbar = ANSI::ProgressBar.new(name, show.size) if @config.verbose
+        tivo.download_show(show) do |tc|
+          td << tc
+          pbar.inc(tc.length) unless pbar.nil?
         end
-        pbar.finish unless pbar.nil?
-        puts unless pbar.nil?
-      else
-        tivo.download_show(show, filename: temp_name)
+        unless pbar.nil?
+          pbar.finish
+          puts
+        end
       end
-
-      command =
-        "java -jar #{@config.tivolibre} -i \"#{temp_name}\" -o \"#{name}\" -m #{@config.mak}"
-      puts command if @config.verbose
-      returncode = system(command)
-      if !returncode
-        puts "something isn't working right, bailing"
-        puts "Command that failed: " + command
-        # TODO: change this to an exception
-        exit(1)
-      end
-
-      File.delete(temp_name) if File.exist?(temp_name)
     end
-
   end
 end
