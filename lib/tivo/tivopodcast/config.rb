@@ -16,7 +16,6 @@
 require 'forwardable'
 require 'singleton'
 require 'yaml'
-require 'TiVo'
 
 module Tivo2Podcast
   # This class makes up the configuation for the TiVo2Podcast engine
@@ -25,11 +24,7 @@ module Tivo2Podcast
     include Singleton
     extend Forwardable
 
-    CONFIG_DIRECTORY = if ENV['TIVO2PODCASTDIR'].nil?
-                         ENV['HOME']
-                       else
-                         ENV['TIVO2PODCASTDIR']
-                       end
+    CONFIG_DIRECTORY = ENV['TIVO2PODCASTDIR'] || ENV['HOME']
 
     # The default configuration filename
     CONFIG_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.conf")
@@ -54,7 +49,8 @@ module Tivo2Podcast
         notifiers: Array.new,
         regenerate_rss: false,
         console: false,
-        tivolibre: nil
+        tivolibre: nil,
+        list_configs: false
       }
 
       load_from_file(CONFIG_FILENAME)
@@ -67,6 +63,7 @@ module Tivo2Podcast
     # Creates an instance of a TiVo object based on the configurations
     # tivo_addr and mak
     def tivo_factory
+      require 'TiVo'
       TiVo::TiVo.new(tivo_addr, mak)
     end
 
@@ -133,6 +130,10 @@ module Tivo2Podcast
 
     def console=(value)
       @config[:console] = value
+    end
+
+    def list_configs=(value)
+      @config[:list_configs] = value
     end
 
     # For backward compatibility with Config from when more things
