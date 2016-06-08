@@ -37,6 +37,8 @@ module Tivo2Podcast
     # The has_and_belogs_to_many expects a configs_rss_files table.
     has_and_belongs_to_many :rss_files
     has_many :shows, foreign_key: 'configid'
+
+    scope :for_name, ->(name) { where(config_name: name) }
   end
 
   class Show < ActiveRecord::Base

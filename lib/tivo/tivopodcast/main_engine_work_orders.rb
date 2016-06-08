@@ -67,8 +67,8 @@ module Tivo2Podcast
       end
 
       def do_work
-        shows_to_clean = Tivo2Podcast::Show.where(configid: @config, on_disk: true)
-          .order(s_ep_timecap: :desc).offset(@config.ep_to_keep)
+        shows_to_clean = Tivo2Podcast::Show.on_disk_for_config(@config).order(s_ep_timecap: :desc).
+          offset(@config.ep_to_keep)
 
         shows_to_clean.each do |show|
           # If the file doesn't exist, don't try to delete, but

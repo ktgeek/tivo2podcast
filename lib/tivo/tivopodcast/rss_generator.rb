@@ -52,8 +52,7 @@ module Tivo2Podcast
       RSS::Maker.make("2.0") do |maker|
         configure_channel(maker.channel)
         maker.items.do_sort = true
-        shows = Tivo2Podcast::Show.where(configid: @rss_file.configs,
-                                         on_disk: true).order(:s_ep_timecap)
+        shows = Tivo2Podcast::Show.on_disk_for_config(@rss_file.configs).order(:s_ep_timecap)
         shows.each { |s| add_item(maker.items, s) }
       end
     end
