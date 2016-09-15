@@ -150,7 +150,7 @@ module TiVo
 
     def description
       desc = get_detail_item('Description')
-      desc.sub!(' Copyright Tribune Media Services, Inc.', '') if desc
+      desc.sub!(/ (?:\* )?Copyright (Tribune Media Services|Rovi), Inc./, '') if desc
       desc
     end
 
