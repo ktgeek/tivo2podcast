@@ -26,6 +26,7 @@ module Tivo2Podcast
       files = Dir['*.m4v']
       deleted_shows = Tivo2Podcast::Show.preload(:config).on_disk.where.not(filename: files)
 
+      deleted_shows.map(&:filename).each { |f| puts "#{f} missing, removing from database." }
       deleted_shows.update_all(on_disk: false)
 
       configs = deleted_shows.map(&:config).uniq

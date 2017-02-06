@@ -36,27 +36,28 @@ module TiVo
     tivos[name]
   end
 
-  def dnssd_search(sleep_time)
-    replies = []
-    service = DNSSD::Service.new
-    begin
-      Timeout::timeout(sleep_time) do
-        service.browse '_tivo-videos._tcp' do |reply|
-          DNSSD.resolve(reply) { |r| replies << r }
+  class << self
+    private
+    def dnssd_search(sleep_time)
+      replies = []
+      begin
+        Timeout::timeout(sleep_time) do
+          DNSSD.browse! '_tivo-videos._tcp' do |reply|
+            DNSSD.resolve(reply) { |r| replies << r }
+          end
         end
+      rescue Timeout::Error
       end
-    rescue Timeout::Error
+      replies
     end
-    replies
   end
-  private :dnssd_search
 
   # Returns a Hash that maps tivo name to tivo ip
   def self.tivos_via_dnssd(sleep_time = 5, reaquire = false)
     @tivos = nil if reaquire
     @tivos ||= begin
-      replies = dnssd_search(sleep_time)
-      return nil if replies.empty?
+      dnssd_finds = dnssd_search(sleep_time)
+      return nil if dnssd_finds.empty?
 
       tivos = dnssd_finds.map { |x| [x.name, IPSocket.getaddress(x.target)] }
       Hash[tivos]
@@ -67,8 +68,8 @@ module TiVo
     attr_accessor :folders, :videos
 
     def initialize(folders = nil, videos = nil)
-      @folders ||= []
-      @videos ||= []
+      @folders = folders || []
+      @videos = videos || []
     end
 
     def total_size
@@ -303,10 +304,10 @@ module TiVo
       end
       file = File.open(filename, 'wb') unless filename.nil?
       url = if get_ts
-              "#{tivo_item.url}&Format=video/x-tivo-mpeg-ts"
-            else
-              tivo_item.url
-            end
+        "#{tivo_item.url}&Format=video/x-tivo-mpeg-ts"
+      else
+        tivo_item.url
+      end
       begin
         @client.set_auth(url, USER, @mak)
         @client.get_content(url, nil, Connection: 'close') do |c|
