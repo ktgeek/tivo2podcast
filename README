@@ -17,9 +17,9 @@ them to be iPhone friendly, and then put them into an podcast friendly
 RSS feed for easy loading and unloading into iTunes/iPhone/etc.
 
 TiVo2Podcast requires:
- o tivolibre - http://tivodecode.sourceforge.net/
- o AtomicParsley from http://atomicparsley.sourceforge.net/
- o HandBrakeCLI from http://handbrake.fr/
+ o tivolibre - https://github.com/fflewddur/tivolibre
+ o AtomicParsley - http://atomicparsley.sourceforge.net/
+ o HandBrakeCLI - http://handbrake.fr/
 
  o For commercial skipping you'll need:
    o libmp4v2 which we use ffi to call out to
