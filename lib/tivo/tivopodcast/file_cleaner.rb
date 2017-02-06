@@ -13,28 +13,23 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'set'
 require 'tivopodcast/database'
 require 'tivopodcast/rss_generator'
 
 module Tivo2Podcast
   class FileCleaner
     def self.file_cleanup
-      files = Tivo2Podcast::Show.where(on_disk: true).select do |r|
-        !File.exist?(r.filename)
-      end
+      # I'm not wild about this, but loading the filenames first
+      # limits doing multiple calls to the database.  Since we only
+      # generated .m4v files now, this seems safe, but we might want
+      # to revisit it.
+      files = Dir['*.m4v']
+      deleted_shows = Tivo2Podcast::Show.preload(:config).on_disk.where.not(filename: files)
 
-      configs = Set.new
-      files.each do |result|
-        puts "#{result.filename} missing, removing from database."
-        configs.add(result.config)
-        result.on_disk = false
-        result.save!
-      end
+      deleted_shows.update_all(on_disk: false)
 
-      unless configs.empty?
-        Tivo2Podcast::RssGenerator.generate_from_configs(configs)
-      end
+      configs = deleted_shows.map(&:config).uniq
+      Tivo2Podcast::RssGenerator.generate_from_configs(configs) unless configs.empty?
     end
   end
 end

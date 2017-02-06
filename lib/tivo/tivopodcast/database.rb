@@ -44,6 +44,10 @@ module Tivo2Podcast
     has_many :rss_files, through: :config
     validates_presence_of :config
 
+    scope :on_disk, -> { where(on_disk: true) }
+    scope :on_disk_for_config, ->(config) { on_disk.where(configid: config) }
+    scope :episode_for, ->(config, programid) { where(configid: config, s_ep_programid: programid) }
+
     def self.new_from_config_show_filename(config, showinfo, filename)
       show = Show.new
       show.config = config
