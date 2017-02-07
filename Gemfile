@@ -18,7 +18,7 @@ gem 'facets', '~>3.0'
 gem 'tty-progressbar'
 gem 'pastel'
 gem 'tty-screen'
-gem 'tty-prompt'
+gem 'tty-prompt', git: 'https://github.com/ktgeek/tty-prompt.git', ref: '8dc6943191f440bba7d86dcac5ce445a80c64530'
 gem 'tty-spinner'
 
 group :development do

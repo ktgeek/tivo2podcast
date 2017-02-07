@@ -30,17 +30,6 @@ require 'tty-prompt'
 require 'tty-spinner'
 require 'pastel'
 
-# I'm monkey patching multilist to not echo out the selections. I
-# should make a pull request to do this based on echo: false.
-class TTY::Prompt::MultiList
-  def render_header
-    instructions = @prompt.decorate(help, :bright_black)
-    if @first_render
-      instructions
-    end
-  end
-end
-
 def make_filename(tivo_item)
   name = tivo_item.title
   ep = tivo_item.episode_title
@@ -66,7 +55,7 @@ def video_menu(videos)
     ]
   end
   prompt = TTY::Prompt.new
-  prompt.multi_select("Choose files to download", per_page: 10) do |menu|
+  prompt.multi_select("Choose files to download", per_page: 10, echo: false) do |menu|
     menu_entries.each { |e| menu.choice *e }
   end
 end

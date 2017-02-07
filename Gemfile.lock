@@ -1,3 +1,14 @@
+GIT
+  remote: https://github.com/ktgeek/tty-prompt.git
+  revision: 8dc6943191f440bba7d86dcac5ce445a80c64530
+  ref: 8dc6943191f440bba7d86dcac5ce445a80c64530
+  specs:
+    tty-prompt (0.10.1)
+      necromancer (~> 0.3.0)
+      pastel (~> 0.7.0)
+      tty-cursor (~> 0.4.0)
+      wisper (~> 1.6.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -58,14 +69,9 @@ GEM
     sqlite3 (1.3.11)
     thread_safe (0.3.5)
     tty-color (0.4.2)
-    tty-cursor (0.3.0)
+    tty-cursor (0.4.0)
     tty-progressbar (0.10.1)
       tty-screen (~> 0.5.0)
-    tty-prompt (0.10.1)
-      necromancer (~> 0.3.0)
-      pastel (~> 0.7.0)
-      tty-cursor (~> 0.3.0)
-      wisper (~> 1.6.1)
     tty-screen (0.5.0)
     tty-spinner (0.4.1)
     tzinfo (1.2.2)
@@ -92,7 +98,7 @@ DEPENDENCIES
   rspec
   sqlite3 (~> 1.3)
   tty-progressbar
-  tty-prompt
+  tty-prompt!
   tty-screen
   tty-spinner
 
