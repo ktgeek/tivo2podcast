@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright 2010 Keith T. Garner. All rights reserved.
+# Copyright 2010,2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,7 +24,22 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
 require 'optparse'
 require 'TiVo'
 require 'TiVo-utils.rb'
-require 'ansi/progressbar'
+require 'tty-progressbar'
+require 'tty-screen'
+require 'tty-prompt'
+require 'tty-spinner'
+require 'pastel'
+
+# I'm monkey patching multilist to not echo out the selections. I
+# should make a pull request to do this based on echo: false.
+class TTY::Prompt::MultiList
+  def render_header
+    instructions = @prompt.decorate(help, :bright_black)
+    if @first_render
+      instructions
+    end
+  end
+end
 
 def make_filename(tivo_item)
   name = tivo_item.title
@@ -38,14 +53,50 @@ def make_filename(tivo_item)
   "#{name}.ts"
 end
 
+def video_menu(videos)
+  menu_entries = videos.map do |video|
+    [
+      "%3d | %-43.43s | %13.13s | %5s\n" % [
+        video.channel,
+        video.printable_title,
+        video.time_captured.strftime('%m/%d %I:%M%p'),
+        video.human_duration
+      ],
+      video
+    ]
+  end
+  prompt = TTY::Prompt.new
+  prompt.multi_select("Choose files to download", per_page: 10) do |menu|
+    menu_entries.each { |e| menu.choice *e }
+  end
+end
+
+def init_progress_bar(name, size)
+  tunc_size = TTY::Screen.width / 3 - 'Downloading '.length
+  display_name = name.gsub(/(.{#{tunc_size}}).+/, '\1...')
+
+  pastel = Pastel.new
+  TTY::ProgressBar.new("Downloading #{display_name} [:bar] :percent",
+                       total: size,
+                       complete: pastel.green("="),
+                       incomplete: pastel.red("="))
+end
+
+def perform_download(tivo, download_item, download_target, progress_bar = nil)
+  tivo.download_show(download_item) do |tivo_chunk|
+    download_target << tivo_chunk
+    progress_bar.advance(tivo_chunk.length) if progress_bar
+  end
+  progress_bar.finish
+end
+
 # Load the mak if we have a mak file, using the tivodecode filename for legacy rasons
 mak_file = "#{ENV['HOME']}/.tivodecode_mak"
 mak = File.read(mak_file).strip if File.exist?(mak_file)
 
-tivo_libre_jar = nil
 
 # Parse the options to get the rest (or override the above)
-tivo_name,tivo_addr = nil, nil
+tivo_name, tivo_addr, tivo_libre_jar = nil, nil, nil
 decode = true
 opts = OptionParser.new
 opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
@@ -66,7 +117,7 @@ opts.parse(ARGV)
 
 if tivo_addr.nil?
   tivo_addr = TiVo.locate_via_dnssd(tivo_name)
-  $stderr.puts "TiVo not found!" if tivo_addr.nil?
+  $stderr.puts "No TiVo found!" if tivo_addr.nil?
 end
 
 if (tivo_addr.nil? && tivo_name.nil?) || mak.nil?
@@ -76,41 +127,32 @@ end
 
 if decode && tivo_libre_jar.nil?
   puts "Must have tivo libre jar to decode"
-  exit (1)
+  exit(1)
 end
 
 tivo = TiVo::TiVo.new(tivo_addr, mak)
 
-downloads = TiVo::Utils::do_menu(tivo.get_listings)
+listings = nil
+spinner = TTY::Spinner.new('Retrieving TiVo videos :spinner')
+spinner.run('Done!') { listings = tivo.get_listings }
 
-downloads.each do |dl|
+downloads = video_menu(listings.videos)
+
+downloads.each_with_index do |dl, index|
   tivo = TiVo::TiVo.new(tivo_addr, mak)
   dl_name = make_filename(dl)
 
-  puts "Attemping to download " + dl.printable_title()
+  pbar = init_progress_bar(dl_name, dl.size)
   if decode
     IO.popen("java -jar #{tivo_libre_jar} -m #{mak} -o \"#{dl_name}\"", 'wb') do |td|
-      pbar = ANSI::ProgressBar.new(dl_name, dl.size)
-      tivo.download_show(dl) do |tc|
-        td << tc
-        pbar.inc(tc.length)
-      end
-      pbar.finish
-      puts
+      perform_download(tivo, dl, td, pbar)
     end
   else
-    File.open(dl_name, 'wb') do |file|
-      pbar = ANSI::ProgressBar.new(dl_name, dl.size)
-      tivo.download_show(dl) do |tc|
-        file << tc
-        pbar.inc(tc.length)
-      end
-      pbar.finish
-      puts
-    end
+    File.open(dl_name, 'wb') { |file| perform_download(dl, file, pbar) }
   end
-  sleep 60 if downloads.size > 1
+  sleep 30 if downloads.size > 1 && index < downloads.size - 1
 end
+
 
 # Local Variables:
 # mode: ruby

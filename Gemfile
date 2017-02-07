@@ -15,6 +15,11 @@ gem 'highline', '~>1.7'
 gem 'ansi', '~>1.5'
 gem 'rest-client', '~>1.8'
 gem 'facets', '~>3.0'
+gem 'tty-progressbar'
+gem 'pastel'
+gem 'tty-screen'
+gem 'tty-prompt'
+gem 'tty-spinner'
 
 group :development do
   gem 'byebug'
