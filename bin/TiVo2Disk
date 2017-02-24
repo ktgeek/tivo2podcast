@@ -23,7 +23,6 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
 
 require 'optparse'
 require 'TiVo'
-require 'TiVo-utils.rb'
 require 'tty-progressbar'
 require 'tty-screen'
 require 'tty-prompt'

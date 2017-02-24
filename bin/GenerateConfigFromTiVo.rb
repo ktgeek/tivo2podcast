@@ -21,7 +21,6 @@ $:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo
 require 'tivopodcast/database'
 require 'optparse'
 require 'TiVo'
-require 'TiVo-utils'
 require 'tivopodcast/config'
 require 'tty-prompt'
 
