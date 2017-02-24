@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright 2011-2014 Keith T. Garner. All rights reserved.
+# Copyright 2011-2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -16,18 +16,32 @@
 
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
-                                      'tivo'))
+$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
 
 require 'tivopodcast/database'
 require 'optparse'
 require 'TiVo'
 require 'TiVo-utils'
 require 'tivopodcast/config'
-require 'highline'
-require 'pp'
+require 'tty-prompt'
 
-URL_REGEXP = /http:\/\/([\w+?\.\w+])+([a-zA-Z0-9\~\!\@\#\$\%\^\&amp;\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?/i
+def video_menu(videos)
+  menu_entries = videos.map do |video|
+    [
+      "%3d | %-43.43s | %13.13s | %5s\n" % [
+        video.channel,
+        video.printable_title,
+        video.time_captured.strftime('%m/%d %I:%M%p'),
+        video.human_duration
+      ],
+      video
+    ]
+  end
+  prompt = TTY::Prompt.new
+  prompt.multi_select("Choose programs to use as templates", per_page: 10, echo: false) do |menu|
+    menu_entries.each { |e| menu.choice *e }
+  end
+end
 
 t2pconfig = Tivo2Podcast::AppConfig.instance
 
@@ -49,46 +63,26 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
-Tivo2Podcast::connect_database((ENV['TIVO2PODCASTDIR'].nil? ? ENV['HOME'] :
-                                ENV['TIVO2PODCASTDIR']) +
-                               File::SEPARATOR + '.tivo2podcast.db')
+Tivo2Podcast::connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
 
 tivo = t2pconfig.tivo_factory
 
-basis = TiVo::Utils::do_menu(tivo.get_listings)
+basis = video_menu(tivo.get_listings.videos)
 
-printf("\n\n")
-hl = HighLine.new
-required_response_proc = Proc.new { |answer| !(answer.nil? || answer.empty?) }
+prompt = TTY::Prompt.new
 basis.each do |show|
   puts "Creating a configuration for #{show.title}"
   sconfig = Tivo2Podcast::Config.new
-  sconfig.config_name = hl.ask('Config name:') do |q|
-    q.default = show.title.delete(' ')
-  end
-  sconfig.show_name = hl.ask('Show name:') do |q|
-    q.default = show.title
-  end
-  sconfig.ep_to_keep = hl.ask('Episodes to keep in the feed:', Integer) do |q|
-    q.default = 4
-  end
-  sconfig.encode_crop = hl.ask('Encode crop:')
-  sconfig.encode_audio_bitrate = hl.ask('Audio bitrate in K:', Integer) do |q|
-    q.default = 48
-  end
-  sconfig.encode_video_bitrate = hl.ask('Video bitrate in K:', Integer) do |q|
-    q.default = 768
-  end
-  sconfig.max_width = hl.ask('Max video width?', Integer) do |q|
-    q.default = 960
-  end
+  sconfig.config_name = prompt.ask('Config name:', default: show.title.delete(' '))
+  sconfig.show_name = prompt.ask('Show name:', default: show.title)
+  sconfig.ep_to_keep = prompt.ask('Episodes to keep in the feed:', convert: :int, default: 4)
+  sconfig.encode_crop = prompt.ask('Encode crop:')
+  sconfig.encode_audio_bitrate = prompt.ask('Audio bitrate in K:', convert: :int, default: 128)
+  sconfig.encode_video_bitrate = prompt.ask('Video bitrate in K:', convert: :int, default: 1546)
+  sconfig.max_width = prompt.ask('Max video width:', convert: :int, default: 1280)
 
-  # I want to let this be null, but you can't do that with an Integer.
-  # We'll revisit that later
-#  sconfig['max_height'] = hl.ask('Max video height?', Integer)
+  sconfig.encode_decomb = prompt.yes?('Decomb/deinterlace? ') ? 1 : 0
 
-  sconfig.encode_decomb = hl.agree('Decomb/deinterlace? (yes/no)') ? 1 : 0
-
-  pp sconfig
   sconfig.save
-end  
+  printf("Saved!\n\n")
+end
