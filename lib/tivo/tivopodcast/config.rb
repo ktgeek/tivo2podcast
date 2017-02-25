@@ -16,6 +16,7 @@
 require 'forwardable'
 require 'singleton'
 require 'yaml'
+require 'tty-spinner'
 
 module Tivo2Podcast
   # This class makes up the configuation for the TiVo2Podcast engine
@@ -75,17 +76,20 @@ module Tivo2Podcast
     # defined in the config, try to locate the tivo vi dnssd
     def tivo_addr
       if @config[:tivo_addr].nil?
-        puts "Attemping to locate tivo #{@config['tivo_name'] unless @config['tivo_name'].nil?}..." if @config['verbose']
-        tmp = TiVo.locate_via_dnssd(@config[:tivo_name])
-        if tmp.nil?
-          puts "TiVo not found!" if @config[:verbose]
-          # Should be changed to an exception to be throw
-          printf($stderr, "TiVo hostname or IP required to run the script\n")
-          exit(1)
+        p = Proc.new { @config[:tivo_addr] = TiVo.locate_via_dnssd(@config[:tivo_name]) }
+        if verbose?
+          spinner = TTY::Spinner.new(":spinner Locating tivo #{@config[:tivo_name] unless @config[:tivo_name].nil?}... ", format: :dots)
+          spinner.run(&p)
         else
-          puts "TiVo found at #{tmp}" if @config['verbose']
-          @config[:tivo_addr] = tmp
+          p.call
         end
+
+        if @config[:tivo_addr].nil?
+          printf($stderr, "No TiVo found! TiVo hostname or IP required to run the script\n")
+          exit(1)
+        end
+
+        puts "TiVo found at #{@config[:tivo_addr]}" if verbose?
       end
 
       result = @config[:tivo_addr]
@@ -118,6 +122,10 @@ module Tivo2Podcast
 
     def verbose=(value)
       @config[:verbose] = value
+    end
+
+    def verbose?
+      @config[:verbose]
     end
 
     def cleanup=(value)
