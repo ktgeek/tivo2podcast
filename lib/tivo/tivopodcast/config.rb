@@ -17,6 +17,7 @@ require 'forwardable'
 require 'singleton'
 require 'yaml'
 require 'tty-spinner'
+require 'pastel'
 
 module Tivo2Podcast
   # This class makes up the configuation for the TiVo2Podcast engine
@@ -77,12 +78,7 @@ module Tivo2Podcast
     def tivo_addr
       if @config[:tivo_addr].nil?
         p = Proc.new { @config[:tivo_addr] = TiVo.locate_via_dnssd(@config[:tivo_name]) }
-        if verbose?
-          spinner = TTY::Spinner.new(":spinner Locating tivo #{@config[:tivo_name] unless @config[:tivo_name].nil?}... ", format: :dots)
-          spinner.run(&p)
-        else
-          p.call
-        end
+        verbose? ? locating_tivo_spinner.run(&p) : p.call
 
         if @config[:tivo_addr].nil?
           printf($stderr, "No TiVo found! TiVo hostname or IP required to run the script\n")
@@ -156,6 +152,13 @@ module Tivo2Podcast
     end
 
     def_delegator :@config, :[]
+
+    private
+    def locating_tivo_spinner
+      pastel = Pastel.new
+      spin_text = "#{pastel.green(':spinner')} Locating tivo #{@config[:tivo_name] unless @config[:tivo_name].nil?}... "
+      TTY::Spinner.new(spin_text, format: :dots)
+    end
   end
 end
 

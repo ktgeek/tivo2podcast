@@ -14,7 +14,6 @@
 #       with the distribution.
 #
 require 'thread'
-require 'ansi/progressbar'
 require 'tivopodcast/notifier'
 require 'tivopodcast/transcoder'
 require 'tivopodcast/database'

@@ -1,10 +1,10 @@
 GIT
-  remote: https://github.com/ktgeek/tty-prompt.git
-  revision: 8dc6943191f440bba7d86dcac5ce445a80c64530
-  ref: 8dc6943191f440bba7d86dcac5ce445a80c64530
+  remote: https://github.com/piotrmurach/tty-prompt.git
+  revision: 0aee562676be7477519a21a1eb05cc5638c985e8
+  ref: 0aee562676be7477519a21a1eb05cc5638c985e8
   specs:
     tty-prompt (0.10.1)
-      necromancer (~> 0.3.0)
+      necromancer (~> 0.4.0)
       pastel (~> 0.7.0)
       tty-cursor (~> 0.4.0)
       wisper (~> 1.6.1)
@@ -36,7 +36,6 @@ GEM
     equatable (0.5.0)
     facets (3.0.0)
     ffi (1.9.10)
-    highline (1.7.8)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     httpclient (2.7.1)
@@ -44,7 +43,7 @@ GEM
     json (1.8.3)
     mime-types (2.99.1)
     minitest (5.8.4)
-    necromancer (0.3.0)
+    necromancer (0.4.0)
     netrc (0.11.0)
     pastel (0.7.1)
       equatable (~> 0.5.0)
@@ -91,7 +90,6 @@ DEPENDENCIES
   dnssd (~> 3.0)
   facets (~> 3.0)
   ffi (~> 1.9)
-  highline (~> 1.7)
   httpclient (~> 2.6)
   pastel
   rest-client (~> 1.8)
