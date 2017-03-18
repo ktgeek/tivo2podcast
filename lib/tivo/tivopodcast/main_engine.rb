@@ -14,7 +14,6 @@
 #       with the distribution.
 #
 require 'thread'
-require 'ansi/progressbar'
 require 'tivopodcast/notifier'
 require 'tivopodcast/transcoder'
 require 'tivopodcast/database'
@@ -43,7 +42,7 @@ module Tivo2Podcast
       name = "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
       name << "-#{show.episode_title}" unless show.episode_title.nil?
       name << "-#{show.episode_number}" unless show.episode_number.nil?
-      name.gsub(/[:\?;]/, '_')
+      name.gsub(/[:\?\/;]/, '_')
     end
 
     def configs

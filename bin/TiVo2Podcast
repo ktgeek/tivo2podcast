@@ -73,6 +73,8 @@ when t2pconfig.regenerate_rss
 when t2pconfig.console
   require 'tivopodcast'
   require 'tivopodcast/console'
+  require 'pp'
+  include Tivo2Podcast
   IRB.start_session(binding)
 else
   require 'tivopodcast/main_engine'

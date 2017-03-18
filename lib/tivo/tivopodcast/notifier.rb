@@ -47,14 +47,12 @@ module Tivo2Podcast
   # shutdown, but will do nothing.  Also handles registration of
   # notifiers
   class Notifier
-    @@registered_notifiers = []
-
     def self.inherited(subclass)
-      @@registered_notifiers << subclass
+      self.registered_notifiers << subclass
     end
 
     def self.registered_notifiers
-      @@registered_notifiers
+      @registered_notifiers ||= []
     end
 
     def notify(_message)

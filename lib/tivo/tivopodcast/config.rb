@@ -16,6 +16,8 @@
 require 'forwardable'
 require 'singleton'
 require 'yaml'
+require 'tty-spinner'
+require 'pastel'
 
 module Tivo2Podcast
   # This class makes up the configuation for the TiVo2Podcast engine
@@ -75,17 +77,15 @@ module Tivo2Podcast
     # defined in the config, try to locate the tivo vi dnssd
     def tivo_addr
       if @config[:tivo_addr].nil?
-        puts "Attemping to locate tivo #{@config['tivo_name'] unless @config['tivo_name'].nil?}..." if @config['verbose']
-        tmp = TiVo.locate_via_dnssd(@config[:tivo_name])
-        if tmp.nil?
-          puts "TiVo not found!" if @config[:verbose]
-          # Should be changed to an exception to be throw
-          printf($stderr, "TiVo hostname or IP required to run the script\n")
+        p = Proc.new { @config[:tivo_addr] = TiVo.locate_via_dnssd(@config[:tivo_name]) }
+        verbose? ? locating_tivo_spinner.run(&p) : p.call
+
+        if @config[:tivo_addr].nil?
+          printf($stderr, "No TiVo found! TiVo hostname or IP required to run the script\n")
           exit(1)
-        else
-          puts "TiVo found at #{tmp}" if @config['verbose']
-          @config[:tivo_addr] = tmp
         end
+
+        puts "TiVo found at #{@config[:tivo_addr]}" if verbose?
       end
 
       result = @config[:tivo_addr]
@@ -120,6 +120,10 @@ module Tivo2Podcast
       @config[:verbose] = value
     end
 
+    def verbose?
+      @config[:verbose]
+    end
+
     def cleanup=(value)
       @config[:cleanup] = value
     end
@@ -148,6 +152,13 @@ module Tivo2Podcast
     end
 
     def_delegator :@config, :[]
+
+    private
+    def locating_tivo_spinner
+      pastel = Pastel.new
+      spin_text = "#{pastel.green(':spinner')} Locating tivo #{@config[:tivo_name] unless @config[:tivo_name].nil?}... "
+      TTY::Spinner.new(spin_text, format: :dots)
+    end
   end
 end
 

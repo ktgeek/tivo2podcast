@@ -14,11 +14,55 @@
 #
 require 'rexml/document'
 require 'httpclient'
+require 'timeout'
+require 'dnssd'
+require 'socket'
 
 module TiVo
   FOLDER = 'x-tivo-container/folder'
   VIDEO = 'video/x-tivo-raw-tts'
-  @@tivos = nil
+
+  # Will return the first TiVo found via
+  # DNSSD/ZeroConf/Bounjour/whatever or nil unless a name for the TiVo is
+  # given then it will return the TiVo that matches that name or nil.
+  #
+  # This assumes the host system has everything configure properly to
+  # work for DNSSD, it also assumes your TiVos are assigned different
+  # names.
+  def self.locate_via_dnssd(name = nil, sleep_time = 5)
+    tivos = tivos_via_dnssd(sleep_time)
+    return nil unless tivos
+    return tivos.values.first unless name
+    tivos[name]
+  end
+
+  class << self
+    private
+    def dnssd_search(sleep_time)
+      replies = []
+      begin
+        Timeout::timeout(sleep_time) do
+          DNSSD.browse! '_tivo-videos._tcp' do |reply|
+            DNSSD.resolve(reply) { |r| replies << r }
+          end
+        end
+      rescue Timeout::Error
+      end
+      replies
+    end
+  end
+
+  # Returns a Hash that maps tivo name to tivo ip
+  def self.tivos_via_dnssd(sleep_time = 5, reaquire = false)
+    @tivos = nil if reaquire
+    @tivos ||= begin
+      dnssd_finds = dnssd_search(sleep_time)
+      return nil if dnssd_finds.empty?
+
+      tivos = dnssd_finds.map { |x| [x.name, IPSocket.getaddress(x.target)] }
+      Hash[tivos]
+    end
+  end
 
   class TiVoListings
     attr_accessor :folders, :videos
@@ -37,40 +81,6 @@ module TiVo
       @folders.concat(tl.folders)
       @videos.concat(tl.videos)
     end
-  end
-
-  # Will return the first TiVo found via
-  # DNSSD/ZeroConf/Bounjour/whatever or nil unless a name for the TiVo is
-  # given then it will return the TiVo that matches that name or nil.
-  #
-  # This assumes the host system has everything configure properly to
-  # work for DNSSD, it also assumes your TiVos are assigned different
-  # names.
-  def self.locate_via_dnssd(name = nil, sleep_time = 5)
-    tivos = tivos_via_dnssd(sleep_time)
-    tivos.nil? ? nil : tivos[name]
-  end
-
-  # Returns a Hash that maps tivo name to tivo ip
-  def self.tivos_via_dnssd(sleep_time = 5, reaquire = false)
-    if @@tivos.nil? || reaquire
-      # We'll only load these classes if we're actually called.
-      require 'socket'
-      require 'dnssd'
-
-      tivos = []
-      service = DNSSD.browse '_tivo-videos._tcp' do |b|
-        DNSSD.resolve(b) { |r| tivos << r }
-      end
-      sleep(sleep_time)
-      service.stop
-
-      return nil if tivos.size < 1
-
-      tivos = tivos.map { |x| [x.name, IPSocket.getaddress(x.target)] }
-      @@tivos = Hash[tivos]
-    end
-    @@tivos
   end
 
   class TiVoItemFactory
@@ -112,7 +122,7 @@ module TiVo
 
     def get_detail_item(name)
       name = @details.elements[name]
-      name.text unless name.nil?
+      name.text if name
     end
 
     def is_folder?
@@ -132,7 +142,7 @@ module TiVo
     def printable_title
       result = title
       ep = episode_title
-      result = "#{result}: #{ep}" unless ep.nil?
+      result = "#{result}: #{ep}" if ep
       result
     end
 
@@ -150,7 +160,7 @@ module TiVo
 
     def description
       desc = get_detail_item('Description')
-      desc.sub!(' Copyright Tribune Media Services, Inc.', '') if desc
+      desc.sub!(/ (?:\* )?Copyright (Tribune Media Services|Rovi), Inc./, '') if desc
       desc
     end
 
@@ -201,10 +211,9 @@ module TiVo
       # Calculate the left over unsloppy seconds
       seconds = seconds % 60
 
-      result = StringIO.new
-      result.printf("%d:", hours) if hours > 0
-      result.printf("%02d:%02d", minutes, seconds)
-      result.string
+      result = ""
+      result << "%d:" % hours if hours > 0
+      result << "%02d:%02d" % [minutes, seconds]
     end
 
     def duration
@@ -214,7 +223,7 @@ module TiVo
     def copy_protected?
       result = false
       cp = get_detail_item('CopyProtected')
-      result = cp.downcase == "yes" unless cp.nil?
+      result = cp.downcase == "yes" if cp
       result
     end
   end
@@ -235,10 +244,10 @@ module TiVo
     BATCH_SIZE = 50
 
     def get_listings(recurse = true, get_xml = false)
+      # We can get some of the URL stuff from the dnssd stuff, we
+      # should use that if its passed in.
       query_url = "#{@base_url}?Command=QueryContainer&Container=/NowPlaying&ItemCount=#{BATCH_SIZE}"
       query_url << '&Recurse=Yes' if recurse
-
-      listings = nil
 
       if get_xml
         listings = get_listings_xml(query_url)
@@ -289,21 +298,21 @@ module TiVo
       videos.sort_by(&:time_captured)
     end
 
-    # Downloads the show given the item passed in.  If a block is given,
-    # it uses the block instead of the filename
+    # Downloads the show given the item passed in. If a block is
+    # given, it uses the block instead of the filename
     def download_show(tivo_item, filename: nil, get_ts: true, &block)
-      if block.nil? && filename.nil?
+      unless block || filename
         raise ArgumentError, 'Must have either a filename or a block', caller
       end
       file = File.open(filename, 'wb') unless filename.nil?
       url = if get_ts
-              "#{tivo_item.url}&Format=video/x-tivo-mpeg-ts"
-            else
-              tivo_item.url
-            end
+        "#{tivo_item.url}&Format=video/x-tivo-mpeg-ts"
+      else
+        tivo_item.url
+      end
       begin
         @client.set_auth(url, USER, @mak)
-        @client.get_content(url, nil, 'Connection' => 'close') do |c|
+        @client.get_content(url, nil, Connection: 'close') do |c|
           if block
             block.call(c)
           else
