@@ -244,6 +244,8 @@ module TiVo
     BATCH_SIZE = 50
 
     def get_listings(recurse = true, get_xml = false)
+      # We can get some of the URL stuff from the dnssd stuff, we
+      # should use that if its passed in.
       query_url = "#{@base_url}?Command=QueryContainer&Container=/NowPlaying&ItemCount=#{BATCH_SIZE}"
       query_url << '&Recurse=Yes' if recurse
 

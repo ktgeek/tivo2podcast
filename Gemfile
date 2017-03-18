@@ -19,6 +19,7 @@ gem 'tty-screen'
 gem 'tty-prompt', git: 'https://github.com/piotrmurach/tty-prompt.git', ref: '0aee562676be7477519a21a1eb05cc5638c985e8'
 gem 'tty-spinner'
 gem 'tty-progressbar'
+gem 'tty-table'
 
 group :development do
   gem 'byebug'
