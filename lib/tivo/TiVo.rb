@@ -18,6 +18,13 @@ require 'timeout'
 require 'dnssd'
 require 'socket'
 
+# Monkey patch httpclient to not show the dot domain warning at all
+class HTTPClient::WebAgent::Cookie
+  def domain
+    self.original_domain
+  end
+end
+
 module TiVo
   FOLDER = 'x-tivo-container/folder'
   VIDEO = 'video/x-tivo-raw-tts'
