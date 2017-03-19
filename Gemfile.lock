@@ -31,7 +31,6 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
-    ansi (1.5.0)
     arel (6.0.4)
     builder (3.2.3)
     byebug (9.0.6)
@@ -101,12 +100,11 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (~> 4.2)
-  ansi (~> 1.5)
   byebug
   dnssd!
   facets (~> 3.0)
   ffi (~> 1.9)
-  httpclient (~> 2.6)
+  httpclient (~> 2.8)
   pastel
   rest-client (~> 1.8)
   rspec
