@@ -59,7 +59,7 @@ module Tivo2Podcast
       # Only work on the X latest shows.  That way if there are 10
       # on the tivo, but we only want to keep 4, we don't encode 6
       # of them just to throw them out later in the cleanup phase.
-      shows = shows.reverse[0, config.ep_to_keep].reverse if shows.size > config.ep_to_keep
+      shows = shows.reverse[0, config.episodes_to_keep].reverse if shows.size > config.episodes_to_keep
 
       shows
     end

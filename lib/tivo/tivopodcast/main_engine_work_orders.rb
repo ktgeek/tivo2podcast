@@ -54,8 +54,7 @@ module Tivo2Podcast
 
         File.delete(@download) if File.exist?(@download)
 
-        show = Tivo2Podcast::Show.new_from_config_show_filename(@config, @show, @transcode)
-        show.save!
+        Tivo2Podcast::Show.create_from_config_show_filename(@config, @show, @transcode)
         notifier.notify("Finished transcode of #{@basename}")
       end
     end
@@ -67,12 +66,12 @@ module Tivo2Podcast
       end
 
       def do_work
-        shows_to_clean = Tivo2Podcast::Show.on_disk_for_config(@config).order(s_ep_timecap: :desc).
-          offset(@config.ep_to_keep)
+        shows_to_clean = Tivo2Podcast::Show.on_disk.for_config(@config).
+                           order(time_captured: :desc).offset(@config.episodes_to_keep)
 
         shows_to_clean.each do |show|
           # If the file doesn't exist, don't try to delete, but
-          # still setting the on_disk to false is appropriate.
+          # setting on_disk to false is appropriate.
           File.delete(show.filename) if File.exist?(show.filename)
           show.on_disk = false
           show.save!
@@ -82,8 +81,7 @@ module Tivo2Podcast
         # something more sane.
         Tivo2Podcast::RssGenerator.generate_from_config(@config)
         # Put notification here
-        Tivo2Podcast::NotifierEngine.instance.notify(
-          "Finished processing #{@config.config_name}")
+        Tivo2Podcast::NotifierEngine.notify("Finished processing #{@config.config_name}")
       end
     end
   end

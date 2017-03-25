@@ -21,53 +21,15 @@ module Tivo2Podcast
   # transcoding from source mpg to iPhone friendly m4v, as well as
   # calling out to AtomicParsley to add the video metadata to the file.
   class Transcoder
-    attr_writer :crop, :audio_bitrate, :video_bitrate, :max_width, :max_height
-
-    # config is assumed to be a HashTable with the configuration information
-    # as sepecified in Database.init_database (I should probably turn
-    # configuration into an object.)
-    #
     # show is assumed to be an instance of TiVo::TiVoVideo which holds
     # the metadata of the show to be transcoded.
-    def initialize(show_config, show)
-      @show_config = show_config
+    def initialize(config, show)
+      @config = config
       @show = show
-      @crop = nil
-      @audio_bitrate = nil
-      @video_bitrate = nil
-      @max_width = nil
-      @max_height = nil
     end
 
-    def crop
-      @crop.nil? ? @show_config.encode_crop : @crop
-    end
-
-    def audio_bitrate
-      ab = @audio_bitrate.nil? ? @show_config.encode_audio_bitrate : @audio_bitrate
-      ab = 48 if ab.nil?
-      return ab
-    end
-
-    def video_bitrate
-      vb = @video_bitrate.nil? ? @show_config.encode_video_bitrate : @video_bitrate
-      vb = 768 if vb.nil?
-      return vb
-    end
-
-    def max_width
-      mw = @max_width.nil? ? @show_config.max_width : @max_width
-      mw = 480 if mw.nil?
-      return mw
-    end
-
-    def max_height
-      @max_height.nil? ? @show_config.max_height : @max_height
-    end
-
-    def decomb?
-      decomb = @decomb.nil? ? @show_config.encode_decomb : @decomb
-      (decomb.nil? || decomb == 0) ? false : true
+    def preset
+      @config.handbrake_config || 'iPad'
     end
 
     def add_chapter_info(m4vfilename, chapfilename, total_length)
@@ -105,14 +67,7 @@ module Tivo2Podcast
     # to
     def transcode_show(infile, outfile)
       t2pconfig = Tivo2Podcast::AppConfig.instance
-      command = "#{t2pconfig.handbrake} -v0 -e x264 -b#{video_bitrate.to_s} -2 -T"
-      command << ' -5 default' if decomb?
-      command << " --crop #{crop}" unless crop.nil?
-      command << " -a 1 -E faac -B#{audio_bitrate.to_s} -6 stereo -R 48"
-      command << " -D 0.0 -f mp4 -X #{max_width}"
-      command << " -Y #{max_height}" unless max_height.nil?
-      command << ' -x cabac=0:ref=2:me=umh:bframes=8:subme=6:8x8dct=0:trellis=2:keyint=24:vbv-bufsize=31250:ref=5:b-adapt=2:rc-lookahead=50'
-      command << " -i \"#{infile}\" -o \"#{outfile}\""
+      command = %/#{t2pconfig.handbrake} -v0 -Z #{preset} -i "#{infile}" -o "#{outfile}"/
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
@@ -133,14 +88,15 @@ module Tivo2Podcast
       showtitle = "#{@show.title}: #{@show.episode_title(use_date_if_nil: true)}"
       showtitle << " (#{@show.episode_number})" unless @show.episode_number.nil?
 
-      command = "#{t2pconfig.atomicparsley} \"#{outfile}\" -W " <<
-        "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " <<
-        "--TVEpisode \"#{@show.episode_title(use_date_if_nil: true)}\" --artist \"#{@show.title}\""
+      command = %/#{t2pconfig.atomicparsley} "#{outfile}" -W / \
+                  %/--title "#{showtitle}" --TVShowName "#{@show.title}" / \
+                  %/--TVEpisode "#{@show.episode_title(use_date_if_nil: true)}" / \
+                  %/--artist "#{@show.title}"/
       command << " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
-      command << " --TVNetwork \"#{@show.station}\"" unless @show.station.nil?
-      unless @show.description.nil?
+      command << %/ --TVNetwork "#{@show.station}"/ unless @show.station.nil?
+      if @show.description
         desc = @show.description.gsub(/"/, '\"')
-        command << " --description \"#{@desc}\""
+        command << %/ --description "#{@desc}"/
       end
       command << ' >/dev/null 2>&1' unless t2pconfig.verbose
       returncode = system(command)
@@ -155,20 +111,20 @@ module Tivo2Podcast
     def skip_commercials(basename, download, transcode)
       t2pconfig = Tivo2Podcast::AppConfig.instance
       # I need to wrap this in a "if you want to do this..."
-      command = "#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q \"#{download}\""
+      command = %/#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q "#{download}"/
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
       # Comskip doesn't seem to do the 0 return code (or is that wine?)
       # For now we'll just check to see if there is a > 0 length .chp file
-#      if !returncode
-#        puts "something isn't working right, bailing"
-#        puts "Command that failed: " + command
-#        # TODO: Change this to an exception
-#        exit(1)
-#      end
+      # if !returncode
+      #   puts "something isn't working right, bailing"
+      #   puts "Command that failed: " + command
+      #   # TODO: Change this to an exception
+      #   exit(1)
+      # end
 
-      chpfile = basename + ".chp"
+      chpfile = "#{basename}.chp"
       duration = @show.duration / 1000
       add_chapter_info(transcode, chpfile, duration)
 
@@ -177,7 +133,6 @@ module Tivo2Podcast
     end
   end
 end
-
 
 # Local Variables:
 # mode: ruby

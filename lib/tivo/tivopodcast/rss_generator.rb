@@ -52,7 +52,7 @@ module Tivo2Podcast
       RSS::Maker.make("2.0") do |maker|
         configure_channel(maker.channel)
         maker.items.do_sort = true
-        shows = Tivo2Podcast::Show.on_disk_for_config(@rss_file.configs).order(:s_ep_timecap)
+        shows = Tivo2Podcast::Show.on_disk.for_config(@rss_file.configs).order(:time_captured)
         shows.each { |s| add_item(maker.items, s) }
       end
     end
@@ -70,7 +70,7 @@ module Tivo2Podcast
     end
 
     def item_title(size, show)
-      size > 1 ? "#{show.s_name}: #{show.s_ep_title}" : show.s_ep_title
+      size > 1 ? "#{show.name}: #{show.episode_title}" : show.episode_title
     end
 
     def add_item(items, show)
@@ -83,13 +83,13 @@ module Tivo2Podcast
 
         item.guid.content = item.link
         item.guid.isPermaLink = true
-        item.pubDate = Time.at(show.s_ep_timecap)
-        item.description = show.s_ep_description
-        item.itunes_summary = show.s_ep_description
+        item.pubDate = Time.at(show.time_captured)
+        item.description = show.description
+        item.itunes_summary = show.description
         item.itunes_explicit = "No"
 
         item.itunes_duration =
-          TiVo::TiVoVideo.human_duration(show.s_ep_length)
+          TiVo::TiVoVideo.human_duration(show.length)
 
         item.enclosure.url = item.link
         item.enclosure.length = File.size(show.filename)

@@ -74,14 +74,10 @@ basis.each do |show|
   sconfig = Tivo2Podcast::Config.new
   sconfig.config_name = prompt.ask('Config name:', default: show.title.delete(' '))
   sconfig.show_name = prompt.ask('Show name:', default: show.title)
-  sconfig.ep_to_keep = prompt.ask('Episodes to keep in the feed:', convert: :int, default: 4)
-  sconfig.encode_crop = prompt.ask('Encode crop:')
-  sconfig.encode_audio_bitrate = prompt.ask('Audio bitrate in K:', convert: :int, default: 128)
-  sconfig.encode_video_bitrate = prompt.ask('Video bitrate in K:', convert: :int, default: 1546)
-  sconfig.max_width = prompt.ask('Max video width:', convert: :int, default: 1280)
+  sconfig.episodes_to_keep =
+    prompt.ask('Episodes to keep in the feed:', convert: :int, default: 4)
+  sconfig.handbrake_config = prompt.ask('HandBrake config:')
+  sconfig.tivo = prompt.ask('TiVo name:')
 
-  sconfig.encode_decomb = prompt.yes?('Decomb/deinterlace? ') ? 1 : 0
-
-  sconfig.save
-  printf("Saved!\n\n")
+  printf("Saved!\n\n") if sconfig.save
 end

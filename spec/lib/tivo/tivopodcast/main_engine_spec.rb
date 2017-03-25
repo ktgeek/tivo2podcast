@@ -19,14 +19,14 @@ describe Tivo2Podcast::MainEngine do
     end
 
     it "returns the last X shows for a given number" do
-      allow(show_config).to receive(:ep_to_keep) { 3 }
+      allow(show_config).to receive(:episodes_to_keep) { 3 }
       shows = main_engine.get_shows_to_process(tivo, show_config)
 
       expect(shows).to eql ['Show 3', 'Show 4', 'Show 5']
     end
 
     it "returns the all the shows when X > totals shows" do
-      allow(show_config).to receive(:ep_to_keep) { 7 }
+      allow(show_config).to receive(:episodes_to_keep) { 7 }
       shows = main_engine.get_shows_to_process(tivo, show_config)
 
       expect(shows).to eql ['Show 1', 'Show 2', 'Show 3', 'Show 4', 'Show 5']

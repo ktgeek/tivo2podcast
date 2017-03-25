@@ -4,8 +4,8 @@ describe Tivo2Podcast::RssGenerator do
   describe "#item_title" do
     let(:show) do
       show = double("TiVo2Podcast::Db::Show")
-      allow(show).to receive(:s_name) { "Show" }
-      allow(show).to receive(:s_ep_title) { "Title" }
+      allow(show).to receive(:name) { "Show" }
+      allow(show).to receive(:episode_title) { "Title" }
       show
     end
     let(:builder) { Tivo2Podcast::RssGenerator.new(nil) }
