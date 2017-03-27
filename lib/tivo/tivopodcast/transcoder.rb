@@ -67,7 +67,8 @@ module Tivo2Podcast
     # to
     def transcode_show(infile, outfile)
       t2pconfig = Tivo2Podcast::AppConfig.instance
-      command = %/#{t2pconfig.handbrake} -v0 -Z #{preset} -i "#{infile}" -o "#{outfile}"/
+      command = %/#{t2pconfig.handbrake} -v0 --preset-import-gui -Z "#{preset}" / \
+                  %/-i "#{infile}" -o "#{outfile}"/
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
