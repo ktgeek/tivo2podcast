@@ -81,7 +81,7 @@ module Tivo2Podcast
         # something more sane.
         Tivo2Podcast::RssGenerator.generate_from_config(@config)
         # Put notification here
-        Tivo2Podcast::NotifierEngine.notify("Finished processing #{@config.config_name}")
+        Tivo2Podcast::NotifierEngine.notify("Finished processing #{@config.name}")
       end
     end
   end

@@ -12,8 +12,8 @@ module Tivo2Podcast
     CONFIG_FORMAT = "%-20.16s%-50.50s\n"
     def configs
       table = TTY::Table.new(header: HEADERS) do |t|
-        Tivo2Podcast::Config.select(:id, :config_name, :show_name).find_each do |config|
-          t << [config.id, config.config_name, config.show_name]
+        Tivo2Podcast::Config.select(:id, :name, :show_name).find_each do |config|
+          t << [config.id, config.name, config.show_name]
         end
       end
 

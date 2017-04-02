@@ -72,7 +72,7 @@ prompt = TTY::Prompt.new
 basis.each do |show|
   puts "Creating a configuration for #{show.title}"
   sconfig = Tivo2Podcast::Config.new
-  sconfig.config_name = prompt.ask('Config name:', default: show.title.delete(' '))
+  sconfig.name = prompt.ask('Config name:', default: show.title.delete(' '))
   sconfig.show_name = prompt.ask('Show name:', default: show.title)
   sconfig.episodes_to_keep =
     prompt.ask('Episodes to keep in the feed:', convert: :int, default: 4)
