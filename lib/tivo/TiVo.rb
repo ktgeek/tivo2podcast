@@ -19,7 +19,7 @@ require 'dnssd'
 require 'socket'
 
 # Monkey patch httpclient to not show the dot domain warning at all
-class HTTPClient::WebAgent::Cookie
+class WebAgent::Cookie
   def domain
     self.original_domain
   end
