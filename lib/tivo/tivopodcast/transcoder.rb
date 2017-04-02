@@ -67,8 +67,8 @@ module Tivo2Podcast
     # to
     def transcode_show(infile, outfile)
       t2pconfig = Tivo2Podcast::AppConfig.instance
-      command = %/#{t2pconfig.handbrake} -v0 --preset-import-gui -Z "#{preset}" / \
-                  %/-i "#{infile}" -o "#{outfile}"/
+      command = "#{t2pconfig.handbrake} -v0 --preset-import-gui -Z \"#{preset}\" " \
+                "-i \"#{infile}\" -o \"#{outfile}\""
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
@@ -89,10 +89,10 @@ module Tivo2Podcast
       showtitle = "#{@show.title}: #{@show.episode_title(use_date_if_nil: true)}"
       showtitle << " (#{@show.episode_number})" unless @show.episode_number.nil?
 
-      command = %/#{t2pconfig.atomicparsley} "#{outfile}" -W / \
-                  %/--title "#{showtitle}" --TVShowName "#{@show.title}" / \
-                  %/--TVEpisode "#{@show.episode_title(use_date_if_nil: true)}" / \
-                  %/--artist "#{@show.title}"/
+      command = "#{t2pconfig.atomicparsley} \"#{outfile}\" -W " \
+                "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " \
+                "--TVEpisode \"#{@show.episode_title(use_date_if_nil: true)}\" " \
+                "--artist \"#{@show.title}\""
       command << " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
       command << %/ --TVNetwork "#{@show.station}"/ unless @show.station.nil?
       if @show.description
