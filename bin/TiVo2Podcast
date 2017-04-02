@@ -38,15 +38,12 @@ opts.on('-R', '--regenerate_rss', 'Regenerate all the RSS files') do
 end
 opts.on('-m MAK', '--mak MAK',
         'The TiVo\'s media access key') { |k| t2pconfig.mak = k }
-opts.on('-t ADDR', '--tivo_addr ADDR',
-        'The hostname or IP address of the tivo to get the data from') do |t|
-  t2pconfig.tivo_addr = t
+opts.on('-t ADDR', '--tivo_address ADDR',
+        'The hostname or IP address of the tivo to get the data from. ' \
+        'Overrides show config settings') do |t|
+  t2pconfig.tivo_address = t
 end
-opts.on('-n NAME', '--tivo_name NAME',
-        'The name assigned to the tivo via the my.tivo service') do |n|
-  t2pconfig.tivo_name = n
-end
-opts.on('--console', 'Go into a console mode') { t2pconfig.console = true }
+opts.on('--console', 'Go into console mode') { t2pconfig.console = true }
 opts.on('--list-configs',
         'List config names and their show titles and exit') { t2pconfig.list_configs = true }
 opts.on('-v', '--verbose') { t2pconfig.verbose = true }

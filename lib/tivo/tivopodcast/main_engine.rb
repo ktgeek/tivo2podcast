@@ -25,6 +25,7 @@ module Tivo2Podcast
   class MainEngine
     def initialize(t2pconfig = nil)
       @t2pconfig = t2pconfig || Tivo2Podcast::AppConfig.instance
+      @tivos_by_name = {}
     end
 
     def create_work_thread(queue)
@@ -60,8 +61,15 @@ module Tivo2Podcast
       # on the tivo, but we only want to keep 4, we don't encode 6
       # of them just to throw them out later in the cleanup phase.
       shows = shows.reverse[0, config.episodes_to_keep].reverse if shows.size > config.episodes_to_keep
-
       shows
+    end
+
+    def tivo_for_name(name)
+      return @t2pconfig.tivo_factory if @t2pconfig.tivo_address || name.nil?
+      @tivos_by_name[name] ||= begin
+        tivo_address = TiVo.locate_via_dnssd(name)
+        TiVo.new(tivo_address, @t2pconfig.mak)
+      end
     end
 
     # This method is doing WAY WAY WAY too much
@@ -69,9 +77,8 @@ module Tivo2Podcast
       work_queue = Queue.new
       work_thread = create_work_thread(work_queue)
 
-      tivo = @t2pconfig.tivo_factory
-
       configs.each do |config|
+        tivo = tivo_for_name(config.tivo)
         shows = get_shows_to_process(tivo, config)
 
         # So starts the giant loop that processes the shows...
@@ -87,7 +94,7 @@ module Tivo2Podcast
               # If the file exists, we'll assume the download went okay
               # Shame on us for not checking if it isn't
               unless File.exist?(download)
-                downloader = ShowDownloader.new(@t2pconfig)
+                downloader = ShowDownloader.new(@t2pconfig, tivo)
                 downloader.download_show(s, download)
               end
 

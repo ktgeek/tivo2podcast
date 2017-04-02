@@ -36,8 +36,7 @@ module Tivo2Podcast
     # base config from.
     def initialize
       @config = {
-        tivo_addr: nil,
-        tivo_name: nil,
+        tivo_address: nil,
         mak: nil,
         verbose: false,
         opt_config_names: Array.new,
@@ -63,42 +62,36 @@ module Tivo2Podcast
     end
 
     # Creates an instance of a TiVo object based on the configurations
-    # tivo_addr and mak
+    # tivo_addr and mak.  If tivo_addr is not defined in the config,
+    # try to locate the tivo vi dnssd
     def tivo_factory
       require 'TiVo'
-      TiVo::TiVo.new(tivo_addr, mak)
-    end
 
-    def tivo_addr=(value)
-      @config[:tivo_addr] = value
-    end
+      tivo_ip = tivo_address
 
-    # Returns the tivo_address defined in the config.  If one is not
-    # defined in the config, try to locate the tivo vi dnssd
-    def tivo_addr
-      if @config[:tivo_addr].nil?
-        p = Proc.new { @config[:tivo_addr] = TiVo.locate_via_dnssd(@config[:tivo_name]) }
+      unless tivo_ip
+        p = Proc.new { tivo_ip = TiVo.locate_via_dnssd }
         verbose? ? locating_tivo_spinner.run(&p) : p.call
 
-        if @config[:tivo_addr].nil?
+        unless tivo_ip
           printf($stderr, "No TiVo found! TiVo hostname or IP required to run the script\n")
           exit(1)
         end
 
-        puts "TiVo found at #{@config[:tivo_addr]}" if verbose?
+        puts "TiVo found at #{tivo_ip}" if verbose?
+        tivo_ip = ensure_ip_address(tivo_ip)
       end
 
-      result = @config[:tivo_addr]
-      # If the tivo_addr is NOT a dotted quad, do a DNS lookup for the
-      # IP. The TiVo wants us to pass the IP address for whatever reason.
-      if /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match(result).nil?
-        result = IPSocket.getaddress(result)
-      end
-      result
+      TiVo::TiVo.new(tivo_ip, mak)
     end
 
-    def tivo_name=(value)
-      @config[:tivo_name] = value
+    def tivo_address=(value)
+      @config[:tivo_address] = value
+    end
+
+    # Returns the tivo_address IP defined in the config
+    def tivo_address
+      ensure_ip_address(@config[:tivo_address])
     end
 
     def mak=(value)
@@ -108,12 +101,10 @@ module Tivo2Podcast
     # Returns the mak from the configuration file or look it up via
     # the .tivodecode_make file
     def mak
-      if @config[:mak].nil?
-        # Load the mak if we have a mak file
+      @config[:mak] ||= begin
         mak_file = File.join(ENV['HOME'], '.tivodecode_mak')
-        @config[:mak] = File.read(mak_file).strip if File.exist?(mak_file)
+        File.read(mak_file).strip if File.exist?(mak_file)
       end
-      @config[:mak]
     end
 
     def verbose=(value)
@@ -156,8 +147,18 @@ module Tivo2Podcast
     private
     def locating_tivo_spinner
       pastel = Pastel.new
-      spin_text = "#{pastel.green(':spinner')} Locating tivo #{@config[:tivo_name] unless @config[:tivo_name].nil?}... "
+      spin_text = "#{pastel.green(':spinner')} Locating tivo... "
       TTY::Spinner.new(spin_text, format: :dots)
+    end
+
+    # if passed in tivo_address is not nil AND its not already a
+    # dotted quad, do a lookup.  If tivo_address is nil, this will
+    # return nil.
+    def ensure_ip_address(tivo_address)
+      if tivo_address && !/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match?(result)
+        tivo_address = IPSocket.getaddress(tivo_address)
+      end
+      tivo_address
     end
   end
 end

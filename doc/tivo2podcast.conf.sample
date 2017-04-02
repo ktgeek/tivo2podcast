@@ -1,20 +1,20 @@
 # This is a YAML file at heart, so make sure you conform to YAML and
-# don't break the expected HASH this will turn into.  TiVo2Podcast has
+# don't break the expected HASH this will turn into. TiVo2Podcast has
 # a number of settings that default to certain values which are
-# documented below.  For people adding extentions to Tivo2Podcast, use
+# documented below. For people adding extentions to Tivo2Podcast, use
 # your own namespace for configuration issues so we can avoid certain
-# overlaps.  Uncomment or change the lines you need for your install.
+# overlaps. Uncomment or change the lines you need for your install.
 
-# The IP address or hostname of your tivo.  If not filled in,
+# The IP address or hostname of your tivo. If not filled in,
 # TiVo2Podcast will use Zerconf/mDNS/Bonjour/Whatever to try to find
-# the tivo.
+# the tivo. If set, this overrides any show config tivo settings.
 #
 # default: nil
 #
-# tivo_addr: nil
+# tivo_address: nil
 
-# The TiVo's MAK.  Needed by TiVo2Podcast to connect to the TiVo2Go
-# service and communicate.  If not filled in, TiVo2Podcast will look
+# Your TiVo account MAK. Needed by TiVo2Podcast to connect to the TiVo2Go
+# service and communicate. If not filled in, TiVo2Podcast will look
 # for the mak in ~/.tivodecode_mak for legacy reasons.
 #
 # default: nil
@@ -53,8 +53,8 @@
 #
 # comskip_ini: z:\sample\path\comskip80_031\comskip.ini
 
-# The default base url to use for the rss feeds.  Can be overridden on
-# a per-config basis.  Required for aggregated_file
+# The default base url to use for the rss feeds. Can be overridden on
+# a per-config basis. Required for aggregated_file
 #
 # default: nil
 #

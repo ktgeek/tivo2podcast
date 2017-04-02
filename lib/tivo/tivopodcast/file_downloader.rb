@@ -20,14 +20,15 @@ require 'pastel'
 
 module Tivo2Podcast
   class ShowDownloader
-    def initialize(config)
+    def initialize(config, tivo)
       @config = config
+      @tivo = tivo
     end
 
     def download_show(show, name)
       pbar = progress_bar(name, show.size) if @config.verbose
       IO.popen("java -jar #{@config.tivolibre} -m #{@config.mak} -o \"#{name}\"", 'wb') do |td|
-        tivo.download_show(show) do |tc|
+        @tivo.download_show(show) do |tc|
           td << tc
           pbar.advance(tc.length) if pbar
         end
@@ -36,10 +37,6 @@ module Tivo2Podcast
     end
 
     private
-
-    def tivo
-      @config.tivo_factory
-    end
 
     def progress_bar(name, size)
       # The name of the file shouldn't take up more than one third of
