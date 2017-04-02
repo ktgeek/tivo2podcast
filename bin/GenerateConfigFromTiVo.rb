@@ -22,6 +22,8 @@ require 'tivopodcast/database'
 require 'optparse'
 require 'TiVo'
 require 'tivopodcast/config'
+require 'pastel'
+require 'tty-spinner'
 require 'tty-prompt'
 
 def video_menu(videos)
@@ -42,18 +44,43 @@ def video_menu(videos)
   end
 end
 
+TiVoChoice = Struct.new(:name, :tivo)
+
+def get_tivo_choice(t2pconfig)
+  return TivoChoice.new(nil, t2pconfig.tivo_factory) if t2pconfig.tivo_address
+
+  tivos = {}
+  spinner = TTY::Spinner.new("#{Pastel.new.green(':spinner')} Locating tivos... ", format: :dots)
+  spinner.run do
+    tivos = TiVo.tivos_via_dnssd
+  end
+
+  if tivos.size < 1
+    $stderr.puts("No TiVos found")
+    exit(1)
+  end
+
+  if tivos.size > 1
+    prompt = TTY::Prompt.new
+    selection = prompt.ask("Please choose a TiVo: ", tivos.map { |k,v| [k, [k, v]] })
+  else
+    selection = tivos.first
+  end
+
+  tivo = TiVo.new(selection[1], t2pconfig.mak)
+
+  TivoChoice.new(selection[0], tivo)
+end
+
 t2pconfig = Tivo2Podcast::AppConfig.instance
 
 opts = OptionParser.new
 opts.on('-m MAK', '--mak MAK',
         'The TiVo\'s media access key') { |k| t2pconfig.mak = k }
-opts.on('-t ADDR', '--tivo_addr ADDR',
-        'The hostname or IP address of the tivo to get the data from') do |t|
-  t2pconfig.tivo_addr = t
-end
-opts.on('-n NAME', '--tivo_name NAME',
-        'The name assigned to the tivo via the my.tivo service') do |n|
-  t2pconfig.tivo_name = n
+opts.on('-t ADDR', '--tivo_address ADDR',
+        'The hostname or IP address of the tivo to get the data from. ' \
+        'If set, this overrides any show config settings.') do |t|
+  t2pconfig.tivo_address = t
 end
 opts.on('-v', '--verbose') { t2pconfig.verbose = true }
 opts.on_tail('-h', '--help', 'Show this message') do
@@ -64,20 +91,19 @@ opts.parse(ARGV)
 
 Tivo2Podcast::connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
 
-tivo = t2pconfig.tivo_factory
+tivo_choice = get_tivo_choice(t2pconfig)
 
-basis = video_menu(tivo.get_listings.videos)
+basis = video_menu(tivo_choice.tivo.get_listings.videos)
 
-prompt = TTY::Prompt.new
 basis.each do |show|
   puts "Creating a configuration for #{show.title}"
   sconfig = Tivo2Podcast::Config.new
-  sconfig.config_name = prompt.ask('Config name:', default: show.title.delete(' '))
+  sconfig.name = prompt.ask('Config name:', default: show.title.delete(' '))
   sconfig.show_name = prompt.ask('Show name:', default: show.title)
   sconfig.episodes_to_keep =
     prompt.ask('Episodes to keep in the feed:', convert: :int, default: 4)
   sconfig.handbrake_config = prompt.ask('HandBrake config:')
-  sconfig.tivo = prompt.ask('TiVo name:')
+  sconfig.tivo = tivo_choice.name
 
   printf("Saved!\n\n") if sconfig.save
 end
