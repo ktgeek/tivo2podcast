@@ -79,7 +79,7 @@ module Tivo2Podcast
       return unless File.exist?(show.filename)
       items.new_item do |item|
         item.title = item_title(@rss_file.configs.size, show)
-        item.link = URI.escape(@rss_file.base_url + show.filename)
+        item.link = URI.escape("#{@rss_file.base_url}#{show.filename}")
 
         item.guid.content = item.link
         item.guid.isPermaLink = true

@@ -20,7 +20,7 @@ module Tivo2Podcast
     has_and_belongs_to_many :rss_files
     has_many :shows
 
-    scope :for_name, ->(name) { where(config_name: name) }
+    scope :for_name, ->(name) { where(name: name) }
   end
 
   module Db
@@ -33,7 +33,7 @@ module Tivo2Podcast
           t.string :handbrake_config
           t.string :tivo
         end
-        add_index :configs, :config_name, unique: true
+        add_index :configs, :name, unique: true
       end
 
       def down
