@@ -47,7 +47,7 @@ end
 TiVoChoice = Struct.new(:name, :tivo)
 
 def get_tivo_choice(t2pconfig)
-  return TivoChoice.new(nil, t2pconfig.tivo_factory) if t2pconfig.tivo_address
+  return TiVoChoice.new(nil, t2pconfig.tivo_factory) if t2pconfig.tivo_address
 
   tivos = {}
   spinner = TTY::Spinner.new("#{Pastel.new.green(':spinner')} Locating tivos... ", format: :dots)
@@ -62,14 +62,14 @@ def get_tivo_choice(t2pconfig)
 
   if tivos.size > 1
     prompt = TTY::Prompt.new
-    selection = prompt.ask("Please choose a TiVo: ", tivos.map { |k,v| [k, [k, v]] })
+    selection = prompt.select("Please choose a TiVo: ", tivos.to_a.index_by { |a| a[0] })
   else
     selection = tivos.first
-  end
+                              end
 
-  tivo = TiVo.new(selection[1], t2pconfig.mak)
+  tivo = TiVo::TiVo.new(selection[1], t2pconfig.mak)
 
-  TivoChoice.new(selection[0], tivo)
+  TiVoChoice.new(selection[0], tivo)
 end
 
 t2pconfig = Tivo2Podcast::AppConfig.instance

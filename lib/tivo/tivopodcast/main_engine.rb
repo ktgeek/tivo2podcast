@@ -68,7 +68,7 @@ module Tivo2Podcast
       return @t2pconfig.tivo_factory if @t2pconfig.tivo_address || name.nil?
       @tivos_by_name[name] ||= begin
         tivo_address = TiVo.locate_via_dnssd(name)
-        TiVo.new(tivo_address, @t2pconfig.mak)
+        TiVo::TiVo.new(tivo_address, @t2pconfig.mak)
       end
     end
 
