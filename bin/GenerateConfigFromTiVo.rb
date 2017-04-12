@@ -95,6 +95,7 @@ tivo_choice = get_tivo_choice(t2pconfig)
 
 basis = video_menu(tivo_choice.tivo.get_listings.videos)
 
+prompt = TTY::Prompt.new
 basis.each do |show|
   puts "Creating a configuration for #{show.title}"
   sconfig = Tivo2Podcast::Config.new
