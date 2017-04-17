@@ -27,7 +27,7 @@ require 'tty-spinner'
 require 'tty-prompt'
 
 def video_menu(videos)
-  menu_entries = videos.map do |video|
+  menu_entries = videos.reject { |v| v.copy_protected? }.map do |video|
     [
       "%3d | %-43.43s | %13.13s | %5s\n" % [
         video.channel,
