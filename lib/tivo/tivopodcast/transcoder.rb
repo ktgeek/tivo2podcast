@@ -89,14 +89,14 @@ module Tivo2Podcast
       #   --TVEpisodeNum (num)    Sets the TV Episode number on the "tves" atom
       #   --description (str)    Sets the description on the "desc" atom
       showtitle = "#{@show.title}: #{@show.episode_title(use_date_if_nil: true)}"
-      showtitle << " (#{@show.episode_number})" unless @show.episode_number.nil?
+      showtitle << " (#{@show.episode_number})" if @show.episode_number
 
       command = "#{t2pconfig.atomicparsley} \"#{outfile}\" -W " \
                 "--title \"#{showtitle}\" --TVShowName \"#{@show.title}\" " \
                 "--TVEpisode \"#{@show.episode_title(use_date_if_nil: true)}\" " \
                 "--artist \"#{@show.title}\""
-      command << " --TVEpisodeNum #{@show.episode_number}" unless @show.episode_number.nil?
-      command << %/ --TVNetwork "#{@show.station}"/ unless @show.station.nil?
+      command << " --TVEpisodeNum #{@show.episode_number}" if @show.episode_number
+      command << %/ --TVNetwork "#{@show.station}"/ if @show.station
       if @show.description
         desc = @show.description.gsub(/"/, '\"')
         command << %/ --description "#{@desc}"/

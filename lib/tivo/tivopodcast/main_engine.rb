@@ -29,7 +29,7 @@ module Tivo2Podcast
     end
 
     def create_work_thread(queue)
-      raise ArgumentError if queue.nil?
+      raise ArgumentError unless queue
       Thread.new do
         loop do
           work_order = queue.deq
@@ -41,8 +41,8 @@ module Tivo2Podcast
 
     def create_show_base_filename(show)
       name = "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
-      name << "-#{show.episode_title}" unless show.episode_title.nil?
-      name << "-#{show.episode_number}" unless show.episode_number.nil?
+      name << "-#{show.episode_title}" if show.episode_title
+      name << "-#{show.episode_number}" if show.episode_number
       name.gsub(/[:\?\/;#]/, '_')
     end
 
