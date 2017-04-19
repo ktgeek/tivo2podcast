@@ -32,8 +32,13 @@ module Tivo2Podcast
       @config.handbrake_config || 'iPad'
     end
 
-    def add_chapter_info(m4vfilename, chapfilename, total_length)
+    def add_chapter_info(m4vfilename, chapfilename)
       m4vfile = Mp4v2::mp4_modify(m4vfilename)
+
+      duration = Mp4v2::mp4_get_duration(m4vfile)
+      time_scale = Mp4v2::mp4_get_time_scale(m4vfile)
+      # This should get us total_length in seconds
+      total_length = duration / time_scale
 
       # Add the chapter track, have it reference the first track
       # (should be the video) and set the "clock ticks per second" to 1.
@@ -45,18 +50,15 @@ module Tivo2Podcast
       File.open(chapfilename) do |f|
         f.each_line do |l|
           md = re.match(l.chomp)
-          unless md.nil?
-            if ((t = md[1].to_i) > 0)
-              Mp4v2::mp4_add_chapter(m4vfile, chapter_track, t - last_time)
-              last_time = t
-            end
+          if md && ((t = md[1].to_i) > 0)
+            Mp4v2::mp4_add_chapter(m4vfile, chapter_track, t - last_time)
+            last_time = t
           end
         end
       end
 
-      if (total_length - last_time > 0)
-        Mp4v2::mp4_add_chapter(m4vfile, chapter_track, total_length - last_time)
-      end
+      remaining = total_length - last_time
+      Mp4v2::mp4_add_chapter(m4vfile, chapter_track, remaining) if remaining > 0
 
       Mp4v2::mp4_close(m4vfile)
       Mp4v2::mp4_optimize(m4vfilename)
@@ -109,10 +111,9 @@ module Tivo2Podcast
       end
     end
 
-    def skip_commercials(basename, download, transcode)
+    def skip_commercials(basename, transcode)
       t2pconfig = Tivo2Podcast::AppConfig.instance
-      # I need to wrap this in a "if you want to do this..."
-      command = %/#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q "#{download}"/
+      command = %/#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q "#{transcode}"/
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
@@ -126,8 +127,7 @@ module Tivo2Podcast
       # end
 
       chpfile = "#{basename}.chp"
-      duration = @show.duration / 1000
-      add_chapter_info(transcode, chpfile, duration)
+      add_chapter_info(transcode, chpfile)
 
       File.delete(chpfile) if File.exist?(chpfile)
       File.delete(basename + ".log") if File.exist?(basename + ".log")

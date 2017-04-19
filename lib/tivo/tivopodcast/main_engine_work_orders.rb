@@ -50,7 +50,7 @@ module Tivo2Podcast
         transcoder = Tivo2Podcast::Transcoder.new(@config, @show)
         transcoder.transcode_show(@download, @transcode)
 
-        transcoder.skip_commercials(@basename, @download, @transcode)
+        transcoder.skip_commercials(@basename, @transcode)
 
         File.delete(@download) if File.exist?(@download)
 

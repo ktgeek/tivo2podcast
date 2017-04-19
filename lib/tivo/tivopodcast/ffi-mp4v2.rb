@@ -63,4 +63,17 @@ module Mp4v2
   end
 
   attach_function :mp4_close, :MP4Close, [:MP4FileHandle], :void
+
+  attach_function :mp4_get_duration, :MP4GetDuration, [:MP4FileHandle], :MP4Duration
+
+  # Get the time scale of the movie (file).
+  #
+  #  MP4GetTimeScale returns the time scale in units of ticks per second for
+  #  the mp4 file. Caveat: tracks may use the same time scale as the movie
+  #  or may use their own time scale.
+  #
+  #  @param hFile handle of file for operation.
+  #
+  #  @return timescale (ticks per second) of the mp4 file.
+  attach_function :mp4_get_time_scale, :MP4GetTimeScale, [:MP4FileHandle], :uint32
 end
