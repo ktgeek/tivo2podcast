@@ -136,7 +136,7 @@ downloads.each_with_index do |dl, index|
       perform_download(tivo, dl, td, pbar)
     end
   else
-    File.open(dl_name, 'wb') { |file| perform_download(dl, file, pbar) }
+    File.open(dl_name, 'wb') { |file| perform_download(tivo, dl, file, pbar) }
   end
   sleep 30 if downloads.size > 1 && index < downloads.size - 1
 end
