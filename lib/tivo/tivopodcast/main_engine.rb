@@ -43,7 +43,7 @@ module Tivo2Podcast
       name = "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
       name << "-#{show.episode_title}" if show.episode_title
       name << "-#{show.episode_number}" if show.episode_number
-      name.gsub(/[:\?\/;#]/, '_')
+      name.gsub(/[:\?\$\/;#]/, '_')
     end
 
     def configs
