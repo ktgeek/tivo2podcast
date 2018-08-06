@@ -312,11 +312,8 @@ module TiVo
         raise ArgumentError, 'Must have either a filename or a block', caller
       end
       file = File.open(filename, 'wb') unless filename.nil?
-      url = if get_ts
-        "#{tivo_item.url}&Format=video/x-tivo-mpeg-ts"
-      else
-        tivo_item.url
-      end
+      url = tivo_item.url
+      url += "&Format=video/x-tivo-mpeg-ts" if get_ts
       begin
         @client.set_auth(url, USER, @mak)
         @client.get_content(url, nil, Connection: 'close') do |c|
