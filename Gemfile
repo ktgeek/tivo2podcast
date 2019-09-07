@@ -1,8 +1,8 @@
 source 'https://rubygems.org'
 
-ruby '~>2.4'
+ruby '~>2.6'
 
-gem 'activerecord', '~>4.2'
+gem 'activerecord', '~>5.2'
 # I really want to get an updated dnssd, because it has a SEGV fix
 # I've been running into. However, there's no gemspec in the
 # repository. This is an investigation for later.
@@ -22,6 +22,7 @@ gem 'tty-table'
 
 group :development do
   gem 'byebug'
+  gem 'rubocop'
 end
 
 group :test do

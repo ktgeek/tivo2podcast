@@ -24,7 +24,7 @@ module Tivo2Podcast
   end
 
   module Db
-    class AddConfigs < ActiveRecord::Migration
+    class AddConfigs < ActiveRecord::Migration[5.2]
       def up
         create_table :configs do |t|
           t.string :name, null: false

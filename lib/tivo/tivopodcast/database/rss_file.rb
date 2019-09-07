@@ -21,7 +21,7 @@ module Tivo2Podcast
   end
 
   module Db
-    class AddRssFiles < ActiveRecord::Migration
+    class AddRssFiles < ActiveRecord::Migration[5.2]
       def up
         create_table :rss_files do |t|
           t.string :filename, unique: true, null: false
@@ -39,7 +39,7 @@ module Tivo2Podcast
       end
     end
 
-    class AddConfigsRssFiles < ActiveRecord::Migration
+    class AddConfigsRssFiles < ActiveRecord::Migration[5.2]
       def up
         create_table :configs_rss_files, id: false do |t|
           t.integer :config_id, null: false

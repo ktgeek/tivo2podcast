@@ -41,7 +41,7 @@ module Tivo2Podcast
   end
 
   module Db
-    class AddShows < ActiveRecord::Migration
+    class AddShows < ActiveRecord::Migration[5.2]
       def up
         create_table :shows do |t|
           t.integer :config_id, null: false
