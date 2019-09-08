@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # Copyright 2011-2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -13,11 +15,7 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 
-
-# Adds the lib path next to the path the script is in to the head of
-# the search patch
-$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
-                                      'tivo'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
 
 require 'optparse'
 require 'tivopodcast/config'
@@ -54,24 +52,25 @@ end
 opts.parse(ARGV)
 
 # Connect to the database
-Tivo2Podcast::connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
+Tivo2Podcast.connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
 
-case
-when t2pconfig.list_configs
+if t2pconfig.list_configs
   require 'tivopodcast/data_outputter'
   output = Tivo2Podcast::DataOutputter.new
   output.configs
-when t2pconfig.cleanup
+elsif t2pconfig.cleanup
   require 'tivopodcast/file_cleaner'
   Tivo2Podcast::FileCleaner.file_cleanup
-when t2pconfig.regenerate_rss
+elsif t2pconfig.regenerate_rss
   require 'tivopodcast/rss_generator'
   Tivo2Podcast::RssGenerator.regenerate_rss_files
-when t2pconfig.console
+elsif t2pconfig.console
   require 'tivopodcast'
   require 'tivopodcast/console'
   require 'pp'
+  # rubocop:disable Style/MixinUsage
   include Tivo2Podcast
+  # rubocop:enable Style/MixinUsage
   IRB.start_session(binding)
 else
   require 'tivopodcast/main_engine'

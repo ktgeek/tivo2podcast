@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -19,9 +21,11 @@ require 'dnssd'
 require 'socket'
 
 # Monkey patch httpclient to not show the dot domain warning at all
-class WebAgent::Cookie
-  def domain
-    self.original_domain
+class WebAgent
+  class Cookie
+    def domain
+      original_domain
+    end
   end
 end
 
@@ -45,10 +49,12 @@ module TiVo
 
   class << self
     private
+
+    # rubocop:disable Lint/HandleExceptions
     def dnssd_search(sleep_time)
       replies = []
       begin
-        Timeout::timeout(sleep_time) do
+        Timeout.timeout(sleep_time) do
           DNSSD.browse! '_tivo-videos._tcp' do |reply|
             DNSSD.resolve(reply) { |r| replies << r }
           end
@@ -57,12 +63,13 @@ module TiVo
       end
       replies
     end
+    # rubocop:enable Lint/HandleExceptions
   end
 
   # Returns a Hash that maps tivo name to tivo ip
   def self.tivos_via_dnssd(sleep_time = 5, reaquire = false)
-    @tivos = nil if reaquire
-    @tivos ||= begin
+    @tivos_via_dnssd = nil if reaquire
+    @tivos_via_dnssd ||= begin
       dnssd_finds = dnssd_search(sleep_time)
       return nil if dnssd_finds.empty?
 
@@ -84,9 +91,9 @@ module TiVo
     end
 
     # We expect another TiVoListings to be passed in here.
-    def concat(tl)
-      @folders.concat(tl.folders)
-      @videos.concat(tl.videos)
+    def concat(tivo_listings)
+      @folders.concat(tivo_listings.folders)
+      @videos.concat(tivo_listings.videos)
     end
   end
 
@@ -127,16 +134,16 @@ module TiVo
       @links.elements['Content'].elements['Url'].text
     end
 
-    def get_detail_item(name)
-      name = @details.elements[name]
-      name.text if name
-    end
-
-    def is_folder?
+    def folder?
       get_detail_item('ContentType') == FOLDER
     end
 
-    protected :get_detail_item
+    protected
+
+    def get_detail_item(name)
+      name = @details.elements[name]
+      name&.text
+    end
   end
 
   class TiVoFolder < TiVoItem
@@ -155,9 +162,7 @@ module TiVo
 
     def episode_title(use_date_if_nil: false)
       title = get_detail_item('EpisodeTitle')
-      if use_date_if_nil && title.nil?
-        title = time_captured.strftime("%m/%d/%Y")
-      end
+      title = time_captured.strftime("%m/%d/%Y") if use_date_if_nil && !title
       title
     end
 
@@ -167,7 +172,7 @@ module TiVo
 
     def description
       desc = get_detail_item('Description')
-      desc.sub!(/ (?:\* )?Copyright (Tribune Media Services|Rovi), Inc./, '') if desc
+      desc&.sub!(/ (?:\* )?Copyright (Tribune Media Services|Rovi), Inc./, '')
       desc
     end
 
@@ -218,9 +223,9 @@ module TiVo
       # Calculate the left over unsloppy seconds
       seconds = seconds % 60
 
-      result = ""
-      result << "%d:" % hours if hours > 0
-      result << "%02d:%02d" % [minutes, seconds]
+      result = String.new ""
+      result << String.format("%d:", hours) if hours.positive?
+      result << String.format("%02d:%02d", minutes, seconds)
     end
 
     def duration
@@ -273,22 +278,6 @@ module TiVo
       listings
     end
 
-    def get_listings_from_url(url, recurse = false)
-      # This needs to be expanded to loop around if all the videos
-      # weren't snagged in the first grab.  We'll need to make some
-      # URL assumptions we hadn't before.
-      xml = @client.get_content(url)
-      listings = TiVoItemFactory.from_xml(xml)
-      if recurse
-        listings.folders.each do |f|
-          new_listings = get_listings_from_url(f.url)
-          listings.videos.concat(new_listings) unless new_listings.nil?
-        end
-        listings.folders = nil
-      end
-      listings
-    end
-
     # Returns the raw XML for listings.  This is really useful for
     # debugging and learning new fields from the TiVo.  Not really
     # expected to be used by end user programs
@@ -308,9 +297,7 @@ module TiVo
     # Downloads the show given the item passed in. If a block is
     # given, it uses the block instead of the filename
     def download_show(tivo_item, filename: nil, get_ts: true, &block)
-      unless block || filename
-        raise ArgumentError, 'Must have either a filename or a block', caller
-      end
+      raise ArgumentError, 'Must have either a filename or a block', caller unless block || filename
       file = File.open(filename, 'wb') unless filename.nil?
       url = tivo_item.url
       url += "&Format=video/x-tivo-mpeg-ts" if get_ts
@@ -326,11 +313,27 @@ module TiVo
       rescue HTTPClient::BadResponseError
         raise TiVoDownloadError, "Error downloading from TiVo", caller
       ensure
-        file.close unless file.nil?
+        file&.close
       end
     end
 
-    private :get_listings_from_url
+    private
+
+    def get_listings_from_url(url, recurse = false)
+      # This needs to be expanded to loop around if all the videos
+      # weren't snagged in the first grab.  We'll need to make some
+      # URL assumptions we hadn't before.
+      xml = @client.get_content(url)
+      listings = TiVoItemFactory.from_xml(xml)
+      if recurse
+        listings.folders.each do |f|
+          new_listings = get_listings_from_url(f.url)
+          listings.videos.concat(new_listings) if new_listings
+        end
+        listings.folders = nil
+      end
+      listings
+    end
   end
 
   class TiVoDownloadError < IOError

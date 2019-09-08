@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -72,10 +74,12 @@ module Tivo2Podcast
         p = proc { tivo_ip = TiVo.locate_via_dnssd }
         verbose? ? locating_tivo_spinner.run(&p) : p.call
 
+        # rubocop:disable Style/StderrPuts
         unless tivo_ip
-          printf($stderr, "No TiVo found! TiVo hostname or IP required to run the script\n")
+          $stderr.puts "No TiVo found! TiVo hostname or IP required to run the script"
           exit(1)
         end
+        # rubocop:enable Style/StderrPuts
 
         puts "TiVo found at #{tivo_ip}" if verbose?
         tivo_ip = ensure_ip_address(tivo_ip)

@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# frozen_string_literal: true
+
 # Copyright 2011 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

@@ -18,7 +18,7 @@ module Tivo2Podcast
     include Singleton
 
     def initialize
-      @notifiers = Array.new
+      @notifiers = []
       init_notifiers
     end
 
@@ -52,17 +52,15 @@ module Tivo2Podcast
   # notifiers
   class Notifier
     def self.inherited(subclass)
-      self.registered_notifiers << subclass
+      registered_notifiers << subclass
     end
 
     def self.registered_notifiers
       @registered_notifiers ||= []
     end
 
-    def notify(_message)
-    end
+    def notify(_message); end
 
-    def shutdown
-    end
+    def shutdown; end
   end
 end

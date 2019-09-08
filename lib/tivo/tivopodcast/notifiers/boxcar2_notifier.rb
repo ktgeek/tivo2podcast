@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -11,12 +13,11 @@
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
-require 'thread'
 require 'rest_client'
 
 module Tivo2Podcast
   class Boxcar2Notifier < Notifier
-    BOXCAR2_API_URL = 'https://new.boxcar.io/api/notifications'
+    BOXCAR2_API_URL = "https://new.boxcar.io/api/notifications"
     SHUTDOWN_MESSAGE = :shutdown_message_sending_now
 
     def initialize
@@ -39,7 +40,7 @@ module Tivo2Podcast
     def shutdown
       @message_queue.enq SHUTDOWN_MESSAGE
 
-      @transmit_thread.join if @transmit_thread
+      @transmit_thread&.join
     end
 
     def start_transmit_thread

@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # Copyright 2011-2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +34,7 @@ def video_menu(videos)
         "%3d | %-43.43s | %13.13s | %5s\n",
         video.channel,
         video.printable_title,
-        video.time_captured.strftime('%m/%d %I:%M%p'),
+        video.time_captured.strftime("%m/%d %I:%M%p"),
         video.human_duration
       ),
       video
@@ -55,10 +57,12 @@ def get_tivo_choice(t2pconfig)
     tivos = TiVo.tivos_via_dnssd
   end
 
+  # rubocop:disable Style/StderrPuts
   if tivos.empty?
     $stderr.puts("No TiVos found")
     exit(1)
   end
+  # rubocop:enable Style/StderrPuts
 
   if tivos.size > 1
     prompt = TTY::Prompt.new

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2011 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,35 +32,35 @@ module Tivo2Podcast
     end
 
     def add_chapter_info(m4vfilename, chapfilename)
-      m4vfile = Mp4v2::mp4_modify(m4vfilename)
+      m4vfile = Mp4v2.mp4_modify(m4vfilename)
 
-      duration = Mp4v2::mp4_get_duration(m4vfile)
-      time_scale = Mp4v2::mp4_get_time_scale(m4vfile)
+      duration = Mp4v2.mp4_get_duration(m4vfile)
+      time_scale = Mp4v2.mp4_get_time_scale(m4vfile)
       # This should get us total_length in seconds
       total_length = duration / time_scale
 
       # Add the chapter track, have it reference the first track
       # (should be the video) and set the "clock ticks per second" to 1.
       # (We may want to set that to 1000 to go into milliseconds.)
-      chapter_track = Mp4v2::mp4_add_chapter_text_track(m4vfile, 1, 1)
+      chapter_track = Mp4v2.mp4_add_chapter_text_track(m4vfile, 1, 1)
 
       re = /^AddChapterBySecond\((\d+),/
       last_time = 0
       File.open(chapfilename) do |f|
         f.each_line do |l|
           md = re.match(l.chomp)
-          if md && ((t = md[1].to_i) > 0)
-            Mp4v2::mp4_add_chapter(m4vfile, chapter_track, t - last_time)
+          if md && (t = md[1].to_i.positive?)
+            Mp4v2.mp4_add_chapter(m4vfile, chapter_track, t - last_time)
             last_time = t
           end
         end
       end
 
       remaining = total_length - last_time
-      Mp4v2::mp4_add_chapter(m4vfile, chapter_track, remaining) if remaining > 0
+      Mp4v2.mp4_add_chapter(m4vfile, chapter_track, remaining) if remaining.positive?
 
-      Mp4v2::mp4_close(m4vfile)
-      Mp4v2::mp4_optimize(m4vfilename)
+      Mp4v2.mp4_close(m4vfile)
+      Mp4v2.mp4_optimize(m4vfilename)
     end
 
     # This transcodes and properly tags the show.  infile is the
@@ -96,10 +95,10 @@ module Tivo2Podcast
                 "--TVEpisode \"#{@show.episode_title(use_date_if_nil: true)}\" " \
                 "--artist \"#{@show.title}\""
       command << " --TVEpisodeNum #{@show.episode_number}" if @show.episode_number
-      command << %/ --TVNetwork "#{@show.station}"/ if @show.station
+      command << %( --TVNetwork "#{@show.station}") if @show.station
       if @show.description
         desc = @show.description.gsub(/"/, '\"')
-        command << %/ --description "#{@desc}"/
+        command << %( --description "#{desc}")
       end
       command << ' >/dev/null 2>&1' unless t2pconfig.verbose
       returncode = system(command)
@@ -113,10 +112,11 @@ module Tivo2Podcast
 
     def skip_commercials(basename, transcode)
       t2pconfig = Tivo2Podcast::AppConfig.instance
-      command = %/#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q "#{transcode}"/
+      command = %(#{t2pconfig.comskip} --ini=#{t2pconfig.comskip_ini} -q "#{transcode}")
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
-      returncode = system(command)
+      system(command)
+      # returncode = system(command)
       # Comskip doesn't seem to do the 0 return code (or is that wine?)
       # For now we'll just check to see if there is a > 0 length .chp file
       # if !returncode

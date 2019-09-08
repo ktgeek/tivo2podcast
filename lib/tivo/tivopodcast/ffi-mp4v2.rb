@@ -15,8 +15,8 @@ module Mp4v2
 
   MP4_INVALID_FILE_HANDLE = nil
 
-  attach_function(:c_mp4_modify, :MP4Modify, [:string, :uint32, :uint32],
-                  :MP4FileHandle)
+  attach_function(:c_mp4_modify, :MP4Modify, %i[string uint32 uint32], :MP4FileHandle)
+
   # Modify an existing mp4 file.
   #
   # MP4Modify is the first call that should be used when you want to modify
@@ -42,20 +42,19 @@ module Mp4v2
     c_mp4_modify(filename, verbosity, 0)
   end
 
-  attach_function(:c_mp4_optimize, :MP4Optimize, [:string, :string, :uint32],
-                  :bool)
+  attach_function(:c_mp4_optimize, :MP4Optimize, %i[string string uint32], :bool)
   def self.mp4_optimize(filename, new_filename = nil, verbosity = 0)
     c_mp4_optimize(filename, new_filename, verbosity)
   end
 
   attach_function(:c_mp4_add_chapter_text_track, :MP4AddChapterTextTrack,
-                  [:MP4FileHandle, :MP4TrackId, :uint32], :MP4TrackId)
+                  %i[MP4FileHandle MP4TrackId uint32], :MP4TrackId)
   def self.mp4_add_chapter_text_track(h_file, ref_track_id, timescale = 0)
     c_mp4_add_chapter_text_track(h_file, ref_track_id, timescale)
   end
 
   attach_function(:c_mp4_add_chapter, :MP4AddChapter,
-                  [:MP4FileHandle, :MP4TrackId, :MP4Duration, :string], :void)
+                  %i[MP4FileHandle MP4TrackId MP4Duration string], :void)
   def self.mp4_add_chapter(h_file, chapter_track_id, chapter_duration,
                            chapter_title = nil)
     c_mp4_add_chapter(h_file, chapter_track_id, chapter_duration, chapter_title)
