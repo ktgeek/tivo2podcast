@@ -13,10 +13,9 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 
-
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
 
 require 'tivopodcast/database'
 require 'optparse'
@@ -27,20 +26,21 @@ require 'tty-spinner'
 require 'tty-prompt'
 
 def video_menu(videos)
-  menu_entries = videos.reject { |v| v.copy_protected? }.map do |video|
+  menu_entries = videos.reject(&:copy_protected?).map do |video|
     [
-      "%3d | %-43.43s | %13.13s | %5s\n" % [
+      String.format(
+        "%3d | %-43.43s | %13.13s | %5s\n",
         video.channel,
         video.printable_title,
         video.time_captured.strftime('%m/%d %I:%M%p'),
         video.human_duration
-      ],
+      ),
       video
     ]
   end
   prompt = TTY::Prompt.new
   prompt.multi_select("Choose programs to use as templates", per_page: 10, echo: false) do |menu|
-    menu_entries.each { |e| menu.choice *e }
+    menu_entries.each { |e| menu.choice(*e) }
   end
 end
 
@@ -55,7 +55,7 @@ def get_tivo_choice(t2pconfig)
     tivos = TiVo.tivos_via_dnssd
   end
 
-  if tivos.size < 1
+  if tivos.empty?
     $stderr.puts("No TiVos found")
     exit(1)
   end
@@ -65,7 +65,7 @@ def get_tivo_choice(t2pconfig)
     selection = prompt.select("Please choose a TiVo: ", tivos.to_a.index_by { |a| a[0] })
   else
     selection = tivos.first
-                              end
+  end
 
   tivo = TiVo::TiVo.new(selection[1], t2pconfig.mak)
 
@@ -89,7 +89,7 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
-Tivo2Podcast::connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
+Tivo2Podcast.connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
 
 tivo_choice = get_tivo_choice(t2pconfig)
 

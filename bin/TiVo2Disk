@@ -18,8 +18,7 @@
 
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
-                                      'tivo'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
 
 require 'optparse'
 require 'TiVo'
@@ -32,30 +31,33 @@ require 'pastel'
 def make_filename(tivo_item)
   name = tivo_item.title
   ep = tivo_item.episode_title
-  name = name + "-" + ep unless ep.nil?
-  unless ep.nil? || tivo_item.episode_number.nil?
-    name = name + "-" + tivo_item.episode_number
+  if ep
+    name = "#{name}-#{ep}"
+  elsif tivo_item.episode_number
+    name = "#{name}-#{tivo_item.episode_number}"
   end
+
   name.sub!(/:/, '_')
-  name.sub!(/\//, '_')
+  name.sub!(%r{/}, '_')
   "#{name}.ts"
 end
 
 def video_menu(videos)
   menu_entries = videos.map do |video|
     [
-      "%3d | %-43.43s | %13.13s | %5s\n" % [
+      String.format(
+        "%3d | %-43.43s | %13.13s | %5s\n",
         video.channel,
         video.printable_title,
         video.time_captured.strftime('%m/%d %I:%M%p'),
         video.human_duration
-      ],
+      ),
       video
     ]
   end
   prompt = TTY::Prompt.new
   prompt.multi_select("Choose files to download", per_page: 10, echo: false) do |menu|
-    menu_entries.each { |e| menu.choice *e }
+    menu_entries.each { |e| menu.choice(*e) }
   end
 end
 
@@ -73,7 +75,7 @@ end
 def perform_download(tivo, download_item, download_target, progress_bar = nil)
   tivo.download_show(download_item) do |tivo_chunk|
     download_target << tivo_chunk
-    progress_bar.advance(tivo_chunk.length) if progress_bar
+    progress_bar&.advance(tivo_chunk.length)
   end
   progress_bar.finish
 end
@@ -82,16 +84,17 @@ end
 mak_file = "#{ENV['HOME']}/.tivodecode_mak"
 mak = File.read(mak_file).strip if File.exist?(mak_file)
 
-
 # Parse the options to get the rest (or override the above)
-tivo_name, tivo_addr, tivo_libre_jar = nil, nil, nil
+tivo_name = nil
+tivo_addr = nil
+tivo_libre_jar = nil
 decode = true
 opts = OptionParser.new
 opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
 opts.on('-t IP', '--tivo IP', 'The IP address of your TiVo') do |ip|
   tivo_addr = ip
 end
-opts.on('-d', '--no-decode', 'Will not use tivodecode.') { |d| decode = false }
+opts.on('-d', '--no-decode', 'Will not use tivodecode.') { decode = false }
 opts.on('-j JAR', '--jar JAR', 'Location of the TiVoLibre jar') { |j| tivo_libre_jar = j }
 opts.on('-n NAME', '--tivo_name NAME',
         'The name assigned to the tivo via the my.tivo service') do |n|
@@ -103,7 +106,7 @@ opts.on_tail('-h', '--help', 'Show this message') do
 end
 opts.parse(ARGV)
 
-if tivo_addr.nil?
+unless tivo_addr
   tivo_addr = TiVo.locate_via_dnssd(tivo_name)
   $stderr.puts "No TiVo found!" if tivo_addr.nil?
 end
@@ -140,8 +143,3 @@ downloads.each_with_index do |dl, index|
   end
   sleep 30 if downloads.size > 1 && index < downloads.size - 1
 end
-
-
-# Local Variables:
-# mode: ruby
-# End:

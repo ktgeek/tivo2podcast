@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2015-2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -13,7 +12,6 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'thread'
 require 'tivopodcast/notifier'
 require 'tivopodcast/transcoder'
 require 'tivopodcast/database'
@@ -43,7 +41,7 @@ module Tivo2Podcast
       name = "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
       name << "-#{show.episode_title}" if show.episode_title
       name << "-#{show.episode_number}" if show.episode_number
-      name.gsub(/[:\?\$\/;#]/, '_')
+      name.gsub(%r{[:\?\$/;#]}, '_')
     end
 
     def configs
@@ -111,8 +109,8 @@ module Tivo2Podcast
               File.delete(download) if File.exist?(download)
               notifier.notify("Error downloading #{basename}: #{e}")
             end
-          else
-            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist" if @t2pconfig.verbose
+          elsif @t2pconfig.verbose
+            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist"
           end
         end
 

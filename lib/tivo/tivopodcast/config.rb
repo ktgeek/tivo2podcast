@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,7 +38,7 @@ module Tivo2Podcast
         tivo_address: nil,
         mak: nil,
         verbose: false,
-        opt_config_names: Array.new,
+        opt_config_names: [],
         handbrake: 'HandBrakeCLI',
         cleanup: false,
         atomicparsley: 'AtomicParsley',
@@ -47,7 +46,7 @@ module Tivo2Podcast
         comskip_ini: nil,
         baseurl: nil,
         aggregate_file: nil,
-        notifiers: Array.new,
+        notifiers: [],
         regenerate_rss: false,
         console: false,
         tivolibre: nil,
@@ -70,7 +69,7 @@ module Tivo2Podcast
       tivo_ip = tivo_address
 
       unless tivo_ip
-        p = Proc.new { tivo_ip = TiVo.locate_via_dnssd }
+        p = proc { tivo_ip = TiVo.locate_via_dnssd }
         verbose? ? locating_tivo_spinner.run(&p) : p.call
 
         unless tivo_ip
@@ -145,6 +144,7 @@ module Tivo2Podcast
     def_delegator :@config, :[]
 
     private
+
     def locating_tivo_spinner
       pastel = Pastel.new
       spin_text = "#{pastel.green(':spinner')} Locating tivo... "
@@ -155,9 +155,7 @@ module Tivo2Podcast
     # dotted quad, do a lookup.  If tivo_address is nil, this will
     # return nil.
     def ensure_ip_address(tivo_address)
-      if tivo_address && !/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match?(result)
-        tivo_address = IPSocket.getaddress(tivo_address)
-      end
+      return IPSocket.getaddress(tivo_address) if tivo_address && !/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match?(result)
       tivo_address
     end
   end

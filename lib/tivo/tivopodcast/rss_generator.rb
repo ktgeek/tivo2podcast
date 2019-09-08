@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2013 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,20 +24,20 @@ module Tivo2Podcast
   class RssGenerator
     def self.regenerate_rss_files
       rss_files = Tivo2Podcast::RssFile.all
-      self.generate_from_rssfiles(rss_files)
+      generate_from_rssfiles(rss_files)
     end
 
     def self.generate_from_config(config)
-      self.generate_from_rssfiles(config.rss_files)
+      generate_from_rssfiles(config.rss_files)
     end
 
     def self.generate_from_configs(configs)
-      self.generate_from_rssfiles(configs.accumulate.rss_files)
+      generate_from_rssfiles(configs.accumulate.rss_files)
     end
 
     def self.generate_from_rssfiles(rssfiles)
       rssfiles.each do |rss_file|
-        rss = self.new(rss_file).make_rss
+        rss = new(rss_file).make_rss
 
         File.open(rss_file.filename, 'w') { |f| f << rss.to_s }
       end
@@ -58,6 +57,7 @@ module Tivo2Podcast
     end
 
     private
+
     def configure_channel(channel)
       channel.title = @rss_file.feed_title
       channel.description = @rss_file.feed_description

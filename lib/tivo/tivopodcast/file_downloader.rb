@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,10 +29,10 @@ module Tivo2Podcast
       IO.popen("java -jar #{@config.tivolibre} -m #{@config.mak} -o \"#{name}\"", 'wb') do |td|
         @tivo.download_show(show) do |tc|
           td << tc
-          pbar.advance(tc.length) if pbar
+          pbar&.advance(tc.length)
         end
       end
-      pbar.finish if pbar
+      pbar&.finish
     end
 
     private
@@ -45,10 +44,12 @@ module Tivo2Podcast
       display_name = name.gsub(/(.{#{truncate_size}}).+/, '\1...')
 
       pastel = Pastel.new
-      TTY::ProgressBar.new("Downloading #{display_name} [:bar] :percent",
-                       total: size,
-                       complete: pastel.green("="),
-                       incomplete: pastel.red("="))
+      TTY::ProgressBar.new(
+        "Downloading #{display_name} [:bar] :percent",
+        total: size,
+        complete: pastel.green("="),
+        incomplete: pastel.red("=")
+      )
     end
   end
 end

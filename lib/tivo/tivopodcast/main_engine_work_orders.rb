@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -67,7 +66,7 @@ module Tivo2Podcast
 
       def do_work
         shows_to_clean = Tivo2Podcast::Show.on_disk.for_config(@config).
-                           order(time_captured: :desc).offset(@config.episodes_to_keep)
+          order(time_captured: :desc).offset(@config.episodes_to_keep)
 
         shows_to_clean.each do |show|
           # If the file doesn't exist, don't try to delete, but

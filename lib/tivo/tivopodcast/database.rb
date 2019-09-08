@@ -14,24 +14,24 @@
 #       with the distribution.
 #
 
-require 'active_record'
-require 'tivopodcast/database/config'
-require 'tivopodcast/database/show'
-require 'tivopodcast/database/rss_file'
+require "active_record"
+require "tivopodcast/database/config"
+require "tivopodcast/database/show"
+require "tivopodcast/database/rss_file"
 
 module Tivo2Podcast
   def self.connect_database(filename)
     database_exists = File.exist?(filename)
 
-    ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: filename)
+    ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: filename)
 
-    unless database_exists
-      # $log.debug { "Creating database schema" }
-      # ActiveRecord::Migration.verbose = false
-      Db::AddConfigs.new.up
-      Db::AddShows.new.up
-      Db::AddRssFiles.new.up
-      Db::AddConfigsRssFiles.new.up
-    end
+    return if database_exists
+
+    # $log.debug { "Creating database schema" }
+    # ActiveRecord::Migration.verbose = false
+    Db::AddConfigs.new.up
+    Db::AddShows.new.up
+    Db::AddRssFiles.new.up
+    Db::AddConfigsRssFiles.new.up
   end
 end

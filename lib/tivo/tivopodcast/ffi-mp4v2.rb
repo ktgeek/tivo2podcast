@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'ffi'
 
 # This module uses FFI to wrap the mp4v2 functions needed by the
@@ -58,7 +57,7 @@ module Mp4v2
   attach_function(:c_mp4_add_chapter, :MP4AddChapter,
                   [:MP4FileHandle, :MP4TrackId, :MP4Duration, :string], :void)
   def self.mp4_add_chapter(h_file, chapter_track_id, chapter_duration,
-                            chapter_title = nil)
+                           chapter_title = nil)
     c_mp4_add_chapter(h_file, chapter_track_id, chapter_duration, chapter_title)
   end
 
