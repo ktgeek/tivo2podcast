@@ -30,7 +30,7 @@ require 'tty-prompt'
 def video_menu(videos)
   menu_entries = videos.reject(&:copy_protected?).map do |video|
     [
-      String.format(
+      format(
         "%3d | %-43.43s | %13.13s | %5s\n",
         video.channel,
         video.printable_title,

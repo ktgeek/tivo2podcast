@@ -224,8 +224,8 @@ module TiVo
       seconds = seconds % 60
 
       result = String.new ""
-      result << String.format("%d:", hours) if hours.positive?
-      result << String.format("%02d:%02d", minutes, seconds)
+      result << format("%d:", hours) if hours.positive?
+      result << format("%02d:%02d", minutes, seconds)
     end
 
     def duration
@@ -258,7 +258,7 @@ module TiVo
     def get_listings(recurse = true, get_xml = false)
       # We can get some of the URL stuff from the dnssd stuff, we
       # should use that if its passed in.
-      query_url = "#{@base_url}?Command=QueryContainer&Container=/NowPlaying&ItemCount=#{BATCH_SIZE}"
+      query_url = String.new "#{@base_url}?Command=QueryContainer&Container=/NowPlaying&ItemCount=#{BATCH_SIZE}"
       query_url << '&Recurse=Yes' if recurse
 
       if get_xml
