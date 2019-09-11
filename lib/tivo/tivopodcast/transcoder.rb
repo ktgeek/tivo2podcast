@@ -13,7 +13,7 @@
 #       with the distribution.
 #
 
-require 'tivopodcast/ffi-mp4v2'
+require 'tivopodcast/ffi_mp4v2'
 
 module Tivo2Podcast
   # This class encapsulates both calling out to handbrake to doing the
@@ -49,7 +49,7 @@ module Tivo2Podcast
       File.open(chapfilename) do |f|
         f.each_line do |l|
           md = re.match(l.chomp)
-          if md && (t = md[1].to_i.positive?)
+          if md && ((t = md[1].to_i).positive?)
             Mp4v2.mp4_add_chapter(m4vfile, chapter_track, t - last_time)
             last_time = t
           end

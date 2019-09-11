@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2015-2016 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,7 +40,7 @@ module Tivo2Podcast
     end
 
     def create_show_base_filename(show)
-      name = "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
+      name = String.new "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
       name << "-#{show.episode_title}" if show.episode_title
       name << "-#{show.episode_number}" if show.episode_number
       name.gsub(%r{[:\?\$/;#]}, '_')
@@ -72,7 +74,6 @@ module Tivo2Podcast
 
     # This method is doing WAY WAY WAY too much
     def normal_processing
-      work_queue = Queue.new
       work_thread = create_work_thread(work_queue)
 
       configs.each do |config|
@@ -80,39 +81,7 @@ module Tivo2Podcast
         shows = get_shows_to_process(tivo, config)
 
         # So starts the giant loop that processes the shows...
-        shows.each do |s|
-          basename = create_show_base_filename(s)
-          download = "#{basename}.ts"
-          transcode = "#{basename}.m4v"
-
-          notifier = Tivo2Podcast::NotifierEngine.instance
-          if !Tivo2Podcast::Show.episode_for(config, s.program_id).exists?
-            begin
-              notifier.notify("Starting download of #{basename}")
-              # If the file exists, we'll assume the download went okay
-              # Shame on us for not checking if it isn't
-              unless File.exist?(download)
-                downloader = ShowDownloader.new(@t2pconfig, tivo)
-                downloader.download_show(s, download)
-              end
-
-              notifier.notify("Finished download of #{basename}")
-
-              work_queue.enq(TranscodeWorkOrder.new(config, s, basename, download, transcode))
-
-              # Adding a 30 second delay before the next download to
-              # see if it helps with our download issues
-              sleep 30
-            rescue IOError => e
-              # If there was an IOError, we'll assume a file turd of
-              # some sort was left behind and clean it up
-              File.delete(download) if File.exist?(download)
-              notifier.notify("Error downloading #{basename}: #{e}")
-            end
-          elsif @t2pconfig.verbose
-            puts "Skipping #{basename} (#{s.program_id}) because it seems to exist"
-          end
-        end
+        process_shows(tivo, config, shows)
 
         work_queue.enq(CleanupWorkOrder.new(config))
       end
@@ -120,6 +89,48 @@ module Tivo2Podcast
       work_queue.enq(NoMoreWorkOrder.new)
       work_thread.join
       Tivo2Podcast::NotifierEngine.instance.shutdown
+    end
+
+    private
+
+    def process_shows(tivo, config, shows)
+      shows.each do |show|
+        basename = create_show_base_filename(show)
+        download = "#{basename}.ts"
+        transcode = "#{basename}.m4v"
+
+        notifier = Tivo2Podcast::NotifierEngine.instance
+        if !Tivo2Podcast::Show.episode_for(config, show.program_id).exists?
+          begin
+            notifier.notify("Starting download of #{basename}")
+            # If the file exists, we'll assume the download went okay
+            # Shame on us for not checking if it isn't
+            unless File.exist?(download)
+              downloader = ShowDownloader.new(@t2pconfig, tivo)
+              downloader.download_show(show, download)
+            end
+
+            notifier.notify("Finished download of #{basename}")
+
+            work_queue.enq(TranscodeWorkOrder.new(config, show, basename, download, transcode))
+
+            # Adding a 30 second delay before the next download to
+            # see if it helps with our download issues
+            sleep 30
+          rescue IOError => e
+            # If there was an IOError, we'll assume a file turd of
+            # some sort was left behind and clean it up
+            File.delete(download) if File.exist?(download)
+            notifier.notify("Error downloading #{basename}: #{e}")
+          end
+        elsif @t2pconfig.verbose
+          puts "Skipping #{basename} (#{show.program_id}) because it seems to exist"
+        end
+      end
+    end
+
+    def work_queue
+      @work_queue ||= Queue.new
     end
   end
 end

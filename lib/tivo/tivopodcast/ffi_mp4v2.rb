@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'ffi'
 
 # This module uses FFI to wrap the mp4v2 functions needed by the

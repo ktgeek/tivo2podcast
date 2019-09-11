@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2013 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -12,7 +14,7 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'cgi'
+require 'erb'
 require 'rss'
 require 'rss/itunes'
 require 'facets/enumerable/accumulate'
@@ -79,7 +81,7 @@ module Tivo2Podcast
       return unless File.exist?(show.filename)
       items.new_item do |item|
         item.title = item_title(@rss_file.configs.size, show)
-        item.link = CGI.escape("#{@rss_file.base_url}#{show.filename}")
+        item.link = "#{@rss_file.base_url}#{ERB::Util.url_encode(show.filename)}"
 
         item.guid.content = item.link
         item.guid.isPermaLink = true
