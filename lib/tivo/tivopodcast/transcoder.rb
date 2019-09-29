@@ -49,10 +49,12 @@ module Tivo2Podcast
       File.open(chapfilename) do |f|
         f.each_line do |l|
           md = re.match(l.chomp)
+          # rubocop:disable Style/RedundantParentheses
           if md && ((t = md[1].to_i).positive?)
             Mp4v2.mp4_add_chapter(m4vfile, chapter_track, t - last_time)
             last_time = t
           end
+          # rubocop:enable Style/RedundantParentheses
         end
       end
 
