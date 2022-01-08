@@ -18,17 +18,18 @@
 # You must have tivodecode for this to work.
 # Your tivo mak will be read out of ~/.tivodecode_mak if it is available
 
+require "bundler/setup"
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "tivo"))
 
-require 'optparse'
-require 'TiVo'
-require 'tty-progressbar'
-require 'tty-screen'
-require 'tty-prompt'
-require 'tty-spinner'
-require 'pastel'
+require "optparse"
+require "TiVo"
+require "tty-progressbar"
+require "tty-screen"
+require "tty-prompt"
+require "tty-spinner"
+require "pastel"
 
 def make_filename(tivo_item)
   name = tivo_item.title
@@ -39,8 +40,8 @@ def make_filename(tivo_item)
     name = "#{name}-#{tivo_item.episode_number}"
   end
 
-  name.sub!(/:/, '_')
-  name.sub!(%r{/}, '_')
+  name.sub!(/:/, "_")
+  name.sub!(%r{/}, "_")
   "#{name}.ts"
 end
 
@@ -48,11 +49,11 @@ def video_menu(videos)
   menu_entries = videos.map do |video|
     [
       format(
-        "%3d | %-43.43s | %13.13s | %5s\n",
-        video.channel,
-        video.printable_title,
-        video.time_captured.strftime('%m/%d %I:%M%p'),
-        video.human_duration
+        "%<channel>3d | %<title>-43.43s | %<time>13.13s | %<duration>5s\n",
+        channel: video.channel,
+        title: video.printable_title,
+        time: video.time_captured.strftime("%m/%d %I:%M%p"),
+        duration: video.human_duration
       ),
       video
     ]
@@ -64,7 +65,8 @@ def video_menu(videos)
 end
 
 def init_progress_bar(name, size)
-  tunc_size = TTY::Screen.width / 3 - 'Downloading '.length
+  # 12 is the length of "Downloading "
+  tunc_size = (TTY::Screen.width / 3) - 12
   display_name = name.gsub(/(.{#{tunc_size}}).+/, '\1...')
 
   pastel = Pastel.new
@@ -92,17 +94,17 @@ tivo_addr = nil
 tivo_libre_jar = nil
 decode = true
 opts = OptionParser.new
-opts.on('-m MAK', '--mak MAK', 'The TiVo\'s media access key') { |k| mak = k }
-opts.on('-t IP', '--tivo IP', 'The IP address of your TiVo') do |ip|
+opts.on("-m MAK", "--mak MAK", "The TiVo's media access key") { |k| mak = k }
+opts.on("-t IP", "--tivo IP", "The IP address of your TiVo") do |ip|
   tivo_addr = ip
 end
-opts.on('-d', '--no-decode', 'Will not use tivodecode.') { decode = false }
-opts.on('-j JAR', '--jar JAR', 'Location of the TiVoLibre jar') { |j| tivo_libre_jar = j }
-opts.on('-n NAME', '--tivo_name NAME',
-        'The name assigned to the tivo via the my.tivo service') do |n|
+opts.on("-d", "--no-decode", "Will not use tivodecode.") { decode = false }
+opts.on("-j JAR", "--jar JAR", "Location of the TiVoLibre jar") { |j| tivo_libre_jar = j }
+opts.on("-n NAME", "--tivo_name NAME",
+        "The name assigned to the tivo via the my.tivo service") do |n|
   tivo_name = n
 end
-opts.on_tail('-h', '--help', 'Show this message') do
+opts.on_tail("-h", "--help", "Show this message") do
   puts opts
   exit
 end
@@ -128,8 +130,8 @@ end
 tivo = TiVo::TiVo.new(tivo_addr, mak)
 
 listings = nil
-spinner = TTY::Spinner.new('Retrieving TiVo videos :spinner')
-spinner.run('Done!') { listings = tivo.get_listings }
+spinner = TTY::Spinner.new("Retrieving TiVo videos :spinner")
+spinner.run("Done!") { listings = tivo.get_listings }
 
 downloads = video_menu(listings.videos)
 
@@ -139,11 +141,11 @@ downloads.each_with_index do |dl, index|
 
   pbar = init_progress_bar(dl_name, dl.size)
   if decode
-    IO.popen("java -jar #{tivo_libre_jar} -m #{mak} -o \"#{dl_name}\"", 'wb') do |td|
+    IO.popen("java -jar #{tivo_libre_jar} -m #{mak} -o \"#{dl_name}\"", "wb") do |td|
       perform_download(tivo, dl, td, pbar)
     end
   else
-    File.open(dl_name, 'wb') { |file| perform_download(tivo, dl, file, pbar) }
+    File.open(dl_name, "wb") { |file| perform_download(tivo, dl, file, pbar) }
   end
   sleep 30 if downloads.size > 1 && index < downloads.size - 1
 end

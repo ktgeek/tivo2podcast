@@ -1,31 +1,14 @@
+require:
+  - rubocop-performance
+
 AllCops:
-  TargetRubyVersion: 2.6
+  TargetRubyVersion: 2.7
+  NewCops: enable
 
-Layout/EmptyLineAfterGuardClause:
+Metrics:
   Enabled: false
-
-Layout/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-  
-Layout/DotPosition:
-  Enabled: true
-  EnforcedStyle: trailing
 
 Style/Documentation:
-  Enabled: false
-
-Style/FormatStringToken:
-  Enabled: false
+   Enabled: false
 Style/StringLiterals:
-  Enabled: false
-
-Metrics/AbcSize:
-  Enabled: false
-Metrics/LineLength:
-  Max: 160
-Metrics/MethodLength:
-  Max: 100
-Metrics/CyclomaticComplexity:
-  Max: 28
-Metrics/PerceivedComplexity:
-  Max: 28
+  EnforcedStyle: double_quotes

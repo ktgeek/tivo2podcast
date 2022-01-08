@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+#
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -12,8 +14,8 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'tivopodcast/database'
-require 'tivopodcast/rss_generator'
+require "tivopodcast/database"
+require "tivopodcast/rss_generator"
 
 module Tivo2Podcast
   class FileCleaner
@@ -22,7 +24,7 @@ module Tivo2Podcast
       # limits doing multiple calls to the database.  Since we only
       # generated .m4v files now, this seems safe, but we might want
       # to revisit it.
-      files = Dir['*.m4v']
+      files = Dir["*.m4v"]
       deleted_shows = Tivo2Podcast::Show.preload(:config).on_disk.where.not(filename: files)
 
       deleted_shows.map(&:filename).each { |f| puts "#{f} missing, removing from database." }

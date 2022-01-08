@@ -14,11 +14,11 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'forwardable'
-require 'singleton'
-require 'yaml'
-require 'tty-spinner'
-require 'pastel'
+require "forwardable"
+require "singleton"
+require "yaml"
+require "tty-spinner"
+require "pastel"
 
 module Tivo2Podcast
   # This class makes up the configuation for the TiVo2Podcast engine
@@ -27,7 +27,7 @@ module Tivo2Podcast
     include Singleton
     extend Forwardable
 
-    CONFIG_DIRECTORY = ENV['TIVO2PODCASTDIR'] || ENV['HOME']
+    CONFIG_DIRECTORY = ENV["TIVO2PODCASTDIR"] || ENV["HOME"]
 
     # The default configuration filename
     CONFIG_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.conf")
@@ -41,9 +41,9 @@ module Tivo2Podcast
         mak: nil,
         verbose: false,
         opt_config_names: [],
-        handbrake: 'HandBrakeCLI',
+        handbrake: "HandBrakeCLI",
         cleanup: false,
-        atomicparsley: 'AtomicParsley',
+        atomicparsley: "AtomicParsley",
         comskip: nil,
         comskip_ini: nil,
         baseurl: nil,
@@ -66,7 +66,7 @@ module Tivo2Podcast
     # tivo_addr and mak.  If tivo_addr is not defined in the config,
     # try to locate the tivo vi dnssd
     def tivo_factory
-      require 'TiVo'
+      require "TiVo"
 
       tivo_ip = tivo_address
 
@@ -105,7 +105,7 @@ module Tivo2Podcast
     # the .tivodecode_make file
     def mak
       @config[:mak] ||= begin
-        mak_file = File.join(ENV['HOME'], '.tivodecode_mak')
+        mak_file = File.join(ENV["HOME"], ".tivodecode_mak")
         File.read(mak_file).strip if File.exist?(mak_file)
       end
     end
@@ -142,6 +142,7 @@ module Tivo2Podcast
     def method_missing(method, *params)
       value = @config[method.to_sym]
       return value unless value.nil?
+
       super
     end
 
@@ -160,6 +161,7 @@ module Tivo2Podcast
     # return nil.
     def ensure_ip_address(tivo_address)
       return IPSocket.getaddress(tivo_address) if tivo_address && !/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.match?(result)
+
       tivo_address
     end
   end

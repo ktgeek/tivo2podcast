@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2011 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -13,7 +15,7 @@
 #       with the distribution.
 #
 
-require 'tivopodcast/ffi_mp4v2'
+require "tivopodcast/ffi_mp4v2"
 
 module Tivo2Podcast
   # This class encapsulates both calling out to handbrake to doing the
@@ -28,7 +30,7 @@ module Tivo2Podcast
     end
 
     def preset
-      @config.handbrake_config || 'iPad'
+      @config.handbrake_config || "iPad"
     end
 
     def add_chapter_info(m4vfilename, chapfilename)
@@ -75,9 +77,9 @@ module Tivo2Podcast
       command << " >/dev/null 2>&1" unless t2pconfig.verbose
 
       returncode = system(command)
-      if !returncode
+      unless returncode
         puts "something isn't working right, bailing"
-        puts "Command that failed: " + command
+        puts "Command that failed: #{command}"
         # TODO: Change this to an exception
         exit(1)
       end
@@ -102,14 +104,14 @@ module Tivo2Podcast
         desc = @show.description.gsub(/"/, '\"')
         command << %( --description "#{desc}")
       end
-      command << ' >/dev/null 2>&1' unless t2pconfig.verbose
+      command << " >/dev/null 2>&1" unless t2pconfig.verbose
       returncode = system(command)
-      if !returncode
-        puts "something isn't working right, bailing"
-        puts "Command that failed: " + command
-        # TODO: change this to an exception
-        exit(1)
-      end
+      return if returncode
+
+      puts "something isn't working right, bailing"
+      puts "Command that failed: #{command}"
+      # TODO: change this to an exception
+      exit(1)
     end
 
     def skip_commercials(basename, transcode)
@@ -132,7 +134,7 @@ module Tivo2Podcast
       add_chapter_info(transcode, chpfile)
 
       File.delete(chpfile) if File.exist?(chpfile)
-      File.delete(basename + ".log") if File.exist?(basename + ".log")
+      File.delete("#{basename}.log") if File.exist?("#{basename}.log")
     end
   end
 end

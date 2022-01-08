@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ffi'
+require "ffi"
 
 # This module uses FFI to wrap the mp4v2 functions needed by the
 # TiVo2Podcast script.
@@ -9,7 +9,7 @@ module Mp4v2
 
   # Behind the scenes in C land this is using dlopen, so library path
   # semantics from there will be followed
-  ffi_lib ['libmp4v2']
+  ffi_lib ["libmp4v2"]
 
   typedef :pointer, :MP4FileHandle
   typedef :uint32, :MP4TrackId

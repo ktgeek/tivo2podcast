@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # Copyright 2012 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -13,24 +15,22 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 
-
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib',
-                                      'tivo'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "tivo"))
 
 begin
-  require 'rubygems'
+  require "rubygems"
 rescue LoadError
   # Ruby gems wasn't found, maybe someone loaded the prereqs directly
   # Not an error, but we'll swallow it for now.
 end
-require 'tivopodcast/config'
-require 'tivopodcast'
+require "tivopodcast/config"
+require "tivopodcast"
 
 t2pconfig = Tivo2Podcast::AppConfig.new
-engine = Tivo2Podcast::MainEngine.new(t2pconfig)
+Tivo2Podcast::MainEngine.new(t2pconfig)
 
 tivo = @config.tivo_factory
 
-puts tivo.get_listings(true, true)
+puts tivo.get_listings(recurse: true, get_xml: true)

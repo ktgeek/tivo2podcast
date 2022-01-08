@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -13,9 +15,9 @@
 #       with the distribution.
 #
 
-require 'tty-progressbar'
-require 'tty-screen'
-require 'pastel'
+require "tty-progressbar"
+require "tty-screen"
+require "pastel"
 
 module Tivo2Podcast
   class ShowDownloader
@@ -26,7 +28,7 @@ module Tivo2Podcast
 
     def download_show(show, name)
       pbar = progress_bar(name, show.size) if @config.verbose
-      IO.popen("java -jar #{@config.tivolibre} -m #{@config.mak} -o \"#{name}\"", 'wb') do |td|
+      IO.popen("java -jar #{@config.tivolibre} -m #{@config.mak} -o \"#{name}\"", "wb") do |td|
         @tivo.download_show(show) do |tc|
           td << tc
           pbar&.advance(tc.length)
@@ -40,7 +42,7 @@ module Tivo2Podcast
     def progress_bar(name, size)
       # The name of the file shouldn't take up more than one third of
       # the screen minus the word downloading.
-      truncate_size = TTY::Screen.width / 3 - 12
+      truncate_size = (TTY::Screen.width / 3) - 12
       display_name = name.gsub(/(.{#{truncate_size}}).+/, '\1...')
 
       pastel = Pastel.new

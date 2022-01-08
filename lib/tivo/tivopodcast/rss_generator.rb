@@ -14,12 +14,12 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'erb'
-require 'rss'
-require 'rss/itunes'
-require 'facets/enumerable/accumulate'
-require 'TiVo'
-require 'tivopodcast/database'
+require "erb"
+require "rss"
+require "rss/itunes"
+require "facets/enumerable/accumulate"
+require "TiVo"
+require "tivopodcast/database"
 
 module Tivo2Podcast
   # Generates the video podcast feed.
@@ -41,7 +41,7 @@ module Tivo2Podcast
       rssfiles.each do |rss_file|
         rss = new(rss_file).make_rss
 
-        File.open(rss_file.filename, 'w') { |f| f << rss.to_s }
+        File.open(rss_file.filename, "w") { |f| f << rss.to_s }
       end
     end
 
@@ -79,6 +79,7 @@ module Tivo2Podcast
       # If the file got removed and no one ran a database clean
       # let's not add it to the RSS feed.
       return unless File.exist?(show.filename)
+
       items.new_item do |item|
         item.title = item_title(@rss_file.configs.size, show)
         item.link = "#{@rss_file.base_url}#{ERB::Util.url_encode(show.filename)}"
@@ -95,7 +96,7 @@ module Tivo2Podcast
 
         item.enclosure.url = item.link
         item.enclosure.length = File.size(show.filename)
-        item.enclosure.type = 'video/x-m4v'
+        item.enclosure.type = "video/x-m4v"
       end
     end
   end

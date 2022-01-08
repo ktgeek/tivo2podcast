@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -11,7 +13,7 @@
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
-require 'singleton'
+require "singleton"
 
 module Tivo2Podcast
   class NotifierEngine
@@ -24,12 +26,10 @@ module Tivo2Podcast
 
     def init_notifiers
       Tivo2Podcast::AppConfig.instance["notifiers"]&.each do |n|
-        begin
-          require "tivopodcast/notifiers/#{n}_notifier"
-        rescue LoadError
-          # Should this toss an exception instead of an error message?
-          puts "Could not find #{n}_notifier... Ignoring."
-        end
+        require "tivopodcast/notifiers/#{n}_notifier"
+      rescue LoadError
+        # Should this toss an exception instead of an error message?
+        puts "Could not find #{n}_notifier... Ignoring."
       end
       @notifiers = Notifier.registered_notifiers.map(&:new)
     end

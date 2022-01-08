@@ -15,37 +15,38 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 
-$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
+require "bundler/setup"
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "tivo"))
 
-require 'optparse'
-require 'tivopodcast/config'
-require 'tivopodcast/database'
+require "optparse"
+require "tivopodcast/config"
+require "tivopodcast/database"
 
 t2pconfig = Tivo2Podcast::AppConfig.instance
 
 opts = OptionParser.new
-opts.on('-c CONFIG', '--config CONFIG',
-        'Use the named config on this run (may be used multiple times)') do |c|
+opts.on("-c CONFIG", "--config CONFIG",
+        "Use the named config on this run (may be used multiple times)") do |c|
   t2pconfig.opt_config_names << c
 end
-opts.on('-C', '--cleanup', 'Clean up database based on existing files') do
+opts.on("-C", "--cleanup", "Clean up database based on existing files") do
   t2pconfig.cleanup = true
 end
-opts.on('-R', '--regenerate_rss', 'Regenerate all the RSS files') do
+opts.on("-R", "--regenerate_rss", "Regenerate all the RSS files") do
   t2pconfig.regenerate_rss = true
 end
-opts.on('-m MAK', '--mak MAK',
-        'The TiVo\'s media access key') { |k| t2pconfig.mak = k }
-opts.on('-t ADDR', '--tivo_address ADDR',
-        'The hostname or IP address of the tivo to get the data from. ' \
-        'Overrides show config settings') do |t|
+opts.on("-m MAK", "--mak MAK",
+        "The TiVo's media access key") { |k| t2pconfig.mak = k }
+opts.on("-t ADDR", "--tivo_address ADDR",
+        "The hostname or IP address of the tivo to get the data from. " \
+        "Overrides show config settings") do |t|
   t2pconfig.tivo_address = t
 end
-opts.on('--console', 'Go into console mode') { t2pconfig.console = true }
-opts.on('--list-configs',
-        'List config names and their show titles and exit') { t2pconfig.list_configs = true }
-opts.on('-v', '--verbose') { t2pconfig.verbose = true }
-opts.on_tail('-h', '--help', 'Show this message') do
+opts.on("--console", "Go into console mode") { t2pconfig.console = true }
+opts.on("--list-configs",
+        "List config names and their show titles and exit") { t2pconfig.list_configs = true }
+opts.on("-v", "--verbose") { t2pconfig.verbose = true }
+opts.on_tail("-h", "--help", "Show this message") do
   puts opts
   exit
 end
@@ -55,25 +56,25 @@ opts.parse(ARGV)
 Tivo2Podcast.connect_database(Tivo2Podcast::AppConfig::DATABASE_FILENAME)
 
 if t2pconfig.list_configs
-  require 'tivopodcast/data_outputter'
+  require "tivopodcast/data_outputter"
   output = Tivo2Podcast::DataOutputter.new
   output.configs
 elsif t2pconfig.cleanup
-  require 'tivopodcast/file_cleaner'
+  require "tivopodcast/file_cleaner"
   Tivo2Podcast::FileCleaner.file_cleanup
 elsif t2pconfig.regenerate_rss
-  require 'tivopodcast/rss_generator'
+  require "tivopodcast/rss_generator"
   Tivo2Podcast::RssGenerator.regenerate_rss_files
 elsif t2pconfig.console
-  require 'tivopodcast'
-  require 'tivopodcast/console'
-  require 'pp'
+  require "tivopodcast"
+  require "tivopodcast/console"
+  require "pp"
   # rubocop:disable Style/MixinUsage
   include Tivo2Podcast
   # rubocop:enable Style/MixinUsage
   IRB.start_session(binding)
 else
-  require 'tivopodcast/main_engine'
+  require "tivopodcast/main_engine"
   engine = Tivo2Podcast::MainEngine.new
   engine.normal_processing
 end

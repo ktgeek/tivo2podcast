@@ -1,5 +1,7 @@
-require 'irb'
-require 'irb/completion'
+# frozen_string_literal: true
+
+require "irb"
+require "irb/completion"
 
 # The code to invoke IRB as a console came from
 # http://jasonroelofs.com/2009/04/02/embedding-irb-into-your-ruby-application/
@@ -13,7 +15,7 @@ module IRB # :nodoc:
       @__initialized = true
     end
 
-    @CONF[:IRB_NAME] = 'TiVo2Podcast'
+    @CONF[:IRB_NAME] = "TiVo2Podcast"
 
     workspace = WorkSpace.new(the_binding)
 

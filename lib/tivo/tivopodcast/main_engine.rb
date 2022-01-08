@@ -14,12 +14,12 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'tivopodcast/notifier'
-require 'tivopodcast/transcoder'
-require 'tivopodcast/database'
-require 'tivopodcast/rss_generator'
-require 'tivopodcast/main_engine_work_orders'
-require 'tivopodcast/file_downloader'
+require "tivopodcast/notifier"
+require "tivopodcast/transcoder"
+require "tivopodcast/database"
+require "tivopodcast/rss_generator"
+require "tivopodcast/main_engine_work_orders"
+require "tivopodcast/file_downloader"
 
 module Tivo2Podcast
   class MainEngine
@@ -30,20 +30,22 @@ module Tivo2Podcast
 
     def create_work_thread(queue)
       raise ArgumentError unless queue
+
       Thread.new do
         loop do
           work_order = queue.deq
           break if work_order.type == :NO_MORE_WORK
+
           work_order.do_work
         end
       end
     end
 
     def create_show_base_filename(show)
-      name = String.new "#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
+      name = +"#{show.title}-#{show.time_captured.strftime('%Y%m%d%H%M')}"
       name << "-#{show.episode_title}" if show.episode_title
       name << "-#{show.episode_number}" if show.episode_number
-      name.gsub(%r{[:\?\$/;#]}, '_')
+      name.gsub(%r{[:?$/;#]}, "_")
     end
 
     def configs
@@ -66,6 +68,7 @@ module Tivo2Podcast
 
     def tivo_for_name(name)
       return @t2pconfig.tivo_factory if @t2pconfig.tivo_address || name.nil?
+
       @tivos_by_name[name] ||= begin
         tivo_address = TiVo.locate_via_dnssd(name)
         TiVo::TiVo.new(tivo_address, @t2pconfig.mak)

@@ -15,27 +15,28 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 
+require "bundler/setup"
 # Adds the lib path next to the path the script is in to the head of
 # the search patch
-$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'tivo'))
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "tivo"))
 
-require 'tivopodcast/database'
-require 'optparse'
-require 'TiVo'
-require 'tivopodcast/config'
-require 'pastel'
-require 'tty-spinner'
-require 'tty-prompt'
+require "tivopodcast/database"
+require "optparse"
+require "TiVo"
+require "tivopodcast/config"
+require "pastel"
+require "tty-spinner"
+require "tty-prompt"
 
 def video_menu(videos)
   menu_entries = videos.reject(&:copy_protected?).map do |video|
     [
       format(
-        "%3d | %-43.43s | %13.13s | %5s\n",
-        video.channel,
-        video.printable_title,
-        video.time_captured.strftime("%m/%d %I:%M%p"),
-        video.human_duration
+        "%<channel>3d | %<title>-43.43s | %<time>13.13s | %<duration>5s\n",
+        channel: video.channel,
+        title: video.printable_title,
+        time: video.time_captured.strftime("%m/%d %I:%M%p"),
+        duration: video.human_duration
       ),
       video
     ]
@@ -79,15 +80,15 @@ end
 t2pconfig = Tivo2Podcast::AppConfig.instance
 
 opts = OptionParser.new
-opts.on('-m MAK', '--mak MAK',
-        'The TiVo\'s media access key') { |k| t2pconfig.mak = k }
-opts.on('-t ADDR', '--tivo_address ADDR',
-        'The hostname or IP address of the tivo to get the data from. ' \
-        'If set, this overrides any show config settings.') do |t|
+opts.on("-m MAK", "--mak MAK",
+        "The TiVo's media access key") { |k| t2pconfig.mak = k }
+opts.on("-t ADDR", "--tivo_address ADDR",
+        "The hostname or IP address of the tivo to get the data from. " \
+        "If set, this overrides any show config settings.") do |t|
   t2pconfig.tivo_address = t
 end
-opts.on('-v', '--verbose') { t2pconfig.verbose = true }
-opts.on_tail('-h', '--help', 'Show this message') do
+opts.on("-v", "--verbose") { t2pconfig.verbose = true }
+opts.on_tail("-h", "--help", "Show this message") do
   puts opts
   exit
 end
@@ -103,11 +104,10 @@ prompt = TTY::Prompt.new
 basis.each do |show|
   puts "Creating a configuration for #{show.title}"
   sconfig = Tivo2Podcast::Config.new
-  sconfig.name = prompt.ask('Config name:', default: show.title.delete(' '))
-  sconfig.show_name = prompt.ask('Show name:', default: show.title)
-  sconfig.episodes_to_keep =
-    prompt.ask('Episodes to keep in the feed:', convert: :int, default: 4)
-  sconfig.handbrake_config = prompt.ask('HandBrake config:')
+  sconfig.name = prompt.ask("Config name:", default: show.title.delete(" "))
+  sconfig.show_name = prompt.ask("Show name:", default: show.title)
+  sconfig.episodes_to_keep = prompt.ask("Episodes to keep in the feed:", convert: :int, default: 4)
+  sconfig.handbrake_config = prompt.ask("HandBrake config:")
   sconfig.tivo = tivo_choice.name
 
   printf("Saved!\n\n") if sconfig.save

@@ -1,5 +1,7 @@
-require 'tivopodcast/database'
-require 'tty-table'
+# frozen_string_literal: true
+
+require "tivopodcast/database"
+require "tty-table"
 
 module Tivo2Podcast
   class DataOutputter
@@ -7,7 +9,7 @@ module Tivo2Podcast
       @io_handle = io_handle
     end
 
-    HEADERS = ['id', 'Config name', 'Show name'].freeze
+    HEADERS = ["id", "Config name", "Show name"].freeze
 
     CONFIG_FORMAT = "%-20.16s%-50.50s\n"
     def configs

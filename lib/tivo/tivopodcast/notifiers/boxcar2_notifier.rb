@@ -13,7 +13,7 @@
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
-require 'rest_client'
+require "rest_client"
 
 module Tivo2Podcast
   class Boxcar2Notifier < Notifier
@@ -23,10 +23,10 @@ module Tivo2Podcast
     def initialize
       super
 
-      @token = Tivo2Podcast::AppConfig.instance['boxcar2.token']
-      raise ArgumentError, 'boxcar2.token must be defined for the Boxcar notifier' if @token.nil?
+      @token = Tivo2Podcast::AppConfig.instance["boxcar2.token"]
+      raise ArgumentError, "boxcar2.token must be defined for the Boxcar notifier" if @token.nil?
 
-      @boxcar2 = RestClient::Resource.new(BOXCAR2_API_URL, ssl_version: 'SSLv23')
+      @boxcar2 = RestClient::Resource.new(BOXCAR2_API_URL, ssl_version: "SSLv23")
       @message_queue = Queue.new
       @transmit_thread = start_transmit_thread
     end
@@ -50,13 +50,13 @@ module Tivo2Podcast
           break if message == SHUTDOWN_MESSAGE
 
           begin
-            @boxcar2.post('user_credentials' => @token,
-                          'notification[title]' => "Tivo2Podcast: #{message}",
-                          'notification[long_message]' => message,
-                          'notification[source_name]' => 'Tivo2Podcast')
+            @boxcar2.post("user_credentials" => @token,
+                          "notification[title]" => "Tivo2Podcast: #{message}",
+                          "notification[long_message]" => message,
+                          "notification[source_name]" => "Tivo2Podcast")
           rescue Exception
             # TODO: replace this with some form of logging. For now, stderr
-            $stderr.puts "Error sending message to boxcar api"
+            warn "Error sending message to boxcar api"
           end
         end
       end

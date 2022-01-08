@@ -14,7 +14,7 @@
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
 #
-require 'tivopodcast/main_engine'
+require "tivopodcast/main_engine"
 
 # Local Variables:
 # mode: ruby
