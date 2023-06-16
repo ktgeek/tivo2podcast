@@ -85,7 +85,7 @@ def perform_download(tivo, download_item, download_target, progress_bar = nil)
 end
 
 # Load the mak if we have a mak file, using the tivodecode filename for legacy rasons
-mak_file = "#{ENV['HOME']}/.tivodecode_mak"
+mak_file = "#{Dir.home}/.tivodecode_mak"
 mak = File.read(mak_file).strip if File.exist?(mak_file)
 
 # Parse the options to get the rest (or override the above)

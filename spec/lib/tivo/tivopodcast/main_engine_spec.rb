@@ -1,4 +1,6 @@
-require 'tivo/tivopodcast/main_engine'
+# frozen_string_literal: true
+
+require "tivo/tivopodcast/main_engine"
 
 describe Tivo2Podcast::MainEngine do
   let(:t2pconfig) { instance_double("Tivo2Podcast::AppConfig") }
@@ -13,7 +15,7 @@ describe Tivo2Podcast::MainEngine do
     let(:tivo) do
       tivo = instance_double("TiVo::TiVo")
       allow(tivo).to receive(:get_shows_by_name) do
-        ['Show 1', 'Show 2', 'Show 3', 'Show 4', 'Show 5']
+        ["Show 1", "Show 2", "Show 3", "Show 4", "Show 5"]
       end
       tivo
     end
@@ -22,14 +24,14 @@ describe Tivo2Podcast::MainEngine do
       allow(show_config).to receive(:episodes_to_keep) { 3 }
       shows = main_engine.get_shows_to_process(tivo, show_config)
 
-      expect(shows).to eql ['Show 3', 'Show 4', 'Show 5']
+      expect(shows).to eql ["Show 3", "Show 4", "Show 5"]
     end
 
     it "returns the all the shows when X > totals shows" do
       allow(show_config).to receive(:episodes_to_keep) { 7 }
       shows = main_engine.get_shows_to_process(tivo, show_config)
 
-      expect(shows).to eql ['Show 1', 'Show 2', 'Show 3', 'Show 4', 'Show 5']
+      expect(shows).to eql ["Show 1", "Show 2", "Show 3", "Show 4", "Show 5"]
     end
   end
 

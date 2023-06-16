@@ -21,7 +21,7 @@ module Tivo2Podcast
     has_and_belongs_to_many :rss_files
     has_many :shows
 
-    scope :for_name, ->(name) { where(name: name) }
+    scope :for_name, ->(name) { where(name:) }
   end
 
   module Db

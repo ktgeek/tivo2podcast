@@ -1,4 +1,6 @@
-require 'tivo/tivopodcast/rss_generator'
+# frozen_string_literal: true
+
+require "tivo/tivopodcast/rss_generator"
 
 describe Tivo2Podcast::RssGenerator do
   describe "#item_title" do
@@ -50,8 +52,8 @@ describe Tivo2Podcast::RssGenerator do
     end
 
     # TODO: finishing testing othre methodsZ
-#    describe "#make_item" do
-#      let(:item)
-#    end
+    #    describe "#make_item" do
+    #      let(:item)
+    #    end
   end
 end

@@ -54,7 +54,7 @@ module Tivo2Podcast
 
         transcoder.skip_commercials(@basename, @transcode)
 
-        File.delete(@download) if File.exist?(@download)
+        File.rm_f(@download)
 
         Tivo2Podcast::Show.create_from_config_show_filename(@config, @show, @transcode)
         notifier.notify("Finished transcode of #{@basename}")
@@ -74,7 +74,7 @@ module Tivo2Podcast
         shows_to_clean.each do |show|
           # If the file doesn't exist, don't try to delete, but
           # setting on_disk to false is appropriate.
-          File.delete(show.filename) if File.exist?(show.filename)
+          File.rm_f(show.filename)
           show.on_disk = false
           show.save!
         end

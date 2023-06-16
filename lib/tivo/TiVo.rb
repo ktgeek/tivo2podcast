@@ -72,7 +72,7 @@ module TiVo
     @tivos_via_dnssd = nil if reaquire
     @tivos_via_dnssd ||= begin
       dnssd_finds = dnssd_search(sleep_time)
-      dnssd_finds.map { |x| [x.name, IPSocket.getaddress(x.target)] }.to_h unless dnssd_finds.empty?
+      dnssd_finds.to_h { |x| [x.name, IPSocket.getaddress(x.target)] } unless dnssd_finds.empty?
     end
   end
 

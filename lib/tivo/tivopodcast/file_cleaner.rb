@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # Copyright 2015 Keith T. Garner. All rights reserved.
 #

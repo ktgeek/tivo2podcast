@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '~>2.6'
+ruby '~>3.2'
 
 gem 'activerecord', '~>5.2'
 # I really want to get an updated dnssd, because it has a SEGV fix
@@ -23,6 +23,8 @@ gem 'tty-table'
 group :development do
   gem 'byebug'
   gem 'rubocop'
+  gem 'rubocop-performance'
+  gem 'rubocop-rspec'
 end
 
 group :test do

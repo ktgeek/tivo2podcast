@@ -27,7 +27,7 @@ module Tivo2Podcast
     include Singleton
     extend Forwardable
 
-    CONFIG_DIRECTORY = ENV["TIVO2PODCASTDIR"] || ENV["HOME"]
+    CONFIG_DIRECTORY = ENV["TIVO2PODCASTDIR"] || Dir.home
 
     # The default configuration filename
     CONFIG_FILENAME = File.join(CONFIG_DIRECTORY, ".tivo2podcast.conf")
@@ -105,7 +105,7 @@ module Tivo2Podcast
     # the .tivodecode_make file
     def mak
       @config[:mak] ||= begin
-        mak_file = File.join(ENV["HOME"], ".tivodecode_mak")
+        mak_file = File.join(Dir.home, ".tivodecode_mak")
         File.read(mak_file).strip if File.exist?(mak_file)
       end
     end

@@ -133,8 +133,8 @@ module Tivo2Podcast
       chpfile = "#{basename}.chp"
       add_chapter_info(transcode, chpfile)
 
-      File.delete(chpfile) if File.exist?(chpfile)
-      File.delete("#{basename}.log") if File.exist?("#{basename}.log")
+      File.rm_f(chpfile)
+      File.rm_f("#{basename}.log")
     end
   end
 end

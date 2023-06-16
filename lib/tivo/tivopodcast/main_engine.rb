@@ -123,7 +123,7 @@ module Tivo2Podcast
           rescue IOError => e
             # If there was an IOError, we'll assume a file turd of
             # some sort was left behind and clean it up
-            File.delete(download) if File.exist?(download)
+            File.rm_f(download)
             notifier.notify("Error downloading #{basename}: #{e}")
           end
         elsif @t2pconfig.verbose

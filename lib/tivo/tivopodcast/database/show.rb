@@ -23,11 +23,11 @@ module Tivo2Podcast
 
     scope :on_disk, -> { where(on_disk: true) }
     scope :for_config, ->(config) { where(config_id: config) }
-    scope :episode_for, ->(config, program_id) { where(config_id: config, program_id: program_id) }
+    scope :episode_for, ->(config, program_id) { where(config_id: config, program_id:) }
 
     def self.create_from_config_show_filename(config, show, filename)
       Show.create(
-        config: config,
+        config:,
         name: show.title,
         episode_title: show.episode_title(use_date_if_nil: true),
         episode_number: show.episode_number,
@@ -36,7 +36,7 @@ module Tivo2Podcast
         time_captured: show.time_captured.to_i,
         program_id: show.program_id,
         on_disk: true,
-        filename: filename
+        filename:
       )
     end
   end
