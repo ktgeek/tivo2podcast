@@ -2,6 +2,8 @@
 
 This is my package of two scripts I wrote up to download content from my TiVo to my linux box.
 
+THIS PROJECT IS NOW DEPRECATED. My tivo(s) died, the company has moved away from boxes and streaming has taken over the world. Keeping it here for reference and nostalgia over all the good tivo years.
+
 ---
 
 ## TiVo2Disk
